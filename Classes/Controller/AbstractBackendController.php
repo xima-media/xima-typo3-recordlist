@@ -30,6 +30,7 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
@@ -79,7 +80,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         if (!count($accessiblePids)) {
             return new HtmlResponse('No accessible child pages found.', 403);
         }
-        $moduleName = $request->getAttribute('route')->getOption('moduleName');
+        $moduleName = $request->getAttribute('route')?->getOption('moduleName') ?? '';
         $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
         if (!in_array($currentPid, $accessiblePids)) {
             return new RedirectResponse($url);
@@ -138,13 +139,19 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $this->view->assign('search_field', $searchInput);
         }
 
+        // demand: order
+        $orderField = $body['order_field'] ?? $GLOBALS['TCA'][$tableName]['ctrl']['label'];
+        $orderDirection = $body['order_direction'] ?? 'ASC';
+        $this->view->assign('order_field', $orderField);
+        $this->view->assign('order_direction', $orderDirection);
+
         $records = $qb->select('*')
             ->from($tableName)
             ->where(
                 $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($accessiblePids))
             )
             ->andWhere(...$additionalConstraints)
-            ->orderBy('title', 'ASC')
+            ->addOrderBy($orderField, $orderDirection)
             ->execute()
             ->fetchAllAssociative();
 
@@ -254,7 +261,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
     protected function initializeView(): void
     {
-        $settings = $this->configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
+        $settings = $this->configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
         $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
         $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
 

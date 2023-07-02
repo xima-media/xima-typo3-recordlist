@@ -1,0 +1,10 @@
+<th>
+	<a href="#"
+	   data-order-field="{field}"
+	   data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">{label}
+	</a>
+	<f:if condition="{order_field}==={field}">
+		<core:icon identifier="actions-caret-{f:if(condition:'{order_direction}===\'DESC\'', then: 'down', else:'up')}"
+				   size="small" />
+	</f:if>
+</th>

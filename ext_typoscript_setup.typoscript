@@ -2,9 +2,9 @@ module.tx_ximatypo3recordlist {
   view {
     templateRootPaths.0 = EXT:xima_typo3_recordlist/Resources/Private/Templates
     templateRootPaths.10 = {$module.tx_ximatypo3recordlist.view.templateRootPath}
-    layoutRootPaths.0 = EXT:xima_typo3_recordlist/Resources/Private/Templates
+    layoutRootPaths.0 = EXT:xima_typo3_recordlist/Resources/Private/Layouts
     layoutRootPaths.10 = {$module.tx_ximatypo3recordlist.view.layoutRootPath}
-    partialRootPaths.0 = EXT:xima_typo3_recordlist/Resources/Private/Templates
+    partialRootPaths.0 = EXT:xima_typo3_recordlist/Resources/Private/Partials
     partialRootPaths.10 = {$module.tx_ximatypo3recordlist.view.partialRootPath}
   }
 }
