@@ -1,4 +1,8 @@
-# Recordlist
+# TYPO3 Recordlist
+
+This package allows you to quickly create backend modules for advanced record listing.
+
+Workspaces integration: More simple workflow for requesting and approving changes.
 
 ## Install
 
@@ -8,9 +12,11 @@ composer require xima/xima-typo3-recordlist
 
 ## Usage
 
+Start by creating a new backend controller in your TYPO3 extension.
+
 ### 1. Extend new controller from `AbstractBackendController`
 
-The abstract controller implements the `BackendControllerInterface` which requires you to add the
+The controller implements the `BackendControllerInterface` which requires you to add the
 methods `getTableName()` and `getRecordPid()`:
 
 ```php
@@ -37,7 +43,7 @@ class UserController extends AbstractBackendController
 ### 2. Register Backend module
 
 Add a new backend module via
-the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/11.5/en-us/ExtensionArchitecture/HowTo/BackendModule/BackendModulesWithoutExtbase/BackendModuleApiWithoutExtbase.html).
+the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/11.5/en-us/ExtensionArchitecture/HowTo/BackendModule/BackendModulesWithoutExtbase/BackendModuleApiWithoutExtbase.html). You're free to adjust the settings as you like, the only import setting is the `routeTarget`: Make sure you always use the `::mainAction`.
 
 ```php
 ExtensionManagementUtility::addModule(
@@ -56,11 +62,13 @@ ExtensionManagementUtility::addModule(
 );
 ```
 
-### 3. Add Template
+That's it.
 
-The name of the template is determined by the controller name, e.g. `UserController` will load a `User.html` from the configured template paths.
+## Customization
 
-The configuration of template paths is done via TypoScript constants:
+### Template
+
+To use a custom template, override the `TEMPLATE_NAME` constant in your controller and configure the template paths via TypoScript constants:
 
 ```typo3_typoscript
 module.tx_ximatypo3recordlist {
@@ -72,13 +80,9 @@ module.tx_ximatypo3recordlist {
 }
 ```
 
-Have a look into the `ExampleTemplate.html`
+### Data
 
-## Customization
-
-### Controller methods
-
-```editRecord(&array)```
+Each record item can be modified using the `modifyRecord` method:
 
 ```php
 class UserController extends AbstractBackendController

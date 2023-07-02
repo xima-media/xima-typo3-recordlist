@@ -38,6 +38,8 @@ abstract class AbstractBackendController implements BackendControllerInterface
 {
     const WORKSPACE_ID = 1;
 
+    const TEMPLATE_NAME = 'Default';
+
     protected StandaloneView $view;
 
     protected Site $site;
@@ -266,7 +268,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
 
         $controllerName = (new \ReflectionClass($this::class))->getShortName();
-        $templateName = str_replace('Controller', '', $controllerName);
+        $templateName = $this::TEMPLATE_NAME;
 
         $this->view = GeneralUtility::makeInstance(StandaloneView::class);
         $this->view->setLayoutRootPaths($typoScript['view']['layoutRootPaths']);
