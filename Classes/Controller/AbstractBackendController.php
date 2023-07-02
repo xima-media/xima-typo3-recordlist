@@ -31,6 +31,7 @@ use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Fluid\View\StandaloneView;
+use TYPO3\CMS\Workspaces\Domain\Model\CombinedRecord;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
 abstract class AbstractBackendController implements BackendControllerInterface
@@ -118,13 +119,13 @@ abstract class AbstractBackendController implements BackendControllerInterface
         // Add data to template
         $tableName = $this->getTableName();
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
-        $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class));
+        $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
         $records = $qb->select('*')
             ->from($tableName)
             ->where(
                 $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($accessiblePids))
             )
-            ->orderBy('tstamp', 'DESC')
+            ->orderBy('title', 'ASC')
             ->execute()
             ->fetchAllAssociative();
 
@@ -145,9 +146,15 @@ abstract class AbstractBackendController implements BackendControllerInterface
             if (is_array($vRecord)) {
                 $record = $vRecord;
                 $record['editable'] = true;
+                $record['state'] = 'modified';
 
                 $record['statusClass'] = 'warning';
                 $record['statusText'] = 'Arbeitskopie';
+
+                // newly created record
+                if ($record['t3ver_oid'] === 0) {
+                    $record['state'] = 'new';
+                }
 
                 // stage "Ready to publish"
                 if ($record['t3ver_stage'] === -10) {
