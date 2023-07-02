@@ -54,23 +54,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
     ) {
     }
 
-    protected function initializeView(): void
-    {
-        $settings = $this->configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
-        $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
-        $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
-
-        $controllerName = (new \ReflectionClass($this::class))->getShortName();
-        $templateName = str_replace('Controller', '', $controllerName);
-
-        $this->view = GeneralUtility::makeInstance(StandaloneView::class);
-        $this->view->setLayoutRootPaths($typoScript['view']['layoutRootPaths']);
-        $this->view->setTemplateRootPaths($typoScript['view']['templateRootPaths']);
-        $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
-        $this->view->setTemplate($templateName);
-        $this->view->getRequest()->setControllerExtensionName($controllerName);
-    }
-
     /**
      * @throws Exception
      * @throws DBALException
@@ -90,20 +73,19 @@ abstract class AbstractBackendController implements BackendControllerInterface
         }
         $this->site = $site;
 
+        // check access + redirect
         $currentPid = (int)($request->getQueryParams()['id'] ?? $request->getParsedBody()['id'] ?? 0);
         $accessiblePids = $this->getAccessibleChildPageUids($this->getRecordPid());
-
         if (!count($accessiblePids)) {
             return new HtmlResponse('No accessible child pages found.', 403);
         }
-
         $moduleName = $request->getAttribute('route')->getOption('moduleName');
         $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
-
         if (!in_array($currentPid, $accessiblePids)) {
             return new RedirectResponse($url);
         }
 
+        // load workspace related stuff @TODO: find what can be removed
         $backendUser = $GLOBALS['BE_USER'];
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
@@ -124,17 +106,17 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // build view
         $this->initializeView();
-
+        $this->view->assign('moduleName', $moduleName);
         $this->view->assign('storagePids', implode(',', $accessiblePids));
 
+        // workspacce stuff
         /** @var BackendUserAuthentication $beUser */
         $beUser = $GLOBALS['BE_USER'];
         $isWorkspaceAdmin = $beUser->workspacePublishAccess($this::WORKSPACE_ID);
         $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
 
-        $tableName = $this->getTableName();
-
         // Add data to template
+        $tableName = $this->getTableName();
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class));
         $records = $qb->select('*')
@@ -148,7 +130,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         $this->view->assign('recordCount', count($records));
 
-        $paginator = new ArrayPaginator($records, 1, 30);
+        $paginator = new ArrayPaginator($records, 1, 100);
         $records = $paginator->getPaginatedItems();
 
         foreach ($records as &$record) {
@@ -159,6 +141,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $record['editable'] = true;
             $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $tableName, $record['uid']);
 
+            // has version record => replace with versioned record
             if (is_array($vRecord)) {
                 $record = $vRecord;
                 $record['editable'] = true;
@@ -166,6 +149,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 $record['statusClass'] = 'warning';
                 $record['statusText'] = 'Arbeitskopie';
 
+                // stage "Ready to publish"
                 if ($record['t3ver_stage'] === -10) {
                     $record['statusClass'] = 'success';
                     $record['statusText'] = 'Wartet auf Veröffentlichung';
@@ -173,9 +157,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 }
             }
 
-            if (method_exists($this, 'editRecord')) {
-                $this->editRecord($record);
-            }
+            $this->modifyRecord($record);
         }
 
         $this->view->assign('records', $records);
@@ -242,5 +224,29 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $pageUids[] = $page['uid'];
         }
         return $pageUids;
+    }
+
+    protected function initializeView(): void
+    {
+        $settings = $this->configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
+        $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
+        $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
+
+        $controllerName = (new \ReflectionClass($this::class))->getShortName();
+        $templateName = str_replace('Controller', '', $controllerName);
+
+        $this->view = GeneralUtility::makeInstance(StandaloneView::class);
+        $this->view->setLayoutRootPaths($typoScript['view']['layoutRootPaths']);
+        $this->view->setTemplateRootPaths($typoScript['view']['templateRootPaths']);
+        $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
+        $this->view->setTemplate($templateName);
+        $this->view->getRequest()->setControllerExtensionName($controllerName);
+    }
+
+    /**
+     * @param mixed[] $record
+     */
+    public function modifyRecord(array &$record): void
+    {
     }
 }

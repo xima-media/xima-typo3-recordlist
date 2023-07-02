@@ -2,7 +2,7 @@
 
 ## Install
 
-```
+```bash
 composer require xima/xima-typo3-recordlist
 ```
 
@@ -13,7 +13,7 @@ composer require xima/xima-typo3-recordlist
 The abstract controller implements the `BackendControllerInterface` which requires you to add the
 methods `getTableName()` and `getRecordPid()`:
 
-```
+```php
 <?php
 
 namespace Vendor\MyExtension\Controller\Backend;
@@ -39,7 +39,7 @@ class UserController extends AbstractBackendController
 Add a new backend module via
 the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/11.5/en-us/ExtensionArchitecture/HowTo/BackendModule/BackendModulesWithoutExtbase/BackendModuleApiWithoutExtbase.html).
 
-```
+```php
 ExtensionManagementUtility::addModule(
     'web',
     'events',
@@ -62,7 +62,7 @@ The name of the template is determined by the controller name, e.g. `UserControl
 
 The configuration of template paths is done via TypoScript constants:
 
-```
+```typo3_typoscript
 module.tx_ximatypo3recordlist {
     view {
       partialRootPaths =  EXT:your_ext/Resources/Private/Backend/Partials
@@ -76,4 +76,16 @@ Have a look into the `ExampleTemplate.html`
 
 ## Customization
 
+### Controller methods
 
+```editRecord(&array)```
+
+```php
+class UserController extends AbstractBackendController
+{
+    public function modifyRecord(array &$record): void
+    {
+        $record['fullName'] = $record['first_name'] . ' ' . $record['last_name'];
+    }
+}
+```
