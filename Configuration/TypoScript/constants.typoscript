@@ -1,0 +1,9 @@
+module {
+  tx_ximatypo3recordlist {
+    view {
+      partialRootPaths =
+      templateRootPath =
+      layoutRootPath =
+    }
+  }
+}

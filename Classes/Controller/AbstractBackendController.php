@@ -8,12 +8,14 @@ use Doctrine\DBAL\Result;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
+use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
@@ -25,15 +27,19 @@ use TYPO3\CMS\Core\Pagination\ArrayPaginator;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
+use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
-abstract class AbstractBackendController
+abstract class AbstractBackendController implements BackendControllerInterface
 {
-    const TABLE_NAME = '';
-    const SITE_CONFIG_PID_KEY = '';
     const WORKSPACE_ID = 1;
+
+    protected StandaloneView $view;
+
+    protected Site $site;
 
     public function __construct(
         protected IconFactory $iconFactory,
@@ -43,22 +49,49 @@ abstract class AbstractBackendController
         protected ContainerInterface $container,
         protected ModuleTemplateFactory $moduleTemplateFactory,
         protected WorkspaceService $workspaceService,
-        protected LanguageService $languageService
+        protected LanguageService $languageService,
+        protected ConfigurationManager $configurationManager
     ) {
     }
 
+    protected function initializeView(): void
+    {
+        $settings = $this->configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
+        $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
+        $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
+
+        $controllerName = (new \ReflectionClass($this::class))->getShortName();
+        $templateName = str_replace('Controller', '', $controllerName);
+
+        $this->view = GeneralUtility::makeInstance(StandaloneView::class);
+        $this->view->setLayoutRootPaths($typoScript['view']['layoutRootPaths']);
+        $this->view->setTemplateRootPaths($typoScript['view']['templateRootPaths']);
+        $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
+        $this->view->setTemplate($templateName);
+        $this->view->getRequest()->setControllerExtensionName($controllerName);
+    }
+
+    /**
+     * @throws Exception
+     * @throws DBALException
+     * @throws RouteNotFoundException
+     * @throws SiteNotFoundException
+     */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
+        // Get site
         $site = $request->getAttribute('site');
-
         if (!$site instanceof Site) {
             $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
-            $site = $siteFinder->getSiteByIdentifier('main');
+            $site = current($siteFinder->getAllSites());
         }
+        if (!$site instanceof Site) {
+            throw new SiteNotFoundException('Could not determine which site configuration to use', 1688298643);
+        }
+        $this->site = $site;
 
         $currentPid = (int)($request->getQueryParams()['id'] ?? $request->getParsedBody()['id'] ?? 0);
-        $eventPid = $site->getConfiguration()['pageUids'][$this::SITE_CONFIG_PID_KEY] ?? 0;
-        $accessiblePids = $this->getAccessibleChildPageUids($eventPid);
+        $accessiblePids = $this->getAccessibleChildPageUids($this->getRecordPid());
 
         if (!count($accessiblePids)) {
             return new HtmlResponse('No accessible child pages found.', 403);
@@ -74,31 +107,38 @@ abstract class AbstractBackendController
         $backendUser = $GLOBALS['BE_USER'];
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
-        $this->pageRenderer->addInlineSetting('FormEngine', 'moduleUrl', (string)$this->uriBuilder->buildUriFromRoute('record_edit'));
-        $this->pageRenderer->addInlineSetting('RecordHistory', 'moduleUrl', (string)$this->uriBuilder->buildUriFromRoute('record_history'));
+        $this->pageRenderer->addInlineSetting(
+            'FormEngine',
+            'moduleUrl',
+            (string)$this->uriBuilder->buildUriFromRoute('record_edit')
+        );
+        $this->pageRenderer->addInlineSetting(
+            'RecordHistory',
+            'moduleUrl',
+            (string)$this->uriBuilder->buildUriFromRoute('record_history')
+        );
         $this->pageRenderer->addInlineSetting('Workspaces', 'id', $currentPid);
         $this->pageRenderer->addInlineSetting('WebLayout', 'moduleUrl', (string)$this->uriBuilder->buildUriFromRoute(
             trim($backendUser->getTSConfig()['options.']['overridePageModule'] ?? 'web_layout')
         ));
 
         // build view
-        $controllerName = (new \ReflectionClass($this::class))->getShortName();
-        $templateName = str_replace('Controller', '', $controllerName);
-        $view = GeneralUtility::makeInstance(StandaloneView::class);
-        $view->setTemplatePathAndFilename(GeneralUtility::getFileAbsFileName('EXT:xima_wfs_sitepackage/Resources/Private/Extensions/Backend/' . $templateName . '.html'));
-        $view->getRequest()->setControllerExtensionName($controllerName);
-        $view->assign('storagePids', implode(',', $accessiblePids));
+        $this->initializeView();
+
+        $this->view->assign('storagePids', implode(',', $accessiblePids));
 
         /** @var BackendUserAuthentication $beUser */
         $beUser = $GLOBALS['BE_USER'];
         $isWorkspaceAdmin = $beUser->workspacePublishAccess($this::WORKSPACE_ID);
-        $view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
+        $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
+
+        $tableName = $this->getTableName();
 
         // Add data to template
-        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($this::TABLE_NAME);
+        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class));
         $records = $qb->select('*')
-            ->from($this::TABLE_NAME)
+            ->from($tableName)
             ->where(
                 $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($accessiblePids))
             )
@@ -106,7 +146,7 @@ abstract class AbstractBackendController
             ->execute()
             ->fetchAllAssociative();
 
-        $view->assign('recordCount', count($records));
+        $this->view->assign('recordCount', count($records));
 
         $paginator = new ArrayPaginator($records, 1, 30);
         $records = $paginator->getPaginatedItems();
@@ -117,7 +157,7 @@ abstract class AbstractBackendController
             }
 
             $record['editable'] = true;
-            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this::TABLE_NAME, $record['uid']);
+            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $tableName, $record['uid']);
 
             if (is_array($vRecord)) {
                 $record = $vRecord;
@@ -138,11 +178,11 @@ abstract class AbstractBackendController
             }
         }
 
-        $view->assign('records', $records);
-        $view->assign('paginator', $paginator);
-        $view->assign('table', $this::TABLE_NAME);
+        $this->view->assign('records', $records);
+        $this->view->assign('paginator', $paginator);
+        $this->view->assign('table', $tableName);
 
-        $content = $view->render();
+        $content = $this->view->render();
 
         // build module template
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
@@ -150,9 +190,9 @@ abstract class AbstractBackendController
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref($this->uriBuilder->buildUriFromRoute(
                     'record_edit',
-                    ['edit' => [$this::TABLE_NAME => [$accessiblePids[0] => 'new']], 'returnUrl' => $url]
+                    ['edit' => [$tableName => [$accessiblePids[0] => 'new']], 'returnUrl' => $url]
                 ))
-                ->setTitle('New ' . $this->languageService->sL($GLOBALS['TCA'][$this::TABLE_NAME]['ctrl']['title']))
+                ->setTitle('New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']))
                 ->setShowLabelText(true)
                 ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
         );
