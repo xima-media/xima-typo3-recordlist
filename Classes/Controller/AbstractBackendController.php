@@ -31,7 +31,6 @@ use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Fluid\View\StandaloneView;
-use TYPO3\CMS\Workspaces\Domain\Model\CombinedRecord;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
 abstract class AbstractBackendController implements BackendControllerInterface
@@ -120,11 +119,31 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $tableName = $this->getTableName();
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
+
+        // demand: search word
+        $additionalConstraints = [];
+        $body = $request->getParsedBody();
+        if (isset($body['search_field']) && $body['search_field']) {
+            $searchInput = $body['search_field'];
+            $searchFields = $GLOBALS['TCA'][$tableName]['ctrl']['searchFields'] ?? '';
+            $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
+            $searchConstraints = [];
+            foreach ($searchFieldArray as $fieldName) {
+                $searchConstraints[] = $qb->expr()->like(
+                    $fieldName,
+                    $qb->createNamedParameter('%' . $searchInput . '%')
+                );
+            }
+            $additionalConstraints[] = $qb->expr()->orX(...$searchConstraints);
+            $this->view->assign('search_field', $searchInput);
+        }
+
         $records = $qb->select('*')
             ->from($tableName)
             ->where(
                 $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($accessiblePids))
             )
+            ->andWhere(...$additionalConstraints)
             ->orderBy('title', 'ASC')
             ->execute()
             ->fetchAllAssociative();
