@@ -81,6 +81,18 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
             document.querySelectorAll('th a[data-order-field]').forEach(a => {
                 a.addEventListener('click', this.onOrderLinkClick.bind(this));
             });
+            document.querySelectorAll('a[data-nextpage]').forEach(a => {
+                a.addEventListener('click', this.onPaginationLinkClick.bind(this));
+            });
+        }
+        onPaginationLinkClick(e) {
+            var _a, _b;
+            e.preventDefault();
+            const link = e.currentTarget;
+            const nextPage = (_a = link.getAttribute('data-nextpage')) !== null && _a !== void 0 ? _a : '';
+            const paginationInput = document.querySelector('tr + tr input[name="current_page"]');
+            paginationInput.value = nextPage;
+            (_b = paginationInput.closest('form')) === null || _b === void 0 ? void 0 : _b.submit();
         }
         onOrderLinkClick(e) {
             var _a, _b, _c;

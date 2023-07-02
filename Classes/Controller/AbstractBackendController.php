@@ -147,6 +147,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('order_field', $orderField);
         $this->view->assign('order_direction', $orderDirection);
 
+        // fetch records
         $records = $qb->select('*')
             ->from($tableName)
             ->where(
@@ -156,11 +157,17 @@ abstract class AbstractBackendController implements BackendControllerInterface
             ->addOrderBy($orderField, $orderDirection)
             ->execute()
             ->fetchAllAssociative();
-
         $this->view->assign('recordCount', count($records));
 
-        $paginator = new ArrayPaginator($records, 1, 100);
+        // init pager
+        $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
+        $paginator = new ArrayPaginator($records, $currentPage, 100);
         $records = $paginator->getPaginatedItems();
+        $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
+        $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
+        $this->view->assign('current_page', $currentPage);
+        $this->view->assign('next_page', $nextPage);
+        $this->view->assign('prev_page', $prevPage);
 
         foreach ($records as &$record) {
             if (!is_int($record['uid'])) {

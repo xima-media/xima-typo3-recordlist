@@ -29,26 +29,28 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 class UserController extends AbstractBackendController
 {
    public function getTableName(): string
-    {
-        return 'fe_users';
-    }
+   {
+       return 'fe_users';
+   }
 
-    public function getRecordPid(): int
-    {
-        return $this->site->getConfiguration()['userPid'] ?? 0;
-    }
+   public function getRecordPid(): int
+   {
+       return $this->site->getConfiguration()['userPid'] ?? 0;
+   }
 }
 ```
 
 ### 2. Register Backend module
 
 Add a new backend module via
-the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/11.5/en-us/ExtensionArchitecture/HowTo/BackendModule/BackendModulesWithoutExtbase/BackendModuleApiWithoutExtbase.html). You're free to adjust the settings as you like, the only import setting is the `routeTarget`: Make sure you always use the `::mainAction`.
+the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/11.5/en-us/ExtensionArchitecture/HowTo/BackendModule/BackendModulesWithoutExtbase/BackendModuleApiWithoutExtbase.html).
+You're free to adjust the settings as you like, the only import setting is the `routeTarget`: Make sure you always use
+the `::mainAction`.
 
 ```php
 ExtensionManagementUtility::addModule(
     'web',
-    'events',
+    'users',
     '',
     '',
     [
@@ -68,14 +70,15 @@ That's it.
 
 ### Template
 
-To use a custom template, override the `TEMPLATE_NAME` constant in your controller and configure the template paths via TypoScript constants:
+To use a custom template, override the `TEMPLATE_NAME` constant in your controller and configure the template paths via
+TypoScript constants:
 
 ```typo3_typoscript
 module.tx_ximatypo3recordlist {
     view {
-      partialRootPaths =  EXT:your_ext/Resources/Private/Backend/Partials
-      templateRootPath =  EXT:your_ext/Resources/Private/Backend/Templates
-      layoutRootPath =  EXT:your_ext/Resources/Private/Backend/Layouts
+        partialRootPaths = EXT:your_ext/Resources/Private/Backend/Partials
+        templateRootPath = EXT:your_ext/Resources/Private/Backend/Templates
+        layoutRootPath = EXT:your_ext/Resources/Private/Backend/Layouts
     }
 }
 ```

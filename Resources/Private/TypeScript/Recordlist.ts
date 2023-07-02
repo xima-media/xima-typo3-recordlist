@@ -38,6 +38,19 @@ class Recordlist {
     document.querySelectorAll('th a[data-order-field]').forEach(a => {
       a.addEventListener('click', this.onOrderLinkClick.bind(this))
     })
+
+    document.querySelectorAll('a[data-nextpage]').forEach(a => {
+      a.addEventListener('click', this.onPaginationLinkClick.bind(this))
+    })
+  }
+
+  protected onPaginationLinkClick(e: PointerEvent): void {
+    e.preventDefault()
+    const link = e.currentTarget as HTMLAnchorElement
+    const nextPage: string = link.getAttribute('data-nextpage') ?? ''
+    const paginationInput = document.querySelector('tr + tr input[name="current_page"]') as HTMLInputElement
+    paginationInput.value = nextPage
+    paginationInput.closest('form')?.submit()
   }
 
   protected onOrderLinkClick(e: PointerEvent): void {
