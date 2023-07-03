@@ -152,7 +152,8 @@ abstract class AbstractBackendController implements BackendControllerInterface
         }
 
         // demand: order
-        $orderField = $body['order_field'] ?? $GLOBALS['TCA'][$tableName]['ctrl']['label'];
+        $defaultOrderField = $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? $GLOBALS['TCA'][$tableName]['ctrl']['label'];
+        $orderField = $body['order_field'] ?? $defaultOrderField;
         $orderDirection = $body['order_direction'] ?? 'ASC';
         $this->view->assign('order_field', $orderField);
         $this->view->assign('order_direction', $orderDirection);
