@@ -1,0 +1,11 @@
+<f:if condition="{isWorkspaceAdmin}">
+	<f:if condition="{item.t3ver_oid}">
+		<be:link.editRecord uid="{item.t3ver_oid}"
+							table="{table}"
+							returnUrl="{f:be.uri(route: moduleName)}"
+							class="btn btn-default">
+			<core:icon identifier="actions-open" size="small" />
+			Original
+		</be:link.editRecord>
+	</f:if>
+</f:if>

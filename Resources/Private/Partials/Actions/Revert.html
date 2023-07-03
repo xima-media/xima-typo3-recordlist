@@ -1,0 +1,9 @@
+<f:if condition="{item.t3ver_oid} && ({item.t3ver_stage} === 0 || {isWorkspaceAdmin})">
+	<a href="#"
+	   class="btn btn-default"
+	   title="Arbeitskopie verwerfen"
+	   data-bs-toggle="tooltip"
+	   data-workspace-action="remove">
+		<core:icon identifier="actions-delete" size="small" />
+	</a>
+</f:if>

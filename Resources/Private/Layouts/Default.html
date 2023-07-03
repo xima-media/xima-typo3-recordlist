@@ -106,90 +106,20 @@
 					</td>
 					<td>
 						<div class="btn-group">
-							<f:if condition="{item.editable}">
-								<be:link.editRecord uid="{item.uid}"
-													table="{table}"
-													returnUrl="{f:be.uri(route: moduleName)}"
-													class="btn btn-default"
-													title="bearbeiten"
-													data="{bs-toggle: 'tooltip'}">
-									<core:icon identifier="actions-open" size="small" />
-								</be:link.editRecord>
-							</f:if>
-							<f:if condition="{item.t3ver_oid}">
-								<a href="#"
-								   class="btn btn-default"
-								   title="Änderungen anzeigen"
-								   data-bs-toggle="tooltip"
-								   data-action="changes">
-									<core:icon identifier="actions-info" size="small" />
-								</a>
-							</f:if>
-							<f:if condition="{item.t3ver_oid} && ({item.t3ver_stage} === 0 || {isWorkspaceAdmin})">
-								<a href="#"
-								   class="btn btn-default"
-								   title="Arbeitskopie verwerfen"
-								   data-bs-toggle="tooltip"
-								   data-workspace-action="remove">
-									<core:icon identifier="actions-delete" size="small" />
-								</a>
-							</f:if>
-							<f:if condition="{item.url}">
-								<a href="{item.url}"
-								   target="_blank"
-								   class="btn btn-default"
-								   title="Auf Webseite ansehen"
-								   data-bs-toggle="tooltip">
-									<core:icon identifier="actions-view" size="small" />
-								</a>
-							</f:if>
+							<f:render partial="Actions/Edit" arguments="{_all}" />
+							<f:render partial="Actions/Changelog" arguments="{_all}" />
+							<f:render partial="Actions/Revert" arguments="{_all}" />
+							<f:render partial="Actions/View" arguments="{_all}" />
 						</div>
-						<f:if condition="{isWorkspaceAdmin}">
-							<f:if condition="{item.t3ver_oid}">
-								<be:link.editRecord uid="{item.t3ver_oid}"
-													table="{table}"
-													returnUrl="{f:be.uri(route: moduleName)}"
-													class="btn btn-default">
-									<core:icon identifier="actions-open" size="small" />
-									Original
-								</be:link.editRecord>
-							</f:if>
-						</f:if>
-						<f:if condition="{isWorkspaceAdmin} && {item.t3ver_stage} === -10">
-							<f:if condition="{item.t3ver_oid}">
-								<a href="#" data-action="publish" class="btn btn-success">
-									<core:icon identifier="actions-check" size="small" />
-									Freigeben
-								</a>
-							</f:if>
-						</f:if>
-						<f:if condition="!{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
-							<div class="btn-group">
-								<f:comment>
-									<a href="{item.url}"
-									   target="_blank"
-									   class="btn btn-outline-success"
-									   title="Auf Webseite ansehen"
-									   data-bs-toggle="tooltip">
-										<core:icon identifier="actions-view" size="small" />
-									</a>
-								</f:comment>
-								<f:if condition="{item.t3ver_oid}">
-									<a href="#" data-workspace-action="readyToPublish" class="btn btn-success">
-										<core:icon identifier="actions-share" size="small" />
-										Freigabe anfordern
-									</a>
-								</f:if>
-							</div>
-						</f:if>
 
-
+						<f:render partial="Actions/EditOriginal" arguments="{_all}" />
+						<f:render partial="Actions/Publish" arguments="{_all}" />
+						<f:render partial="Actions/ReadyToPublish" arguments="{_all}" />
 					</td>
 				</tr>
 			</f:for>
 			<f:render partial="PaginationRow" arguments="{_all}" />
 			</tbody>
-
 		</table>
 	</main>
 </f:form>
