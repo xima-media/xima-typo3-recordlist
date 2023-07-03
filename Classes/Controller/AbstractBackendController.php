@@ -212,9 +212,20 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $this->modifyRecord($record);
         }
 
+        // Table column configuration
+        $tableConfiguration = $this->getTableConfiguration();
+        foreach ($tableConfiguration['columns'] as &$column) {
+            if (!isset($column['label'])) {
+                $tcaLabel = $GLOBALS['TCA'][$tableName]['columns'][$column['columnName']]['label'] ?? '';
+                $column['label'] = $this->languageService->sL($tcaLabel);
+            }
+        }
+        $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
+
         $this->view->assign('records', $records);
         $this->view->assign('paginator', $paginator);
         $this->view->assign('table', $tableName);
+        $this->view->assign('tableConfiguration', $tableConfiguration);
 
         $content = $this->view->render();
 
@@ -308,5 +319,38 @@ abstract class AbstractBackendController implements BackendControllerInterface
      */
     public function modifyRecord(array &$record): void
     {
+    }
+
+    /**
+     * @return array<string, array<string|int, mixed>>
+     */
+    public function getTableConfiguration(): array
+    {
+        $tableName = $this->getTableName();
+        $defaultColumns = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
+
+        return [
+            'columns' => [
+                0 => [
+                    'columnName' => $defaultColumns,
+                    'partial' => 'Text',
+                ],
+                1 => [
+                    'columnName' => 'workspace-status',
+                    'partial' => 'Workspace',
+                ],
+            ],
+            'groupActions' => [
+                'Edit',
+                'Changelog',
+                'Revert',
+                'View',
+            ],
+            'actions' => [
+                'EditOriginal',
+                'Publish',
+                'ReadyToPublish',
+            ],
+        ];
     }
 }

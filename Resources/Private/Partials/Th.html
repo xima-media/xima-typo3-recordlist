@@ -1,9 +1,9 @@
 <th>
 	<a href="#"
-	   data-order-field="{field}"
-	   data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">{label}
+	   data-order-field="{colConfig.columnName}"
+	   data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">{colConfig.label}
 	</a>
-	<f:if condition="{order_field}==={field}">
+	<f:if condition="{order_field}==={colConfig.columnName}">
 		<core:icon identifier="actions-caret-{f:if(condition:'{order_direction}===\'DESC\'', then: 'down', else:'up')}"
 				   size="small" />
 	</f:if>
