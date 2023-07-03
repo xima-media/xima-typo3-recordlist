@@ -44,6 +44,8 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
     protected Site $site;
 
+    protected ServerRequestInterface $request;
+
     public function __construct(
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
@@ -65,6 +67,8 @@ abstract class AbstractBackendController implements BackendControllerInterface
      */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
+        $this->request = $request;
+
         // Get site
         $site = $request->getAttribute('site');
         if (!$site instanceof Site) {
@@ -112,7 +116,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('moduleName', $moduleName);
         $this->view->assign('storagePids', implode(',', $accessiblePids));
 
-        // workspacce stuff
+        // workspace stuff
         /** @var BackendUserAuthentication $beUser */
         $beUser = $GLOBALS['BE_USER'];
         $isWorkspaceAdmin = $beUser->workspacePublishAccess($this::WORKSPACE_ID);
@@ -139,6 +143,12 @@ abstract class AbstractBackendController implements BackendControllerInterface
             }
             $additionalConstraints[] = $qb->expr()->orX(...$searchConstraints);
             $this->view->assign('search_field', $searchInput);
+        }
+
+        // demand: additional constraints from child class
+        $addedAdditionalConstraints = $this->addAdditionalConstraints();
+        if (count($addedAdditionalConstraints)) {
+            $additionalConstraints[] = $qb->expr()->andX(...$this->addAdditionalConstraints());
         }
 
         // demand: order
@@ -283,6 +293,14 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
         $this->view->setTemplate($templateName);
         $this->view->getRequest()->setControllerExtensionName($controllerName);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function addAdditionalConstraints(): array
+    {
+        return [];
     }
 
     /**

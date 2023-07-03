@@ -96,3 +96,31 @@ class UserController extends AbstractBackendController
     }
 }
 ```
+
+Add new filter options
+
+```php
+class UserController extends AbstractBackendController
+{
+    public function addAdditionalConstraints(): array
+    {
+        $constraints = [];
+        $body = $this->request->getParsedBody();
+        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('fe_users');
+
+        // Set default value + check POST override
+        $registerDate = new DateTime();
+        if (isset($body['register_date']) && $body['register_date']) {
+            $registerDate = new DateTime($body['register_date']);
+        }
+
+        // Add value for form element to template
+        $this->view->assign('register_date', $registerDate);
+
+        // Add default condition
+        $constraints[] = $qb->expr()->gte('register_date', $registerDate->getTimestamp());
+
+        return $constraints;
+    }
+}
+```
