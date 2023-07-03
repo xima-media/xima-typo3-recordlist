@@ -1,18 +1,1 @@
-{namespace be=TYPO3\CMS\Backend\ViewHelpers}
-
 <f:layout name="Default" />
-
-<f:section name="SearchInputs">
-
-	<div class="row mb-5">
-		<div class="col-3">
-			<f:render partial="Filter/DateTime"
-					  arguments="{fieldName: 'start_date', fieldValue: start_date, label: 'Start'}" />
-		</div>
-		<div class="col-3">
-			<f:render partial="Filter/DateTime"
-					  arguments="{fieldName: 'end_date', fieldValue: end_date, label: 'Ende'}" />
-		</div>
-	</div>
-
-</f:section>
