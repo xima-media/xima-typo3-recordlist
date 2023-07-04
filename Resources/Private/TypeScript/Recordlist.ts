@@ -42,6 +42,13 @@ class Recordlist {
     document.querySelectorAll('a[data-nextpage]').forEach(a => {
       a.addEventListener('click', this.onPaginationLinkClick.bind(this))
     })
+
+    document.querySelector('.toggleSearchButton')?.addEventListener('click', e => {
+      e.preventDefault()
+      const button = e.currentTarget as HTMLAnchorElement
+      button.classList.toggle('active')
+      document.querySelector('#searchInputs')?.classList.toggle('hidden')
+    })
   }
 
   protected onPaginationLinkClick(e: PointerEvent): void {

@@ -72,6 +72,7 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
             this.bindEvents();
         }
         bindEvents() {
+            var _a;
             document.querySelectorAll('[data-workspace-action="readyToPublish"]').forEach(btn => {
                 btn.addEventListener('click', this.onReadyToPublishClick.bind(this));
             });
@@ -83,6 +84,13 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
             });
             document.querySelectorAll('a[data-nextpage]').forEach(a => {
                 a.addEventListener('click', this.onPaginationLinkClick.bind(this));
+            });
+            (_a = document.querySelector('.toggleSearchButton')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', e => {
+                var _a;
+                e.preventDefault();
+                const button = e.currentTarget;
+                button.classList.toggle('active');
+                (_a = document.querySelector('#searchInputs')) === null || _a === void 0 ? void 0 : _a.classList.toggle('hidden');
             });
         }
         onPaginationLinkClick(e) {

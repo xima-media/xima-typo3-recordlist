@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -228,6 +229,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('table', $tableName);
         $this->view->assign('tableConfiguration', $tableConfiguration);
 
+        $isPostRequest = $request->getMethod() === 'POST';
+        $this->view->assign('isPostRequest', $isPostRequest);
+
         $content = $this->view->render();
 
         // build module template
@@ -241,6 +245,17 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 ->setTitle('New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']))
                 ->setShowLabelText(true)
                 ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
+        );
+        $searchClass = $isPostRequest ? 'active' : '';
+        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref('#')
+                ->setTitle('Show search form')
+                ->setShowLabelText(false)
+                ->setClasses($searchClass . ' toggleSearchButton')
+                ->setIcon($this->iconFactory->getIcon('actions-search', ICON::SIZE_SMALL)),
+            ButtonBar::BUTTON_POSITION_LEFT,
+            2
         );
         $moduleTemplate->setContent($content);
         return new HtmlResponse($moduleTemplate->renderContent());
