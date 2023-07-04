@@ -159,6 +159,20 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('order_field', $orderField);
         $this->view->assign('order_direction', $orderDirection);
 
+        // demand: offline records (1/2)
+        $onlyOfflineRecords = false;
+        if (isset($body['is_offline']) && $body['is_offline'] === '1') {
+            $this->view->assign('is_offline', 1);
+            $onlyOfflineRecords = true;
+        }
+
+        // demand: readyToPublish (1/2)
+        $onlyReadyToPublish = false;
+        if (isset($body['is_ready_to_publish']) && $body['is_ready_to_publish'] === '1') {
+            $this->view->assign('is_ready_to_publish', 1);
+            $onlyReadyToPublish = true;
+        }
+
         // fetch records
         $records = $qb->select('*')
             ->from($tableName)
@@ -211,8 +225,23 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 }
             }
 
+            // demand: readyToPublish (2/2)
+            if ($onlyReadyToPublish && (!is_array($vRecord) || $record['t3ver_stage'] !== -10)) {
+                $record = null;
+                continue;
+            }
+
+            // demand: offline records (2/2)
+            if ($onlyOfflineRecords && !is_array($vRecord)) {
+                $record = null;
+                continue;
+            }
+
             $this->modifyRecord($record);
         }
+
+        // remove unset records
+        $records = array_filter($records);
 
         // Table column configuration
         $tableConfiguration = $this->getTableConfiguration();
