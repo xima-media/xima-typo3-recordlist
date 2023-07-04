@@ -383,6 +383,8 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 1 => [
                     'columnName' => 'workspace-status',
                     'partial' => 'Workspace',
+                    'label' => 'Status',
+                    'notSortable' => true,
                 ],
             ],
             'groupActions' => [

@@ -1,8 +1,16 @@
 <th>
-	<a href="#"
-	   data-order-field="{colConfig.columnName}"
-	   data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">{colConfig.label}
-	</a>
+	<f:if condition="{colConfig.notSortable}">
+		<f:then>
+			{colConfig.label}
+		</f:then>
+		<f:else>
+			<a href="#"
+			   data-order-field="{colConfig.columnName}"
+			   data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">
+				{colConfig.label}
+			</a>
+		</f:else>
+	</f:if>
 	<f:if condition="{order_field}==={colConfig.columnName}">
 		<core:icon identifier="actions-caret-{f:if(condition:'{order_direction}===\'DESC\'', then: 'down', else:'up')}"
 				   size="small" />
