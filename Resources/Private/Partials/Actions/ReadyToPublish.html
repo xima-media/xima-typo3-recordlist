@@ -1,6 +1,6 @@
 <f:if condition="!{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
 	<div class="btn-group">
-		<f:if condition="{item.t3ver_oid}">
+		<f:if condition="{item.t3ver_oid} || {item.t3ver_state} === 1">
 			<a href="#" data-workspace-action="readyToPublish" class="btn btn-success">
 				<core:icon identifier="actions-share" size="small" />
 				Freigabe anfordern
