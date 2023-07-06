@@ -37,7 +37,7 @@ use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
 abstract class AbstractBackendController implements BackendControllerInterface
 {
-    const WORKSPACE_ID = 1;
+    const WORKSPACE_ID = 0;
 
     const TEMPLATE_NAME = 'Default';
 
@@ -122,6 +122,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $beUser = $GLOBALS['BE_USER'];
         $isWorkspaceAdmin = $beUser->workspacePublishAccess($this::WORKSPACE_ID);
         $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
+        if (!$isWorkspaceAdmin && $this::WORKSPACE_ID) {
+            $beUser->setWorkspace($this::WORKSPACE_ID);
+        }
 
         // Add data to template
         $tableName = $this->getTableName();
