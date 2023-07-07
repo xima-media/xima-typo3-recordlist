@@ -1,10 +1,19 @@
-<f:if condition="!{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
-	<div class="btn-group">
-		<f:if condition="{item.t3ver_oid} || {item.t3ver_state} === 1">
+<f:if condition="{item.t3ver_oid} || {item.t3ver_state} === 1">
+	<f:if condition="!{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
+		<div class="btn-group">
 			<a href="#" data-workspace-action="readyToPublish" class="btn btn-success">
 				<core:icon identifier="actions-share" size="small" />
 				Freigabe anfordern
 			</a>
-		</f:if>
-	</div>
+		</div>
+	</f:if>
+	<f:if condition="{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
+		<div class="btn-group">
+			<a href="#" data-workspace-action="readyToPublish" class="btn btn-warning">
+				<core:icon identifier="actions-share" size="small" />
+				Zur Freigabe
+			</a>
+		</div>
+	</f:if>
 </f:if>
+

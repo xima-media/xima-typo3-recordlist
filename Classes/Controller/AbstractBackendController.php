@@ -93,38 +93,37 @@ abstract class AbstractBackendController implements BackendControllerInterface
             return new RedirectResponse($url);
         }
 
-        // load workspace related stuff @TODO: find what can be removed
+        /** @var BackendUserAuthentication $backendUser */
         $backendUser = $GLOBALS['BE_USER'];
-        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
-        $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
-        $this->pageRenderer->addInlineSetting(
-            'FormEngine',
-            'moduleUrl',
-            (string)$this->uriBuilder->buildUriFromRoute('record_edit')
-        );
-        $this->pageRenderer->addInlineSetting(
-            'RecordHistory',
-            'moduleUrl',
-            (string)$this->uriBuilder->buildUriFromRoute('record_history')
-        );
-        $this->pageRenderer->addInlineSetting('Workspaces', 'id', $currentPid);
-        $this->pageRenderer->addInlineSetting('WebLayout', 'moduleUrl', (string)$this->uriBuilder->buildUriFromRoute(
-            trim($backendUser->getTSConfig()['options.']['overridePageModule'] ?? 'web_layout')
-        ));
+        $isWorkspaceAdmin = false;
+        // load workspace related stuff @TODO: find what can be removed
+        if ($this::WORKSPACE_ID) {
+            $isWorkspaceAdmin = $backendUser->workspacePublishAccess($this::WORKSPACE_ID);
+            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
+            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
+            $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
+            $this->pageRenderer->addInlineSetting(
+                'FormEngine',
+                'moduleUrl',
+                (string)$this->uriBuilder->buildUriFromRoute('record_edit')
+            );
+            $this->pageRenderer->addInlineSetting(
+                'RecordHistory',
+                'moduleUrl',
+                (string)$this->uriBuilder->buildUriFromRoute('record_history')
+            );
+            $this->pageRenderer->addInlineSetting('Workspaces', 'id', $currentPid);
+            $this->pageRenderer->addInlineSetting('WebLayout', 'moduleUrl',
+                (string)$this->uriBuilder->buildUriFromRoute(
+                    trim($backendUser->getTSConfig()['options.']['overridePageModule'] ?? 'web_layout')
+                ));
+        }
 
         // build view
         $this->initializeView();
         $this->view->assign('moduleName', $moduleName);
         $this->view->assign('storagePids', implode(',', $accessiblePids));
-
-        // workspace stuff
-        /** @var BackendUserAuthentication $beUser */
-        $beUser = $GLOBALS['BE_USER'];
-        $isWorkspaceAdmin = $beUser->workspacePublishAccess($this::WORKSPACE_ID);
         $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
-        if (!$isWorkspaceAdmin && $this::WORKSPACE_ID) {
-            $beUser->setWorkspace($this::WORKSPACE_ID);
-        }
 
         // Add data to template
         $tableName = $this->getTableName();

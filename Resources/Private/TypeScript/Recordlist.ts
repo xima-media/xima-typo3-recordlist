@@ -19,6 +19,7 @@ import Utility from '@typo3/backend/utility'
 // @ts-expect-error
 import NProgress from 'nprogress'
 
+
 class Recordlist {
   protected currentModal: any
 
@@ -26,7 +27,7 @@ class Recordlist {
     this.bindEvents()
   }
 
-  protected bindEvents() {
+  protected bindEvents(): void {
     document.querySelectorAll('[data-workspace-action="readyToPublish"]').forEach(btn => {
       btn.addEventListener('click', this.onReadyToPublishClick.bind(this))
     })
