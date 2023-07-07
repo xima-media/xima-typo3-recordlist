@@ -113,10 +113,13 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 (string)$this->uriBuilder->buildUriFromRoute('record_history')
             );
             $this->pageRenderer->addInlineSetting('Workspaces', 'id', $currentPid);
-            $this->pageRenderer->addInlineSetting('WebLayout', 'moduleUrl',
+            $this->pageRenderer->addInlineSetting(
+                'WebLayout',
+                'moduleUrl',
                 (string)$this->uriBuilder->buildUriFromRoute(
                     trim($backendUser->getTSConfig()['options.']['overridePageModule'] ?? 'web_layout')
-                ));
+                )
+            );
         }
 
         // build view
