@@ -13,7 +13,6 @@
 </div>
 
 <f:form>
-
 	<div id="searchInputs" class="mb-5 {f:if(condition:isPostRequest, else:'hidden')}">
 
 		<f:form.hidden name="order_field" value="{order_field}" />
@@ -59,12 +58,13 @@
 					data-pid="{item.pid}"
 					data-t3ver_oid="{item.t3ver_oid}"
 					data-t3ver_wsid="1"
+					data-l18n_parent="{item.l18n_parent}"
 					data-stage="{item.t3ver_stage}"
 					data-table="{table}"
 					data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
 
 					<f:for each="{tableConfiguration.columns}" as="colConfig">
-						<td>
+						<td data-language-indent="{colConfig.languageIndent}">
 							<f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
 						</td>
 					</f:for>
@@ -92,3 +92,7 @@
 		</table>
 	</main>
 </f:form>
+
+<style>
+	.table > tbody > tr:not([data-l18n_parent="0"]) td[data-language-indent="1"] > *:first-child {margin-left: 18px;}
+</style>

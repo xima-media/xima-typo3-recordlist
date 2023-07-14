@@ -421,6 +421,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 0 => [
                     'columnName' => $defaultColumns,
                     'partial' => 'Text',
+                    'languageIndent' => true,
                 ],
                 1 => [
                     'columnName' => 'workspace-status',
