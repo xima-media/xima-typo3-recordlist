@@ -36,63 +36,67 @@
 
 	</div>
 
-	<main class="recordlist"
-		  data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}"
-		  id="workspace-content-wrapper">
+	<f:if condition="{records->f:count()}">
+		<main class="recordlist"
+			  data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}"
+			  id="workspace-content-wrapper">
 
-		<table class="table table-striped table-hover mb-0">
-			<thead>
-			<tr>
-				<f:for each="{tableConfiguration.columns}" as="colConfig">
-					<f:render partial="Th" arguments="{_all}" />
-				</f:for>
-				<f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
-					<th>Actions</th>
-				</f:if>
-			</tr>
-			</thead>
-			<tbody>
-			<f:render partial="PaginationRow" arguments="{_all}" />
-			<f:for each="{records}" as="item">
-				<tr data-uid="{item.uid}"
-					data-pid="{item.pid}"
-					data-t3ver_oid="{item.t3ver_oid}"
-					data-t3ver_wsid="1"
-					data-l18n_parent="{item.l18n_parent}"
-					data-stage="{item.t3ver_stage}"
-					data-table="{table}"
-					data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
-
+			<table class="table table-striped table-hover mb-0">
+				<thead>
+				<tr>
 					<f:for each="{tableConfiguration.columns}" as="colConfig">
-						<td data-language-indent="{colConfig.languageIndent}">
-							<f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
-						</td>
+						<f:render partial="Th" arguments="{_all}" />
 					</f:for>
-
 					<f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
-						<td>
-							<f:if condition="{tableConfiguration.groupActions}">
-								<div class="btn-group">
-									<f:for each="{tableConfiguration.groupActions}" as="actionName">
-										<f:render partial="Actions/{actionName}" arguments="{_all}" />
-									</f:for>
-								</div>
-							</f:if>
-							<f:if condition="{tableConfiguration.actions}">
-								<f:for each="{tableConfiguration.actions}" as="actionName">
-									<f:render partial="Actions/{actionName}" arguments="{_all}" />
-								</f:for>
-							</f:if>
-						</td>
+						<th>Actions</th>
 					</f:if>
 				</tr>
-			</f:for>
-			<f:render partial="PaginationRow" arguments="{_all}" />
-			</tbody>
-		</table>
-	</main>
+				</thead>
+				<tbody>
+				<f:render partial="PaginationRow" arguments="{_all}" />
+				<f:for each="{records}" as="item">
+					<tr data-uid="{item.uid}"
+						data-pid="{item.pid}"
+						data-t3ver_oid="{item.t3ver_oid}"
+						data-t3ver_wsid="1"
+						data-l18n_parent="{item.l18n_parent}"
+						data-stage="{item.t3ver_stage}"
+						data-table="{table}"
+						data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
+
+						<f:for each="{tableConfiguration.columns}" as="colConfig">
+							<td data-language-indent="{colConfig.languageIndent}">
+								<f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
+							</td>
+						</f:for>
+
+						<f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
+							<td>
+								<f:if condition="{tableConfiguration.groupActions}">
+									<div class="btn-group">
+										<f:for each="{tableConfiguration.groupActions}" as="actionName">
+											<f:render partial="Actions/{actionName}" arguments="{_all}" />
+										</f:for>
+									</div>
+								</f:if>
+								<f:if condition="{tableConfiguration.actions}">
+									<f:for each="{tableConfiguration.actions}" as="actionName">
+										<f:render partial="Actions/{actionName}" arguments="{_all}" />
+									</f:for>
+								</f:if>
+							</td>
+						</f:if>
+					</tr>
+				</f:for>
+				<f:render partial="PaginationRow" arguments="{_all}" />
+				</tbody>
+			</table>
+		</main>
+	</f:if>
 </f:form>
 
 <style>
-	.table > tbody > tr:not([data-l18n_parent="0"]) td[data-language-indent="1"] > *:first-child {margin-left: 18px;}
+	.table > tbody > tr:not([data-l18n_parent="0"]) td[data-language-indent="1"] > *:first-child {
+		margin-left: 18px;
+	}
 </style>

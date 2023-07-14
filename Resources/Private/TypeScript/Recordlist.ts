@@ -53,19 +53,12 @@ class Recordlist {
       this.updateUserSettings('isSearchButtonActive', isActive)
       document.querySelector('#searchInputs')?.classList.toggle('hidden')
     })
-
-    document.querySelector('select[name="languageSelector"]')?.addEventListener('change', e => {
-    })
   }
 
   protected updateUserSettings(settingName: string, settingValue: string): void {
     const payload = new FormData()
     payload.append(TYPO3.settings.XimaTypo3Recordlist.moduleName + '[' + settingName + ']', settingValue)
-    new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_usersetting)
-      .post('', {body: payload})
-      .then(async function (response) {
-      const resolved = await response.resolve()
-    })
+    new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_usersetting).post('', { body: payload })
   }
 
   protected onPaginationLinkClick(e: PointerEvent): void {
