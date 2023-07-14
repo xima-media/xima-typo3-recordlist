@@ -90,6 +90,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             return new HtmlResponse('No accessible child pages found.', 403);
         }
         $moduleName = $request->getAttribute('route')?->getOption('moduleName') ?? '';
+        $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $moduleName);
         $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
         if (!in_array($currentPid, $accessiblePids)) {
             return new RedirectResponse($url);
@@ -137,6 +138,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $languages[-1]['uid'] = 'all';
         }
         $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
+        $this->view->assign('settings', $moduleData['settings'] ?? []);
         $activeLanguage = (string)($moduleData['settings']['language'] ?? 'all');
         foreach ($languages as &$language) {
             // needs to be strict type checking as this is not possible in fluid
@@ -284,9 +286,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('table', $tableName);
         $this->view->assign('tableConfiguration', $tableConfiguration);
 
-        $isPostRequest = $request->getMethod() === 'POST';
-        $this->view->assign('isPostRequest', $isPostRequest);
-
         $content = $this->view->render();
 
         // build module template
@@ -301,7 +300,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 ->setShowLabelText(true)
                 ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
         );
-        $searchClass = $isPostRequest ? 'active' : '';
+        // search button
+        $isSearchButtonActive = (string)($moduleData['settings']['isSearchButtonActive'] ?? '');
+        $searchClass = $isSearchButtonActive ? 'active' : '';
         $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')

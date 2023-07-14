@@ -1,0 +1,11 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Xima\XimaTypo3Recordlist\:
+    resource: '../Classes/*'
+
+  Xima\XimaTypo3Recordlist\Controller\AjaxController:
+    public: true

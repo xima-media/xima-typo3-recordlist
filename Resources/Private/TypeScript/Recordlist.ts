@@ -19,11 +19,13 @@ import Utility from '@typo3/backend/utility'
 // @ts-expect-error
 import NProgress from 'nprogress'
 
-
 class Recordlist {
   protected currentModal: any
 
+  protected moduleName: string
+
   constructor() {
+    console.log(TYPO3.settings);
     this.bindEvents()
   }
 
@@ -48,7 +50,20 @@ class Recordlist {
       e.preventDefault()
       const button = e.currentTarget as HTMLAnchorElement
       button.classList.toggle('active')
+      const isActive = button.classList.contains('active') ? '1' : '0'
+      this.updateUserSettings('isSearchButtonActive', isActive)
       document.querySelector('#searchInputs')?.classList.toggle('hidden')
+    })
+  }
+
+  protected updateUserSettings(settingName: string, settingValue: string): void {
+    const payload = new FormData()
+    payload.append(TYPO3.settings.XimaTypo3Recordlist.moduleName + '[' + settingName + ']', settingValue)
+    new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_usersetting)
+      .post('', {body: payload})
+      .then(async function (response) {
+      const resolved = await response.resolve()
+      console.log(resolved.result)
     })
   }
 

@@ -69,6 +69,7 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
                     }
                 });
             };
+            console.log(TYPO3.settings);
             this.bindEvents();
         }
         bindEvents() {
@@ -90,7 +91,21 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
                 e.preventDefault();
                 const button = e.currentTarget;
                 button.classList.toggle('active');
+                const isActive = button.classList.contains('active') ? '1' : '0';
+                this.updateUserSettings('isSearchButtonActive', isActive);
                 (_a = document.querySelector('#searchInputs')) === null || _a === void 0 ? void 0 : _a.classList.toggle('hidden');
+            });
+        }
+        updateUserSettings(settingName, settingValue) {
+            const payload = new FormData();
+            payload.append(TYPO3.settings.XimaTypo3Recordlist.moduleName + '[' + settingName + ']', settingValue);
+            new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_usersetting)
+                .post('', { body: payload })
+                .then(function (response) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    const resolved = yield response.resolve();
+                    console.log(resolved.result);
+                });
             });
         }
         onPaginationLinkClick(e) {

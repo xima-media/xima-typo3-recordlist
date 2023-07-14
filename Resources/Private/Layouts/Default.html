@@ -13,7 +13,7 @@
 </div>
 
 <f:form>
-	<div id="searchInputs" class="mb-5 {f:if(condition:isPostRequest, else:'hidden')}">
+	<div id="searchInputs" class="mb-5 {f:if(condition:settings.isSearchButtonActive, else:'hidden')}">
 
 		<f:form.hidden name="order_field" value="{order_field}" />
 		<f:form.hidden name="order_direction" value="{order_direction}" />
