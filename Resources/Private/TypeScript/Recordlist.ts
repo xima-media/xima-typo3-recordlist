@@ -82,7 +82,7 @@ class Recordlist {
     fieldInput.closest('form')?.submit()
   }
 
-  private readonly confirmDeleteRecordFromWorkspace = (e): void => {
+  private readonly confirmDeleteRecordFromWorkspace = (e: { target: any }): void => {
     const $tr = $(e.target).closest('tr')
     const $modal = Modal.confirm(TYPO3.lang['window.discard.title'], TYPO3.lang['window.discard.message'], SeverityEnum.warning, [
       {
@@ -100,7 +100,7 @@ class Recordlist {
         name: 'ok'
       }
     ])
-    $modal.on('button.clicked', (modalEvent): void => {
+    $modal.on('button.clicked', (modalEvent: { target: HTMLAnchorElement }): void => {
       if ((modalEvent.target as HTMLAnchorElement).name === 'ok') {
         const payload = {
           action: 'Actions',
@@ -116,8 +116,8 @@ class Recordlist {
               'Content-Type': 'application/json; charset=utf-8'
             }
           })
-          .then(async response => {
-            top.TYPO3.Backend.ContentContainer.refresh()
+          .then(async (response: Response) => {
+            top?.TYPO3.Backend.ContentContainer.refresh()
           })
         $modal.modal('hide')
       }
@@ -126,7 +126,13 @@ class Recordlist {
 
   protected onReadyToPublishClick(e: PointerEvent) {
     e.preventDefault()
-    const tr = e.currentTarget.closest('tr')
+    const eventTarget: HTMLElement = e.currentTarget as HTMLElement
+    const tr = eventTarget.closest('tr')
+
+    if(!tr) {
+      return
+    }
+
     const affectedRecord = {
       table: tr.getAttribute('data-table'),
       uid: tr.getAttribute('data-uid'),
@@ -147,12 +153,12 @@ class Recordlist {
           'Content-Type': 'application/json; charset=utf-8'
         }
       })
-      .then(async response => {
+      .then(async (response: { resolve: () => any[] | PromiseLike<any[]> }) => {
         this.renderSendToStageWindow(await response.resolve(), affectedRecord)
       })
   }
 
-  protected renderSendToStageWindow(response, affectedRecord) {
+  protected renderSendToStageWindow(response: Array<any>, affectedRecord: Object) {
     const result = response[0].result
     const $form = $('<form />')
 
@@ -257,10 +263,10 @@ class Recordlist {
                 'Content-Type': 'application/json; charset=utf-8'
               }
             })
-            .then(async response => {
+            .then(async (response: any) => {
               Notification.success('Anfrage erfolgreich', 'Die Anfrage zur Freigabe wurde erfolgreich übermittelt')
               Modal.currentModal.trigger('modal-dismiss')
-              top.TYPO3.Backend.ContentContainer.refresh()
+              top?.TYPO3.Backend.ContentContainer.refresh()
             })
         }
       }

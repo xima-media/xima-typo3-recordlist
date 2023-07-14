@@ -63,7 +63,7 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
                             }
                         })
                             .then((response) => __awaiter(this, void 0, void 0, function* () {
-                            top.TYPO3.Backend.ContentContainer.refresh();
+                            top === null || top === void 0 ? void 0 : top.TYPO3.Backend.ContentContainer.refresh();
                         }));
                         $modal.modal('hide');
                     }
@@ -123,7 +123,11 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
         }
         onReadyToPublishClick(e) {
             e.preventDefault();
-            const tr = e.currentTarget.closest('tr');
+            const eventTarget = e.currentTarget;
+            const tr = eventTarget.closest('tr');
+            if (!tr) {
+                return;
+            }
             const affectedRecord = {
                 table: tr.getAttribute('data-table'),
                 uid: tr.getAttribute('data-uid'),
@@ -221,7 +225,7 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
                             .then((response) => __awaiter(this, void 0, void 0, function* () {
                             Notification.success('Anfrage erfolgreich', 'Die Anfrage zur Freigabe wurde erfolgreich übermittelt');
                             Modal.currentModal.trigger('modal-dismiss');
-                            top.TYPO3.Backend.ContentContainer.refresh();
+                            top === null || top === void 0 ? void 0 : top.TYPO3.Backend.ContentContainer.refresh();
                         }));
                     }
                 }
