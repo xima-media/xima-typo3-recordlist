@@ -25,7 +25,6 @@ class Recordlist {
   protected moduleName: string
 
   constructor() {
-    console.log(TYPO3.settings);
     this.bindEvents()
   }
 
@@ -54,6 +53,9 @@ class Recordlist {
       this.updateUserSettings('isSearchButtonActive', isActive)
       document.querySelector('#searchInputs')?.classList.toggle('hidden')
     })
+
+    document.querySelector('select[name="languageSelector"]')?.addEventListener('change', e => {
+    })
   }
 
   protected updateUserSettings(settingName: string, settingValue: string): void {
@@ -63,7 +65,6 @@ class Recordlist {
       .post('', {body: payload})
       .then(async function (response) {
       const resolved = await response.resolve()
-      console.log(resolved.result)
     })
   }
 

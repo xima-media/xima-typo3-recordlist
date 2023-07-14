@@ -69,11 +69,10 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
                     }
                 });
             };
-            console.log(TYPO3.settings);
             this.bindEvents();
         }
         bindEvents() {
-            var _a;
+            var _a, _b;
             document.querySelectorAll('[data-workspace-action="readyToPublish"]').forEach(btn => {
                 btn.addEventListener('click', this.onReadyToPublishClick.bind(this));
             });
@@ -95,6 +94,8 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
                 this.updateUserSettings('isSearchButtonActive', isActive);
                 (_a = document.querySelector('#searchInputs')) === null || _a === void 0 ? void 0 : _a.classList.toggle('hidden');
             });
+            (_b = document.querySelector('select[name="languageSelector"]')) === null || _b === void 0 ? void 0 : _b.addEventListener('change', e => {
+            });
         }
         updateUserSettings(settingName, settingValue) {
             const payload = new FormData();
@@ -103,8 +104,7 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TY
                 .post('', { body: payload })
                 .then(function (response) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    const resolved = yield response.resolve();
-                    console.log(resolved.result);
+                    yield response.resolve();
                 });
             });
         }

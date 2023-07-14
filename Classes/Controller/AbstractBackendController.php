@@ -89,8 +89,12 @@ abstract class AbstractBackendController implements BackendControllerInterface
         if (!count($accessiblePids)) {
             return new HtmlResponse('No accessible child pages found.', 403);
         }
+
+        // module: get name + settings
         $moduleName = $request->getAttribute('route')?->getOption('moduleName') ?? '';
+        $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $moduleName);
+
         $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
         if (!in_array($currentPid, $accessiblePids)) {
             return new RedirectResponse($url);
@@ -131,15 +135,25 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('storagePids', implode(',', $accessiblePids));
         $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
 
-        // language
+        // language: get available
         $languages = GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($currentPid);
         $this->view->assign('languages', $languages);
         if (isset($languages[-1])) {
             $languages[-1]['uid'] = 'all';
         }
-        $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
+        // language: override from request
+        $requestedLanguage = GeneralUtility::_GET('language');
+        if (isset($requestedLanguage) && is_string($requestedLanguage) && in_array(
+            (int)$requestedLanguage,
+            array_keys($languages)
+        )) {
+            $moduleData['settings'] ??= [];
+            $moduleData['settings']['language'] = (int)$requestedLanguage;
+            $backendUser->pushModuleData($moduleName, $moduleData);
+        }
+
         $this->view->assign('settings', $moduleData['settings'] ?? []);
-        $activeLanguage = (string)($moduleData['settings']['language'] ?? 'all');
+        $activeLanguage = $moduleData['settings']['language'] ?? -1;
         foreach ($languages as &$language) {
             // needs to be strict type checking as this is not possible in fluid
             if ((string)$language['uid'] === $activeLanguage) {
@@ -200,6 +214,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // display hidden records
         $qb->getRestrictions()->removeByType(HiddenRestriction::class);
+
+        // demand: language
+        if ($activeLanguage !== -1) {
+            $additionalConstraints[] = $qb->expr()->eq('sys_language_uid', $activeLanguage);
+        }
 
         // fetch records
         $records = $qb->select('*')
@@ -318,12 +337,15 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $languageMenu->setIdentifier('languageSelector');
         $languageMenu->setLabel('');
         unset($language);
-        foreach ($languages as $language) {
+        foreach ($languages as $languageKey => $language) {
             $menuItem = $languageMenu
                 ->makeMenuItem()
                 ->setTitle($language['title'])
-                ->setHref('#');
-            if ($activeLanguage === $language['uid']) {
+                ->setHref((string)$this->uriBuilder->buildUriFromRoute(
+                    $moduleName,
+                    ['id' => $currentPid, 'language' => $languageKey]
+                ));
+            if ($activeLanguage === $languageKey) {
                 $menuItem->setActive(true);
             }
             $languageMenu->addMenuItem($menuItem);
