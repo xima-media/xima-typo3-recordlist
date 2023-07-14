@@ -8,6 +8,7 @@ use Doctrine\DBAL\Result;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
@@ -15,6 +16,7 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\HtmlResponse;
@@ -128,6 +130,21 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('storagePids', implode(',', $accessiblePids));
         $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
 
+        // language
+        $languages = GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($currentPid);
+        $this->view->assign('languages', $languages);
+        if (isset($languages[-1])) {
+            $languages[-1]['uid'] = 'all';
+        }
+        $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
+        $activeLanguage = (string)($moduleData['settings']['language'] ?? 'all');
+        foreach ($languages as &$language) {
+            // needs to be strict type checking as this is not possible in fluid
+            if ((string)$language['uid'] === $activeLanguage) {
+                $language['active'] = true;
+            }
+        }
+
         // Add data to template
         $tableName = $this->getTableName();
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
@@ -178,6 +195,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $this->view->assign('is_ready_to_publish', 1);
             $onlyReadyToPublish = true;
         }
+
+        // display hidden records
+        $qb->getRestrictions()->removeByType(HiddenRestriction::class);
 
         // fetch records
         $records = $qb->select('*')
@@ -292,6 +312,22 @@ abstract class AbstractBackendController implements BackendControllerInterface
             ButtonBar::BUTTON_POSITION_LEFT,
             2
         );
+
+        $languageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+        $languageMenu->setIdentifier('languageSelector');
+        $languageMenu->setLabel('');
+        unset($language);
+        foreach ($languages as $language) {
+            $menuItem = $languageMenu
+                ->makeMenuItem()
+                ->setTitle($language['title'])
+                ->setHref('#');
+            if ($activeLanguage === $language['uid']) {
+                $menuItem->setActive(true);
+            }
+            $languageMenu->addMenuItem($menuItem);
+        }
+        $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
         $moduleTemplate->setContent($content);
         return new HtmlResponse($moduleTemplate->renderContent());
     }
@@ -390,6 +426,12 @@ abstract class AbstractBackendController implements BackendControllerInterface
                     'columnName' => 'workspace-status',
                     'partial' => 'Workspace',
                     'label' => 'Status',
+                    'notSortable' => true,
+                ],
+                2 => [
+                    'columnName' => 'Language',
+                    'partial' => 'Language',
+                    'label' => 'Sprache',
                     'notSortable' => true,
                 ],
             ],
