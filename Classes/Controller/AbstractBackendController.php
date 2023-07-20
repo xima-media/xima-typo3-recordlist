@@ -256,8 +256,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 $record['editable'] = true;
                 $record['state'] = 'modified';
 
-                $record['statusClass'] = 'warning';
-                $record['statusText'] = 'Arbeitskopie';
+                $workspaceStatus = [];
+                $workspaceStatus['level'] = 'warning';
+                $workspaceStatus['text'] = 'Arbeitskopie';
 
                 // newly created record
                 if ($record['t3ver_oid'] === 0) {
@@ -266,10 +267,13 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
                 // stage "Ready to publish"
                 if ($record['t3ver_stage'] === -10) {
-                    $record['statusClass'] = 'success';
-                    $record['statusText'] = 'Wartet auf Veröffentlichung';
+                    $workspaceStatus['level'] = 'success';
+                    $workspaceStatus['text'] = 'Wartet auf Veröffentlichung';
                     $record['editable'] = $isWorkspaceAdmin;
                 }
+
+                $record['status'] ??= [];
+                $record['status'][] = $workspaceStatus;
             }
 
             // demand: readyToPublish (2/2)

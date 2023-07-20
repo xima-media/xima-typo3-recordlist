@@ -1,3 +1,3 @@
-<f:if condition="{item.statusClass}">
-	<span class="badge badge-{item.statusClass}">{item.statusText}</span>
-</f:if>
+<f:for each="{item.status}" as="status">
+	<span class="badge badge-{status.level}">{status.text}</span>
+</f:for>
