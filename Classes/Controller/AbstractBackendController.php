@@ -233,17 +233,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
             ->addOrderBy($orderField, $orderDirection)
             ->execute()
             ->fetchAllAssociative();
-        $this->view->assign('recordCount', count($records));
-
-        // init pager
-        $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
-        $paginator = new ArrayPaginator($records, $currentPage, 100);
-        $records = $paginator->getPaginatedItems();
-        $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
-        $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
-        $this->view->assign('current_page', $currentPage);
-        $this->view->assign('next_page', $nextPage);
-        $this->view->assign('prev_page', $prevPage);
 
         foreach ($records as &$record) {
             if (!is_int($record['uid'])) {
@@ -296,6 +285,17 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // remove unset records
         $records = array_filter($records);
+        $this->view->assign('recordCount', count($records));
+
+        // init pager
+        $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
+        $paginator = new ArrayPaginator($records, $currentPage, 100);
+        $records = $paginator->getPaginatedItems();
+        $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
+        $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
+        $this->view->assign('current_page', $currentPage);
+        $this->view->assign('next_page', $nextPage);
+        $this->view->assign('prev_page', $prevPage);
 
         // Table column configuration
         $tableConfiguration = $this->getTableConfiguration();
