@@ -135,6 +135,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('moduleName', $moduleName);
         $this->view->assign('storagePids', implode(',', $accessiblePids));
         $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
+        $this->view->assign('currentPid', $currentPid);
 
         // language: get available
         $languages = GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($currentPid);
