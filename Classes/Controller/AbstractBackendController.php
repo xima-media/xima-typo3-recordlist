@@ -85,7 +85,8 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // check access + redirect
         $currentPid = (int)($request->getQueryParams()['id'] ?? $request->getParsedBody()['id'] ?? 0);
-        $accessiblePids = $this->getAccessibleChildPageUids($this->getRecordPid());
+        $accessiblePages = $this->getAccessibleChildPages($this->getRecordPid());
+        $accessiblePids = array_column($accessiblePages, 'uid');
         if (!count($accessiblePids)) {
             return new HtmlResponse('No accessible child pages found.', 403);
         }
@@ -221,10 +222,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
         }
 
         // fetch records
+        $requestedPids = $currentPid === $accessiblePids[0] ? $accessiblePids : [$currentPid];
         $records = $qb->select('*')
             ->from($tableName)
             ->where(
-                $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($accessiblePids))
+                $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
             )
             ->andWhere(...$additionalConstraints)
             ->addOrderBy($orderField, $orderDirection)
@@ -337,6 +339,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             2
         );
 
+        // language menu
         $languageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
         $languageMenu->setIdentifier('languageSelector');
         $languageMenu->setLabel('');
@@ -355,19 +358,38 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $languageMenu->addMenuItem($menuItem);
         }
         $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
+
+        // page selection menu
+        $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+        $pageMenu->setIdentifier('pageSelector');
+        $pageMenu->setLabel('');
+        foreach ($accessiblePages as $page) {
+            $menuItem = $pageMenu
+                ->makeMenuItem()
+                ->setTitle($page['title'])
+                ->setHref((string)$this->uriBuilder->buildUriFromRoute(
+                    $moduleName,
+                    ['id' => $page['uid'], 'language' => $requestedLanguage ?? 0]
+                ));
+            if ($currentPid === $page['uid']) {
+                $menuItem->setActive(true);
+            }
+            $pageMenu->addMenuItem($menuItem);
+        }
+        $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
+
         $moduleTemplate->setContent($content);
         return new HtmlResponse($moduleTemplate->renderContent());
     }
 
     /**
-     * @return int[]
      * @throws DBALException
      * @throws Exception
      */
-    protected function getAccessibleChildPageUids(int $pageUid): array
+    protected function getAccessibleChildPages(int $pageUid): array
     {
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
-        $result = $qb->select('uid')
+        $result = $qb->select('uid', 'title')
             ->from('pages')
             ->where(
                 $qb->expr()->orX(
@@ -383,7 +405,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         $pages = $result->fetchAllAssociative();
 
-        $pageUids = [];
+        $accessiblePages = [];
         foreach ($pages as $page) {
             if (!is_int($page['uid'])) {
                 continue;
@@ -398,9 +420,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 continue;
             }
 
-            $pageUids[] = $page['uid'];
+            $accessiblePages[] = $page;
         }
-        return $pageUids;
+        return $accessiblePages;
     }
 
     protected function initializeView(): void
