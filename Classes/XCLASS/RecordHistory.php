@@ -14,8 +14,10 @@ class RecordHistory extends \TYPO3\CMS\Backend\History\RecordHistory
 {
     public function findEventsForRecord(string $table, int $uid, int $limit = 0, int $minimumUid = null): array
     {
-        $tablesForFullHistoryConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('xima_typo3_recordlist',
-            'tables_for_full_history') ?? '';
+        $tablesForFullHistoryConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get(
+            'xima_typo3_recordlist',
+            'tables_for_full_history'
+        ) ?? '';
         $tablesForFullHistory = GeneralUtility::trimExplode(',', $tablesForFullHistoryConf, true);
 
         if (!in_array($table, $tablesForFullHistory)) {
@@ -27,8 +29,10 @@ class RecordHistory extends \TYPO3\CMS\Backend\History\RecordHistory
             ->select('*')
             ->from('sys_history')
             ->where(
-                $queryBuilder->expr()->eq('tablename',
-                    $queryBuilder->createNamedParameter($table, Connection::PARAM_STR)),
+                $queryBuilder->expr()->eq(
+                    'tablename',
+                    $queryBuilder->createNamedParameter($table, Connection::PARAM_STR)
+                ),
                 $queryBuilder->expr()->eq('recuid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT))
             );
         if ($limit) {
@@ -36,8 +40,10 @@ class RecordHistory extends \TYPO3\CMS\Backend\History\RecordHistory
         }
 
         if ($minimumUid) {
-            $queryBuilder->andWhere($queryBuilder->expr()->gte('uid',
-                $queryBuilder->createNamedParameter($minimumUid, Connection::PARAM_INT)));
+            $queryBuilder->andWhere($queryBuilder->expr()->gte(
+                'uid',
+                $queryBuilder->createNamedParameter($minimumUid, Connection::PARAM_INT)
+            ));
         }
 
         return $this->prepareEventDataFromQueryBuilder($queryBuilder);
@@ -45,8 +51,10 @@ class RecordHistory extends \TYPO3\CMS\Backend\History\RecordHistory
 
     protected function resolveElement(string $table, int $uid): int
     {
-        $tablesForFullHistoryConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('xima_typo3_recordlist',
-            'tables_for_full_history') ?? '';
+        $tablesForFullHistoryConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get(
+            'xima_typo3_recordlist',
+            'tables_for_full_history'
+        ) ?? '';
         $tablesForFullHistory = GeneralUtility::trimExplode(',', $tablesForFullHistoryConf, true);
 
         if (in_array($table, $tablesForFullHistory) && isset($GLOBALS['TCA'][$table])
@@ -75,7 +83,7 @@ class RecordHistory extends \TYPO3\CMS\Backend\History\RecordHistory
                             $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
                         ),
                         $queryBuilder->expr()->orX(
-                        // t3ver_state=1 does not contain a t3ver_oid, and returns itself
+                            // t3ver_state=1 does not contain a t3ver_oid, and returns itself
                             $queryBuilder->expr()->andX(
                                 $queryBuilder->expr()->eq(
                                     'uid',
@@ -83,8 +91,10 @@ class RecordHistory extends \TYPO3\CMS\Backend\History\RecordHistory
                                 ),
                                 $queryBuilder->expr()->eq(
                                     't3ver_state',
-                                    $queryBuilder->createNamedParameter(VersionState::NEW_PLACEHOLDER,
-                                        Connection::PARAM_INT)
+                                    $queryBuilder->createNamedParameter(
+                                        VersionState::NEW_PLACEHOLDER,
+                                        Connection::PARAM_INT
+                                    )
                                 )
                             ),
                             $queryBuilder->expr()->eq(
