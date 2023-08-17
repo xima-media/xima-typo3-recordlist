@@ -39,6 +39,7 @@ class Recordlist {
 
   protected onNewRecordInPageClick(e: PointerEvent): void {
     e.preventDefault()
+    const btn = e.currentTarget as HTMLAnchorElement
     // construct select element
     const selection = document.createElement('select')
     selection.id = 'page-for-new-record'
@@ -51,12 +52,12 @@ class Recordlist {
     })
     // display modal
     Modal.advanced({
-      title: 'Select page for creation',
+      title: TYPO3.lang.newRecordinPageModalTitle,
       size: Modal.sizes.small,
       content: selection,
       buttons: [
         {
-          text: 'Create element',
+          text: btn.getAttribute('title'),
           icon: 'actions-add',
           btnClass: 'btn-primary',
           trigger: function () {

@@ -96,6 +96,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $moduleName);
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
+        $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
 
         $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
         if (!in_array($currentPid, $accessiblePids)) {
@@ -105,7 +106,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         /** @var BackendUserAuthentication $backendUser */
         $backendUser = $GLOBALS['BE_USER'];
         $isWorkspaceAdmin = false;
-        // load workspace related stuff @TODO: find what can be removed
+        // load workspace related stuff
         if ($this::WORKSPACE_ID) {
             $isWorkspaceAdmin = $backendUser->workspacePublishAccess($this::WORKSPACE_ID);
             $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
@@ -251,7 +252,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
                 $workspaceStatus = [];
                 $workspaceStatus['level'] = 'warning';
-                $workspaceStatus['text'] = 'Arbeitskopie';
+                $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy');
 
                 // newly created record
                 if ($record['t3ver_oid'] === 0) {
@@ -261,7 +262,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 // stage "Ready to publish"
                 if ($record['t3ver_stage'] === -10) {
                     $workspaceStatus['level'] = 'success';
-                    $workspaceStatus['text'] = 'Wartet auf Veröffentlichung';
+                    $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
                     $record['editable'] = $isWorkspaceAdmin;
                 }
 
@@ -337,7 +338,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')
-                ->setTitle('Show search form')
+                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
                 ->setShowLabelText(false)
                 ->setClasses($searchClass . ' toggleSearchButton')
                 ->setIcon($this->iconFactory->getIcon('actions-search', ICON::SIZE_SMALL)),
@@ -481,13 +482,13 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 1 => [
                     'columnName' => 'workspace-status',
                     'partial' => 'Workspace',
-                    'label' => 'Status',
+                    'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
                     'notSortable' => true,
                 ],
                 2 => [
                     'columnName' => 'Language',
                     'partial' => 'Language',
-                    'label' => 'Sprache',
+                    'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.language',
                     'notSortable' => true,
                 ],
             ],
@@ -503,5 +504,10 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 'ReadyToPublish',
             ],
         ];
+    }
+
+    protected function getLanguageService(): LanguageService
+    {
+        return $GLOBALS['LANG'];
     }
 }

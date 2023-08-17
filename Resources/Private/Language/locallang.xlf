@@ -1,0 +1,44 @@
+<?xml version="1.2" encoding="UTF-8" ?>
+<xliff version="1.2">
+	<file source-language="en" datatype="plaintext" original="messages" date="2023-04-04T09:23:21Z"
+		  product-name="xima_typo3_recordlist">
+		<body>
+			<trans-unit id="newRecordinPageModalTitle">
+				<source>Select page for new record</source>
+			</trans-unit>
+			<trans-unit id="table.column.language">
+				<source>Language</source>
+			</trans-unit>
+			<trans-unit id="table.column.actions">
+				<source>Actions</source>
+			</trans-unit>
+			<trans-unit id="table.column.status">
+				<source>Status</source>
+			</trans-unit>
+			<trans-unit id="table.button.reset">
+				<source>Reset</source>
+			</trans-unit>
+			<trans-unit id="table.button.search">
+				<source>Search</source>
+			</trans-unit>
+			<trans-unit id="table.filter.label">
+				<source>Filter records</source>
+			</trans-unit>
+			<trans-unit id="table.label.records">
+				<source>Records</source>
+			</trans-unit>
+			<trans-unit id="table.label.searchField">
+				<source>Enter search phrase</source>
+			</trans-unit>
+			<trans-unit id="table.button.toggleSearch">
+				<source>Show search form</source>
+			</trans-unit>
+			<trans-unit id="table.label.copy">
+				<source>Copy</source>
+			</trans-unit>
+			<trans-unit id="table.label.waiting">
+				<source>Awaiting review</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

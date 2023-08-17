@@ -3,7 +3,7 @@
 <f:be.pageRenderer includeRequireJsModules="{0: 'TYPO3/CMS/Backend/Tooltip'}" />
 
 <f:render section="Headline" optional="true">
-	<h1>{recordCount} Records</h1>
+	<h1>{recordCount} {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
 </f:render>
 
 
@@ -20,7 +20,7 @@
 
 		<div class="row mb-3">
 			<div class="col-6">
-				<h5>Einträge filtern</h5>
+				<h5>{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.filter')}</h5>
 				<f:render partial="Filter/SearchField" arguments="{_all}" />
 			</div>
 		</div>
@@ -29,8 +29,8 @@
 
 		<div class="row mb-3">
 			<div class="col col-auto">
-				<a href="{f:be.uri(route: moduleName)}" class="btn btn-default">zurücksetzen</a>
-				<input type="submit" class="btn btn-primary" value="Suchen" />
+				<a href="{f:be.uri(route: moduleName)}" class="btn btn-default">{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}</a>
+				<input type="submit" class="btn btn-primary" value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.search')}" />
 			</div>
 		</div>
 
@@ -48,7 +48,7 @@
 						<f:render partial="Th" arguments="{_all}" />
 					</f:for>
 					<f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
-						<th>Actions</th>
+						<th>{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.actions')}</th>
 					</f:if>
 				</tr>
 				</thead>

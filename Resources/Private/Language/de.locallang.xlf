@@ -1,0 +1,44 @@
+<?xml version="1.2" encoding="UTF-8" ?>
+<xliff version="1.2">
+	<file source-language="en" datatype="plaintext" original="messages" date="2023-04-04T09:23:21Z"
+		  product-name="xima_typo3_recordlist">
+		<body>
+			<trans-unit id="newRecordinPageModalTitle">
+				<target>Seite für neuen Datensatz auswählen</target>
+			</trans-unit>
+			<trans-unit id="table.column.language">
+				<target>Sprache</target>
+			</trans-unit>
+			<trans-unit id="table.column.actions">
+				<target>Aktionen</target>
+			</trans-unit>
+			<trans-unit id="table.column.status">
+				<target>Status</target>
+			</trans-unit>
+			<trans-unit id="table.button.reset">
+				<target>Zurücksetzen</target>
+			</trans-unit>
+			<trans-unit id="table.button.search">
+				<target>Suchen</target>
+			</trans-unit>
+			<trans-unit id="table.filter.label">
+				<target>Einträge filtern</target>
+			</trans-unit>
+			<trans-unit id="table.label.records">
+				<target>Einträge</target>
+			</trans-unit>
+			<trans-unit id="table.label.searchField">
+				<target>Suchbegriff eingeben</target>
+			</trans-unit>
+			<trans-unit id="table.button.toggleSearch">
+				<target>Suche anzeigen</target>
+			</trans-unit>
+			<trans-unit id="table.label.copy">
+				<target>Arbeitskopie</target>
+			</trans-unit>
+			<trans-unit id="table.label.waiting">
+				<target>Wartet auf Freigabe</target>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
