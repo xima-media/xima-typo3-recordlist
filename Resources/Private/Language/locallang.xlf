@@ -39,6 +39,30 @@
 			<trans-unit id="table.label.waiting">
 				<source>Awaiting review</source>
 			</trans-unit>
+			<trans-unit id="table.button.view">
+				<source>Open website</source>
+			</trans-unit>
+			<trans-unit id="table.button.revert">
+				<source>Discard changes</source>
+			</trans-unit>
+			<trans-unit id="table.button.requestReview">
+				<source>Request review</source>
+			</trans-unit>
+			<trans-unit id="table.button.toReview">
+				<source>Ready to publish</source>
+			</trans-unit>
+			<trans-unit id="table.button.publish">
+				<source>Publish</source>
+			</trans-unit>
+			<trans-unit id="table.button.original">
+				<source>Original</source>
+			</trans-unit>
+			<trans-unit id="table.button.edit">
+				<source>Edit</source>
+			</trans-unit>
+			<trans-unit id="table.button.changelog">
+				<source>View changes</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

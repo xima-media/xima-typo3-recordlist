@@ -1,7 +1,7 @@
 <f:if condition="{item.t3ver_oid} && ({item.t3ver_stage} === 0 || {isWorkspaceAdmin})">
 	<a href="#"
 	   class="btn btn-default"
-	   title="Arbeitskopie verwerfen"
+	   title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.revert')}"
 	   data-bs-toggle="tooltip"
 	   data-workspace-action="remove">
 		<core:icon identifier="actions-delete" size="small" />

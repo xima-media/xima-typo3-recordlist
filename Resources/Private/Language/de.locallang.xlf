@@ -39,6 +39,30 @@
 			<trans-unit id="table.label.waiting">
 				<target>Wartet auf Freigabe</target>
 			</trans-unit>
+			<trans-unit id="table.button.view">
+				<target>Auf Webseite anzeigen</target>
+			</trans-unit>
+			<trans-unit id="table.button.revert">
+				<target>Arbeitskopie verwerfen</target>
+			</trans-unit>
+			<trans-unit id="table.button.requestReview">
+				<target>Freigabe anfordern</target>
+			</trans-unit>
+			<trans-unit id="table.button.toReview">
+				<target>Zur Freigabe</target>
+			</trans-unit>
+			<trans-unit id="table.button.publish">
+				<target>Veröffentlichen</target>
+			</trans-unit>
+			<trans-unit id="table.button.original">
+				<target>Original</target>
+			</trans-unit>
+			<trans-unit id="table.button.edit">
+				<target>Bearbeiten</target>
+			</trans-unit>
+			<trans-unit id="table.button.changelog">
+				<target>Änderungen anzeigen</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
