@@ -95,6 +95,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $moduleName = $request->getAttribute('route')?->getOption('moduleName') ?? '';
         $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $moduleName);
+        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
 
         $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
         if (!in_array($currentPid, $accessiblePids)) {
@@ -108,7 +109,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         if ($this::WORKSPACE_ID) {
             $isWorkspaceAdmin = $backendUser->workspacePublishAccess($this::WORKSPACE_ID);
             $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
-            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
+            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Workspace');
             $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
             $this->pageRenderer->addInlineSetting(
                 'FormEngine',
@@ -316,16 +317,20 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // build module template
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
-        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                ->setHref($this->uriBuilder->buildUriFromRoute(
-                    'record_edit',
-                    ['edit' => [$tableName => [$accessiblePids[0] => 'new']], 'returnUrl' => $url]
-                ))
-                ->setTitle('New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']))
-                ->setShowLabelText(true)
-                ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
-        );
+        // new buttons
+        foreach ($accessiblePages as $key => $page) {
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+                $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                    ->setHref($this->uriBuilder->buildUriFromRoute(
+                        'record_edit',
+                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $url]
+                    ))
+                    ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
+                    ->setTitle($key === 0 ? 'New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
+                    ->setShowLabelText(true)
+                    ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
+            );
+        }
         // search button
         $isSearchButtonActive = (string)($moduleData['settings']['isSearchButtonActive'] ?? '');
         $searchClass = $isSearchButtonActive ? 'active' : '';
