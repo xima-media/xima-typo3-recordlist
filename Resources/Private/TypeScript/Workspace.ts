@@ -28,6 +28,85 @@ class Workspace {
     document.querySelectorAll('[data-workspace-action="remove"]').forEach(btn => {
       btn.addEventListener('click', this.confirmDeleteRecordFromWorkspace.bind(this))
     })
+
+    document.querySelectorAll('[data-workspace-action="publish"]').forEach(btn => {
+      btn.addEventListener('click', this.confirmPublishRecordFromWorkspace.bind(this))
+    })
+  }
+
+  protected confirmPublishRecordFromWorkspace(e: PointerEvent): void {
+    e.preventDefault()
+    const btn = e.currentTarget as HTMLAnchorElement
+    const tr = btn.closest('tr')
+
+    if (!tr) {
+      return
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this
+    const uid = parseInt(tr.getAttribute('data-uid') ?? '')
+    const table = tr.getAttribute('data-table') ?? ''
+    let t3verOid = parseInt(tr.getAttribute('data-t3ver_oid') ?? '')
+    if (!t3verOid) {
+      t3verOid = uid
+    }
+
+    Modal.advanced({
+      title: 'Datensatz veröffentlichen',
+      size: Modal.sizes.small,
+      severity: SeverityEnum.info,
+      content: 'Möchten Sie den Datensatz wirklich veröffentlichen?',
+      buttons: [
+        {
+          text: 'Nein, abbrechen',
+          icon: 'actions-close',
+          btnClass: 'btn-default',
+          trigger: function () {
+            Modal.currentModal.trigger('modal-dismiss')
+          }
+        },
+        {
+          text: 'Ja, veröffentlichen',
+          icon: 'actions-check',
+          btnClass: 'btn-success',
+          trigger: function () {
+            self.publishRecord(t3verOid, table, uid)
+            Modal.currentModal.trigger('modal-dismiss')
+          }
+        }
+      ]
+    })
+  }
+  protected publishRecord(liveId: number, table: string, versionId: number): void {
+    const payload = {
+      action: 'Actions',
+      data: [
+        {
+          action: 'publish',
+          selection: [
+            {
+              liveId: liveId,
+              table: table,
+              versionId: versionId
+            }
+          ]
+        }
+      ],
+      method: 'executeSelectionAction',
+      tid: 3,
+      type: 'rpc'
+    }
+
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+      .post(payload, {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8'
+        }
+      })
+      .then(async (response: { resolve: () => any[] | PromiseLike<any[]> }) => {
+        top?.TYPO3.Backend.ContentContainer.refresh()
+      })
   }
 
   private readonly confirmDeleteRecordFromWorkspace = (e: { target: any }): void => {
