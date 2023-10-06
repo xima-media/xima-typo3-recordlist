@@ -1,66 +1,86 @@
-<?xml version="1.2" encoding="UTF-8" ?>
-<xliff version="1.2">
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
 	<file source-language="en" datatype="plaintext" original="messages" date="2023-04-04T09:23:21Z"
 		  product-name="xima_typo3_recordlist">
 		<body>
 			<trans-unit id="newRecordinPageModalTitle">
+				<source />
 				<target>Seite für neuen Datensatz auswählen</target>
 			</trans-unit>
 			<trans-unit id="table.column.language">
+				<source />
 				<target>Sprache</target>
 			</trans-unit>
 			<trans-unit id="table.column.actions">
+				<source />
 				<target>Aktionen</target>
 			</trans-unit>
 			<trans-unit id="table.column.status">
+				<source />
 				<target>Status</target>
 			</trans-unit>
 			<trans-unit id="table.button.reset">
+				<source />
 				<target>Zurücksetzen</target>
 			</trans-unit>
 			<trans-unit id="table.button.search">
+				<source />
 				<target>Suchen</target>
 			</trans-unit>
 			<trans-unit id="table.filter.label">
+				<source />
 				<target>Einträge filtern</target>
 			</trans-unit>
 			<trans-unit id="table.label.records">
+				<source />
 				<target>Einträge</target>
 			</trans-unit>
 			<trans-unit id="table.label.searchField">
+				<source />
 				<target>Suchbegriff eingeben</target>
 			</trans-unit>
 			<trans-unit id="table.button.toggleSearch">
+				<source />
 				<target>Suche anzeigen</target>
 			</trans-unit>
 			<trans-unit id="table.label.copy">
+				<source />
 				<target>Arbeitskopie</target>
 			</trans-unit>
 			<trans-unit id="table.label.waiting">
+				<source />
 				<target>Wartet auf Freigabe</target>
 			</trans-unit>
 			<trans-unit id="table.button.view">
+				<source />
 				<target>Auf Webseite anzeigen</target>
 			</trans-unit>
 			<trans-unit id="table.button.revert">
+				<source />
 				<target>Arbeitskopie verwerfen</target>
 			</trans-unit>
 			<trans-unit id="table.button.requestReview">
+				<source />
 				<target>Freigabe anfordern</target>
 			</trans-unit>
 			<trans-unit id="table.button.toReview">
+				<source />
 				<target>Zur Freigabe</target>
 			</trans-unit>
 			<trans-unit id="table.button.publish">
+				<source />
 				<target>Veröffentlichen</target>
 			</trans-unit>
 			<trans-unit id="table.button.original">
+				<source />
 				<target>Original</target>
 			</trans-unit>
 			<trans-unit id="table.button.edit">
+				<source />
 				<target>Bearbeiten</target>
 			</trans-unit>
 			<trans-unit id="table.button.changelog">
+				<source />
 				<target>Änderungen anzeigen</target>
 			</trans-unit>
 		</body>
