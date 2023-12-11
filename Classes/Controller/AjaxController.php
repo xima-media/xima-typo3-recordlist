@@ -5,6 +5,7 @@ namespace Xima\XimaTypo3Recordlist\Controller;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -47,11 +48,21 @@ class AjaxController
     public function deleteRecord(ServerRequestInterface $request): ResponseInterface
     {
         $body = $request->getParsedBody();
-        $cmd[$body['table'] ?? ''][$body['uid'] ?? '']['delete'] = 1;
+        $table = $body['table'] ?? '';
+        $uid = $body['uid'] ?? '';
+        $verOid = $body['verOid'] ?? '';
 
-        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-        $dataHandler->start([], $cmd);
-        $dataHandler->process_cmdmap();
+        if ($verOid) {
+            $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
+            $qb->delete($table)
+                ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid, \PDO::PARAM_INT)))
+                ->execute();
+        } else {
+            $cmd[$table][$uid]['delete'] = 1;
+            $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+            $dataHandler->start([], $cmd);
+            $dataHandler->process_cmdmap();
+        }
 
         return $this->responseFactory->createResponse();
     }

@@ -108,6 +108,13 @@ class Recordlist {
     const btn = e.currentTarget as HTMLAnchorElement
     const table = btn?.closest('tr')?.getAttribute('data-table') ?? ''
     const uid = btn?.closest('tr')?.getAttribute('data-uid') ?? ''
+    const verOid = btn?.closest('tr')?.getAttribute('data-t3ver_oid') ?? ''
+
+    const payload = new FormData()
+    payload.append('table', table)
+    payload.append('uid', uid)
+    payload.append('verOid', verOid)
+
     const $modal = Modal.confirm(
       'Datensatz löschen',
       'Sind Sie sich sicher, dass Sie diesen Datensatz löschen möchten?',
@@ -131,11 +138,6 @@ class Recordlist {
     )
     $modal.on('button.clicked', (modalEvent: { target: HTMLAnchorElement }): void => {
       if (modalEvent.target.name === 'ok') {
-        const payload = new FormData()
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-        payload.append('table', table)
-        payload.append('uid', uid)
-
         new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_delete).post('', { body: payload }, '').then(async () => {
           top?.TYPO3.Backend.ContentContainer.refresh()
         })

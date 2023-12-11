@@ -91,10 +91,15 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
             (_c = fieldInput.closest('form')) === null || _c === void 0 ? void 0 : _c.submit();
         }
         onDeleteLinkClick(e) {
-            var _a, _b, _c, _d;
+            var _a, _b, _c, _d, _e, _f;
             const btn = e.currentTarget;
             const table = (_b = (_a = btn === null || btn === void 0 ? void 0 : btn.closest('tr')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-table')) !== null && _b !== void 0 ? _b : '';
             const uid = (_d = (_c = btn === null || btn === void 0 ? void 0 : btn.closest('tr')) === null || _c === void 0 ? void 0 : _c.getAttribute('data-uid')) !== null && _d !== void 0 ? _d : '';
+            const verOid = (_f = (_e = btn === null || btn === void 0 ? void 0 : btn.closest('tr')) === null || _e === void 0 ? void 0 : _e.getAttribute('data-t3ver_oid')) !== null && _f !== void 0 ? _f : '';
+            const payload = new FormData();
+            payload.append('table', table);
+            payload.append('uid', uid);
+            payload.append('verOid', verOid);
             const $modal = Modal.confirm('Datensatz löschen', 'Sind Sie sich sicher, dass Sie diesen Datensatz löschen möchten?', severity_js.SeverityEnum.warning, [
                 {
                     text: 'Nein, abbrechen',
@@ -113,10 +118,6 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
             ]);
             $modal.on('button.clicked', (modalEvent) => {
                 if (modalEvent.target.name === 'ok') {
-                    const payload = new FormData();
-                    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                    payload.append('table', table);
-                    payload.append('uid', uid);
                     new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_delete).post('', { body: payload }, '').then(() => tslib_es6.__awaiter(this, void 0, void 0, function* () {
                         top === null || top === void 0 ? void 0 : top.TYPO3.Backend.ContentContainer.refresh();
                     }));
