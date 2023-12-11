@@ -59,6 +59,10 @@
 				<source />
 				<target>Arbeitskopie verwerfen</target>
 			</trans-unit>
+			<trans-unit id="table.button.delete">
+				<source />
+				<target>Datensatz löschen</target>
+			</trans-unit>
 			<trans-unit id="table.button.requestReview">
 				<source />
 				<target>Freigabe anfordern</target>

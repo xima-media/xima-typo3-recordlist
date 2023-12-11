@@ -2,6 +2,8 @@
 import AjaxRequest from '@typo3/core/ajax/ajax-request'
 // @ts-expect-error
 import Modal from '@typo3/backend/modal'
+// @ts-expect-error
+import { SeverityEnum } from '@typo3/backend/enum/severity'
 
 class Recordlist {
   protected currentModal: any
@@ -19,6 +21,10 @@ class Recordlist {
 
     document.querySelectorAll('a[data-nextpage]').forEach(a => {
       a.addEventListener('click', this.onPaginationLinkClick.bind(this))
+    })
+
+    document.querySelectorAll('a[data-delete2]').forEach(a => {
+      a.addEventListener('click', this.onDeleteLinkClick.bind(this))
     })
 
     document.querySelector('.toggleSearchButton')?.addEventListener('click', e => {
@@ -96,6 +102,46 @@ class Recordlist {
     fieldInput.value = field
     directionInput.value = direction
     fieldInput.closest('form')?.submit()
+  }
+
+  protected onDeleteLinkClick(e: PointerEvent): void {
+    const btn = e.currentTarget as HTMLAnchorElement
+    const table = btn?.closest('tr')?.getAttribute('data-table') ?? ''
+    const uid = btn?.closest('tr')?.getAttribute('data-uid') ?? ''
+    const $modal = Modal.confirm(
+      'Datensatz löschen',
+      'Sind Sie sich sicher, dass Sie diesen Datensatz löschen möchten?',
+      SeverityEnum.warning,
+      [
+        {
+          text: 'Nein, abbrechen',
+          active: true,
+          btnClass: 'btn-default',
+          name: 'cancel',
+          trigger: (): void => {
+            $modal.modal('hide')
+          }
+        },
+        {
+          text: 'Ja, löschen',
+          btnClass: 'btn-warning',
+          name: 'ok'
+        }
+      ]
+    )
+    $modal.on('button.clicked', (modalEvent: { target: HTMLAnchorElement }): void => {
+      if (modalEvent.target.name === 'ok') {
+        const payload = new FormData()
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+        payload.append('table', table)
+        payload.append('uid', uid)
+
+        new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_delete).post('', { body: payload }, '').then(async () => {
+          top?.TYPO3.Backend.ContentContainer.refresh()
+        })
+        $modal.modal('hide')
+      }
+    })
   }
 }
 

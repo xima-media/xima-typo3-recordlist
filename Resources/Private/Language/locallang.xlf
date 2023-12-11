@@ -45,6 +45,9 @@
 			<trans-unit id="table.button.revert">
 				<source>Discard changes</source>
 			</trans-unit>
+			<trans-unit id="table.button.delete">
+				<source>Delete record</source>
+			</trans-unit>
 			<trans-unit id="table.button.requestReview">
 				<source>Request review</source>
 			</trans-unit>

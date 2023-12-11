@@ -5,6 +5,8 @@ namespace Xima\XimaTypo3Recordlist\Controller;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class AjaxController
 {
@@ -40,5 +42,17 @@ class AjaxController
         }
 
         $GLOBALS['BE_USER']->pushModuleData($moduleName, $moduleData);
+    }
+
+    public function deleteRecord(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = $request->getParsedBody();
+        $cmd[$body['table'] ?? ''][$body['uid'] ?? '']['delete'] = 1;
+
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start([], $cmd);
+        $dataHandler->process_cmdmap();
+
+        return $this->responseFactory->createResponse();
     }
 }

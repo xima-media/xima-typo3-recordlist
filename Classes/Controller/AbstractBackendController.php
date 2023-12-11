@@ -259,6 +259,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
                     $record['state'] = 'new';
                 }
 
+                // newly deleted recrod
+                if ($record['t3ver_state'] === 2) {
+                    $record['state'] = 'deleted';
+                }
+
                 // stage "Ready to publish"
                 if ($record['t3ver_stage'] === -10) {
                     $workspaceStatus['level'] = 'success';

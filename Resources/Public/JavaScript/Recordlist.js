@@ -1,6 +1,5 @@
-define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal'], (function (AjaxRequest, Modal) { 'use strict';
+define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal', 'TYPO3/CMS/Backend/Enum/Severity'], (function (tslib_es6, AjaxRequest, Modal, severity_js) { 'use strict';
 
-    // @ts-expect-error
     class Recordlist {
         constructor() {
             this.bindEvents();
@@ -12,6 +11,9 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal'], (function
             });
             document.querySelectorAll('a[data-nextpage]').forEach(a => {
                 a.addEventListener('click', this.onPaginationLinkClick.bind(this));
+            });
+            document.querySelectorAll('a[data-delete2]').forEach(a => {
+                a.addEventListener('click', this.onDeleteLinkClick.bind(this));
             });
             (_a = document.querySelector('.toggleSearchButton')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', e => {
                 var _a;
@@ -87,6 +89,40 @@ define(['TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal'], (function
             fieldInput.value = field;
             directionInput.value = direction;
             (_c = fieldInput.closest('form')) === null || _c === void 0 ? void 0 : _c.submit();
+        }
+        onDeleteLinkClick(e) {
+            var _a, _b, _c, _d;
+            const btn = e.currentTarget;
+            const table = (_b = (_a = btn === null || btn === void 0 ? void 0 : btn.closest('tr')) === null || _a === void 0 ? void 0 : _a.getAttribute('data-table')) !== null && _b !== void 0 ? _b : '';
+            const uid = (_d = (_c = btn === null || btn === void 0 ? void 0 : btn.closest('tr')) === null || _c === void 0 ? void 0 : _c.getAttribute('data-uid')) !== null && _d !== void 0 ? _d : '';
+            const $modal = Modal.confirm('Datensatz löschen', 'Sind Sie sich sicher, dass Sie diesen Datensatz löschen möchten?', severity_js.SeverityEnum.warning, [
+                {
+                    text: 'Nein, abbrechen',
+                    active: true,
+                    btnClass: 'btn-default',
+                    name: 'cancel',
+                    trigger: () => {
+                        $modal.modal('hide');
+                    }
+                },
+                {
+                    text: 'Ja, löschen',
+                    btnClass: 'btn-warning',
+                    name: 'ok'
+                }
+            ]);
+            $modal.on('button.clicked', (modalEvent) => {
+                if (modalEvent.target.name === 'ok') {
+                    const payload = new FormData();
+                    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+                    payload.append('table', table);
+                    payload.append('uid', uid);
+                    new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_delete).post('', { body: payload }, '').then(() => tslib_es6.__awaiter(this, void 0, void 0, function* () {
+                        top === null || top === void 0 ? void 0 : top.TYPO3.Backend.ContentContainer.refresh();
+                    }));
+                    $modal.modal('hide');
+                }
+            });
         }
     }
     new Recordlist();
