@@ -159,10 +159,9 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
             const result = response[0].result;
             const $form = $('<form />');
             if (typeof result.sendMailTo !== 'undefined' && result.sendMailTo.length > 0) {
-                $form.append($('<label />', { class: 'control-label' }).text(TYPO3.lang['window.sendToNextStageWindow.itemsWillBeSentTo']));
-                $form.append($('<div />', { class: 'form-group' }).append($('<button type="button" class="btn btn-default btn-xs t3js-workspace-recipients-selectall" />').text(TYPO3.lang['window.sendToNextStageWindow.selectAll']), '&nbsp;', $('<button type="button" class="btn btn-default btn-xs t3js-workspace-recipients-deselectall" />').text(TYPO3.lang['window.sendToNextStageWindow.deselectAll'])));
+                $form.append($('<div />', { class: 'form-group hidden' }).append($('<button type="button" class="btn btn-default btn-xs t3js-workspace-recipients-selectall" />').text(TYPO3.lang['window.sendToNextStageWindow.selectAll']), '&nbsp;', $('<button type="button" class="btn btn-default btn-xs t3js-workspace-recipients-deselectall" />').text(TYPO3.lang['window.sendToNextStageWindow.deselectAll'])));
                 for (const recipient of result.sendMailTo) {
-                    $form.append($('<div />', { class: 'form-check' }).append($('<input />', {
+                    $form.append($('<div />', { class: 'form-check hidden' }).append($('<input />', {
                         type: 'checkbox',
                         name: 'recipients',
                         class: 'form-check-input t3js-workspace-recipient',

@@ -190,9 +190,8 @@ class Workspace {
     const $form = $('<form />')
 
     if (typeof result.sendMailTo !== 'undefined' && result.sendMailTo.length > 0) {
-      $form.append($('<label />', { class: 'control-label' }).text(TYPO3.lang['window.sendToNextStageWindow.itemsWillBeSentTo']))
       $form.append(
-        $('<div />', { class: 'form-group' }).append(
+        $('<div />', { class: 'form-group hidden' }).append(
           $('<button type="button" class="btn btn-default btn-xs t3js-workspace-recipients-selectall" />').text(
             TYPO3.lang['window.sendToNextStageWindow.selectAll']
           ),
@@ -205,7 +204,7 @@ class Workspace {
 
       for (const recipient of result.sendMailTo) {
         $form.append(
-          $('<div />', { class: 'form-check' }).append(
+          $('<div />', { class: 'form-check hidden' }).append(
             $('<input />', {
               type: 'checkbox',
               name: 'recipients',
