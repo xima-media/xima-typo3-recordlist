@@ -108,12 +108,10 @@ class Recordlist {
     const btn = e.currentTarget as HTMLAnchorElement
     const table = btn?.closest('tr')?.getAttribute('data-table') ?? ''
     const uid = btn?.closest('tr')?.getAttribute('data-uid') ?? ''
-    const verOid = btn?.closest('tr')?.getAttribute('data-t3ver_oid') ?? ''
 
     const payload = new FormData()
     payload.append('table', table)
     payload.append('uid', uid)
-    payload.append('verOid', verOid)
 
     const $modal = Modal.confirm(
       'Datensatz löschen',
