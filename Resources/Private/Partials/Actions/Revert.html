@@ -1,11 +1,16 @@
+<f:variable name="label">LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.delete</f:variable>
+<f:if condition="{item.t3ver_wsid}">
+	<f:variable name="label">LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.revert</f:variable>
+</f:if>
+
 <f:if condition="{item.t3ver_oid} && !{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
-	<a href="#" class="btn btn-default" title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.revert')}" data-bs-toggle="tooltip" data-workspace-action="remove">
+	<a href="#" class="btn btn-default" title="{f:translate(key:label)}" data-bs-toggle="tooltip" data-workspace-action="remove">
 		<core:icon identifier="actions-delete" size="small" />
 	</a>
 </f:if>
 
 <f:if condition="!{item.t3ver_oid} || {isWorkspaceAdmin}}">
-	<a href="#" class="btn btn-default" title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.delete')}" data-bs-toggle="tooltip" data-delete2>
+	<a href="#" class="btn btn-default" title="{f:translate(key:label)}" data-bs-toggle="tooltip" data-delete2>
 		<core:icon identifier="actions-delete" size="small" />
 	</a>
 </f:if>
