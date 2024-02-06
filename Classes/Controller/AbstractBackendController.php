@@ -270,6 +270,24 @@ abstract class AbstractBackendController implements BackendControllerInterface
                     $workspaceStatus['level'] = 'success';
                     $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
                     $record['editable'] = $isWorkspaceAdmin;
+
+                    $referencesToPublish = [];
+                    foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $column) {
+                        if (($column['config']['foreign_table'] ?? false) && $column['config']['foreign_table'] === 'sys_file_reference') {
+                            $references = BackendUtility::resolveFileReferences($tableName, $columnName, $record, $this::WORKSPACE_ID);
+                            foreach ($references ?? [] as $reference) {
+                                if ($reference->getProperty('t3ver_stage') !== -10) {
+                                    continue;
+                                }
+                                $referencesToPublish[] = [
+                                    'liveId' => $reference->getProperty('t3ver_oid') ?: $reference->getUid(),
+                                    'table' => 'sys_file_reference',
+                                    'versionId' => $reference->getUid(),
+                                ];
+                            }
+                        }
+                    }
+                    $record['referencesToPublish'] = $referencesToPublish;
                 }
 
                 $record['status'] ??= [];

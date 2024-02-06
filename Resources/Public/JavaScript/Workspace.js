@@ -56,7 +56,7 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
             });
         }
         confirmPublishRecordFromWorkspace(e) {
-            var _a, _b, _c;
+            var _a, _b, _c, _d;
             e.preventDefault();
             const btn = e.currentTarget;
             const tr = btn.closest('tr');
@@ -70,6 +70,18 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
             let t3verOid = parseInt((_c = tr.getAttribute('data-t3ver_oid')) !== null && _c !== void 0 ? _c : '');
             if (!t3verOid) {
                 t3verOid = uid;
+            }
+            const recordsToPublish = [
+                {
+                    liveId: t3verOid,
+                    table: table,
+                    versionId: uid
+                }
+            ];
+            const sysFileReferencesToPublish = (_d = tr.getAttribute('data-sys-file-references')) !== null && _d !== void 0 ? _d : '';
+            if (sysFileReferencesToPublish) {
+                const sysFileReferences = JSON.parse(sysFileReferencesToPublish);
+                Array.prototype.push.apply(recordsToPublish, sysFileReferences);
             }
             Modal.advanced({
                 title: 'Datensatz veröffentlichen',
@@ -90,26 +102,20 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
                         icon: 'actions-check',
                         btnClass: 'btn-success',
                         trigger: function () {
-                            self.publishRecord(t3verOid, table, uid);
+                            self.publishRecords(recordsToPublish);
                             Modal.currentModal.trigger('modal-dismiss');
                         }
                     }
                 ]
             });
         }
-        publishRecord(liveId, table, versionId) {
+        publishRecords(records) {
             const payload = {
                 action: 'Actions',
                 data: [
                     {
                         action: 'publish',
-                        selection: [
-                            {
-                                liveId: liveId,
-                                table: table,
-                                versionId: versionId
-                            }
-                        ]
+                        selection: records
                     }
                 ],
                 method: 'executeSelectionAction',

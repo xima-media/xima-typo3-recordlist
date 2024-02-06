@@ -52,6 +52,20 @@ class Workspace {
       t3verOid = uid
     }
 
+    const recordsToPublish = [
+      {
+        liveId: t3verOid,
+        table: table,
+        versionId: uid
+      }
+    ]
+
+    const sysFileReferencesToPublish = tr.getAttribute('data-sys-file-references') ?? ''
+    if (sysFileReferencesToPublish) {
+      const sysFileReferences = JSON.parse(sysFileReferencesToPublish)
+      Array.prototype.push.apply(recordsToPublish, sysFileReferences)
+    }
+
     Modal.advanced({
       title: 'Datensatz veröffentlichen',
       size: Modal.sizes.small,
@@ -71,26 +85,20 @@ class Workspace {
           icon: 'actions-check',
           btnClass: 'btn-success',
           trigger: function () {
-            self.publishRecord(t3verOid, table, uid)
+            self.publishRecords(recordsToPublish)
             Modal.currentModal.trigger('modal-dismiss')
           }
         }
       ]
     })
   }
-  protected publishRecord(liveId: number, table: string, versionId: number): void {
+  protected publishRecords(records): void {
     const payload = {
       action: 'Actions',
       data: [
         {
           action: 'publish',
-          selection: [
-            {
-              liveId: liveId,
-              table: table,
-              versionId: versionId
-            }
-          ]
+          selection: records
         }
       ],
       method: 'executeSelectionAction',

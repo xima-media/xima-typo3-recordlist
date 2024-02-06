@@ -62,6 +62,7 @@
 						data-l18n_parent="{item.l18n_parent}"
 						data-stage="{item.t3ver_stage}"
 						data-table="{table}"
+						data-sys-file-references="{f:if(condition: item.referencesToPublish, then: '{item.referencesToPublish->f:format.json()}')}"
 						data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
 
 						<f:for each="{tableConfiguration.columns}" as="colConfig">
