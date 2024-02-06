@@ -274,6 +274,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                     $referencesToPublish = [];
                     foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $column) {
                         if (($column['config']['foreign_table'] ?? false) && $column['config']['foreign_table'] === 'sys_file_reference') {
+                            // new/modified records
                             $references = BackendUtility::resolveFileReferences($tableName, $columnName, $record, $this::WORKSPACE_ID);
                             foreach ($references ?? [] as $reference) {
                                 if ($reference->getProperty('t3ver_stage') !== -10) {
@@ -284,6 +285,18 @@ abstract class AbstractBackendController implements BackendControllerInterface
                                     'table' => 'sys_file_reference',
                                     'versionId' => $reference->getUid(),
                                 ];
+                            }
+                            // deleted records
+                            $references = BackendUtility::resolveFileReferences($tableName, $columnName, $record);
+                            foreach ($references ?? [] as $reference) {
+                                $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, 'sys_file_reference', $reference->getUid());
+                                if (is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === 2) {
+                                    $referencesToPublish[] = [
+                                        'liveId' => $referenceOverlay['t3ver_oid'] ?: $referenceOverlay['uid'],
+                                        'table' => 'sys_file_reference',
+                                        'versionId' => $referenceOverlay['uid'],
+                                    ];
+                                }
                             }
                         }
                     }
