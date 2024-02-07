@@ -290,7 +290,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
                             $references = BackendUtility::resolveFileReferences($tableName, $columnName, $record);
                             foreach ($references ?? [] as $reference) {
                                 $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, 'sys_file_reference', $reference->getUid());
-                                if (is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === 2) {
+                                $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === 2;
+                                $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === -10;
+                                if ($isDeleted || $isModified) {
                                     $referencesToPublish[] = [
                                         'liveId' => $referenceOverlay['t3ver_oid'] ?: $referenceOverlay['uid'],
                                         'table' => 'sys_file_reference',
