@@ -1,4 +1,4 @@
-define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal', 'TYPO3/CMS/Backend/Enum/Severity'], (function (tslib_es6, AjaxRequest, Modal, severity_js) { 'use strict';
+define(['./tslib.es6-CiN4LreV', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal', 'TYPO3/CMS/Backend/Enum/Severity'], (function (tslib_es6, AjaxRequest, Modal, severity_js) { 'use strict';
 
     class Recordlist {
         constructor() {
