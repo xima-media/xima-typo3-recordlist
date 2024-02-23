@@ -16,6 +16,7 @@ use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
@@ -227,13 +228,18 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // fetch records
         $requestedPids = $currentPid === $accessiblePids[0] ? $accessiblePids : [$currentPid];
-        $records = $qb->select('*')
+        $query = $qb->select('*')
             ->from($tableName)
             ->where(
                 $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
             )
             ->andWhere(...$additionalConstraints)
-            ->addOrderBy($orderField, $orderDirection)
+            ->addOrderBy($orderField, $orderDirection);
+
+        // hook to modify query in child class
+        $this->modifyQueryBuilder($query);
+
+        $records = $query
             ->execute()
             ->fetchAllAssociative();
 
@@ -500,6 +506,10 @@ abstract class AbstractBackendController implements BackendControllerInterface
      * @param mixed[] $record
      */
     public function modifyRecord(array &$record): void
+    {
+    }
+
+    public function modifyQueryBuilder(QueryBuilder $qb): void
     {
     }
 
