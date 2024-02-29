@@ -55,7 +55,7 @@
 				<source>Ready to publish</source>
 			</trans-unit>
 			<trans-unit id="table.button.publish">
-				<source>Publish</source>
+				<source>Grant approval</source>
 			</trans-unit>
 			<trans-unit id="table.button.original">
 				<source>Original</source>

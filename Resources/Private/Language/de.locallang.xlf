@@ -73,7 +73,7 @@
 			</trans-unit>
 			<trans-unit id="table.button.publish">
 				<source />
-				<target>Veröffentlichen</target>
+				<target>Freigabe erteilen</target>
 			</trans-unit>
 			<trans-unit id="table.button.original">
 				<source />
