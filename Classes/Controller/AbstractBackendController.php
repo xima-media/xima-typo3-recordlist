@@ -40,9 +40,9 @@ use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
 abstract class AbstractBackendController implements BackendControllerInterface
 {
-    const WORKSPACE_ID = 0;
+    public const WORKSPACE_ID = 0;
 
-    const TEMPLATE_NAME = 'Default';
+    public const TEMPLATE_NAME = 'Default';
 
     protected StandaloneView $view;
 
@@ -281,7 +281,12 @@ abstract class AbstractBackendController implements BackendControllerInterface
                     foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $column) {
                         if (($column['config']['foreign_table'] ?? false) && $column['config']['foreign_table'] === 'sys_file_reference') {
                             // new/modified records
-                            $references = BackendUtility::resolveFileReferences($tableName, $columnName, $record, $this::WORKSPACE_ID);
+                            $references = BackendUtility::resolveFileReferences(
+                                $tableName,
+                                $columnName,
+                                $record,
+                                $this::WORKSPACE_ID
+                            );
                             foreach ($references ?? [] as $reference) {
                                 if ($reference->getProperty('t3ver_stage') !== -10) {
                                     continue;
@@ -295,7 +300,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
                             // deleted records
                             $references = BackendUtility::resolveFileReferences($tableName, $columnName, $record);
                             foreach ($references ?? [] as $reference) {
-                                $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, 'sys_file_reference', $reference->getUid());
+                                $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord(
+                                    $this::WORKSPACE_ID,
+                                    'sys_file_reference',
+                                    $reference->getUid()
+                                );
                                 $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === 2;
                                 $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === -10;
                                 if ($isDeleted || $isModified) {
@@ -494,6 +503,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->getRequest()->setControllerExtensionName($controllerName);
     }
 
+    public function getTableName(): string
+    {
+        return $this::TABLE_NAME;
+    }
+
     /**
      * @return array<int, string>
      */
@@ -502,14 +516,19 @@ abstract class AbstractBackendController implements BackendControllerInterface
         return [];
     }
 
+    public function modifyQueryBuilder(QueryBuilder $qb): void
+    {
+    }
+
+    protected function getLanguageService(): LanguageService
+    {
+        return $GLOBALS['LANG'];
+    }
+
     /**
      * @param mixed[] $record
      */
     public function modifyRecord(array &$record): void
-    {
-    }
-
-    public function modifyQueryBuilder(QueryBuilder $qb): void
     {
     }
 
@@ -553,10 +572,5 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 'ReadyToPublish',
             ],
         ];
-    }
-
-    protected function getLanguageService(): LanguageService
-    {
-        return $GLOBALS['LANG'];
     }
 }
