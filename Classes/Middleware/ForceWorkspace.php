@@ -44,7 +44,7 @@ class ForceWorkspace implements MiddlewareInterface
         $beUser = $GLOBALS['BE_USER'];
 
         $reflectionClass = new ReflectionClass($classParts[0]);
-        $workspaceId = $reflectionClass->hasConstant('WORKSPACE_ID') ? $reflectionClass->getConstant('WORKSPACE_ID') : 0;
+        $workspaceId = $reflectionClass->hasConstant('WORKSPACE_ID') ? $reflectionClass->getConstant('WORKSPACE_ID') : $beUser->getDefaultWorkspace();
 
         if ($beUser->workspace !== $workspaceId && is_int($workspaceId)) {
             $beUser->setWorkspace($workspaceId);
