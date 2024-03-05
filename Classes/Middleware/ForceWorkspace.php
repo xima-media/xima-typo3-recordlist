@@ -2,6 +2,7 @@
 
 namespace Xima\XimaTypo3Recordlist\Middleware;
 
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -49,8 +50,11 @@ class ForceWorkspace implements MiddlewareInterface
 
         if ($beUser->workspace !== $workspaceId && is_int($workspaceId)) {
             $beUser->setWorkspace($workspaceId);
-            $handler->handle($request);
-            return new RedirectResponse($request->getUri());
+            try {
+                return $handler->handle($request);
+            } catch (Exception) {
+                return new RedirectResponse($request->getUri());
+            }
         }
 
         return $handler->handle($request);
