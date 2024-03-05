@@ -9,6 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class ForceWorkspace implements MiddlewareInterface
@@ -48,6 +49,8 @@ class ForceWorkspace implements MiddlewareInterface
 
         if ($beUser->workspace !== $workspaceId && is_int($workspaceId)) {
             $beUser->setWorkspace($workspaceId);
+            $handler->handle($request);
+            return new RedirectResponse($request->getUri());
         }
 
         return $handler->handle($request);
