@@ -24,6 +24,9 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
                 this.updateUserSettings('isSearchButtonActive', isActive);
                 (_a = document.querySelector('#searchInputs')) === null || _a === void 0 ? void 0 : _a.classList.toggle('hidden');
             });
+            document.querySelectorAll('input[data-reset-form]').forEach(input => {
+                input.addEventListener('click', this.onResetButtonClicked.bind(this))
+            })
             if (document.querySelectorAll('.new-record-in-page').length > 1) {
                 document.querySelectorAll('.new-record-in-page').forEach(btn => {
                     btn.addEventListener('click', this.onNewRecordInPageClick.bind(this));
@@ -122,6 +125,21 @@ define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
                     $modal.modal('hide');
                 }
             });
+        }
+        onResetButtonClicked(e) {
+            const btn = e.currentTarget
+            let form = btn.closest('form')
+            let inputs = form.querySelectorAll('input')
+            let selectElements = form.querySelectorAll('select')
+            for (let input of inputs) {
+                if (input.type !== 'hidden') {
+                    input.value = ''
+                }
+            }
+            for (let select of selectElements) {
+                select.selectedIndex = -1
+            }
+            form.submit()
         }
     }
     new Recordlist();

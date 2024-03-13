@@ -36,6 +36,10 @@ class Recordlist {
       document.querySelector('#searchInputs')?.classList.toggle('hidden')
     })
 
+    document.querySelectorAll('input[data-reset-form]').forEach(input => {
+      input.addEventListener('click', this.onResetButtonClicked.bind(this))
+    })
+
     if (document.querySelectorAll('.new-record-in-page').length > 1) {
       document.querySelectorAll('.new-record-in-page').forEach(btn => {
         btn.addEventListener('click', this.onNewRecordInPageClick.bind(this))
@@ -102,6 +106,22 @@ class Recordlist {
     fieldInput.value = field
     directionInput.value = direction
     fieldInput.closest('form')?.submit()
+  }
+
+  protected onResetButtonClicked(e: PointerEvent): void {
+    const btn = e.currentTarget as HTMLInputElement
+    let form = btn.closest('form')
+    let inputs = form.querySelectorAll('input')
+    let selectElements = form.querySelectorAll('select')
+    for (let input of inputs) {
+      if (input.type !== 'hidden') {
+        input.value = ''
+      }
+    }
+    for (let select of selectElements) {
+      select.selectedIndex = -1
+    }
+    form.submit()
   }
 
   protected onDeleteLinkClick(e: PointerEvent): void {

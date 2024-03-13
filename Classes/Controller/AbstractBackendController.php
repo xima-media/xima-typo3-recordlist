@@ -157,6 +157,13 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $backendUser->pushModuleData($moduleName, $moduleData);
         }
 
+        // store search values in module data
+        if ($this->request->getParsedBody()) {
+            $moduleData['settings'] ??= [];
+            $moduleData['settings']['searchValues'] = $this->request->getParsedBody();
+            $backendUser->pushModuleData($moduleName, $moduleData);
+        }
+
         $this->view->assign('settings', $moduleData['settings'] ?? []);
         $activeLanguage = $moduleData['settings']['language'] ?? -1;
         foreach ($languages as &$language) {
@@ -174,6 +181,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
         // demand: search word
         $additionalConstraints = [];
         $body = $request->getParsedBody();
+        $moduleData = $this->getModuleData();
+        $moduleDataSearchValues = $moduleData['settings']['searchValues'] ?? [];
+        if (isset($moduleDataSearchValues['search_field']) && $moduleDataSearchValues['search_field']) {
+            $body['search_field'] = $moduleDataSearchValues['search_field'];
+        }
         if (isset($body['search_field']) && $body['search_field']) {
             $searchInput = $body['search_field'];
             $searchFields = $GLOBALS['TCA'][$tableName]['ctrl']['searchFields'] ?? '';
@@ -206,6 +218,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // demand: offline records (1/2)
         $onlyOfflineRecords = false;
+        if (isset($moduleDataSearchValues['is_offline']) && $moduleDataSearchValues['is_offline']) {
+            $body['is_offline'] = $moduleDataSearchValues['is_offline'];
+        }
         if (isset($body['is_offline']) && $body['is_offline'] === '1') {
             $this->view->assign('is_offline', 1);
             $onlyOfflineRecords = true;
@@ -213,6 +228,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // demand: readyToPublish (1/2)
         $onlyReadyToPublish = false;
+        if (isset($moduleDataSearchValues['is_ready_to_publish']) && $moduleDataSearchValues['is_ready_to_publish']) {
+            $body['is_ready_to_publish'] = $moduleDataSearchValues['is_ready_to_publish'];
+        }
         if (isset($body['is_ready_to_publish']) && $body['is_ready_to_publish'] === '1') {
             $this->view->assign('is_ready_to_publish', 1);
             $onlyReadyToPublish = true;
@@ -558,5 +576,15 @@ abstract class AbstractBackendController implements BackendControllerInterface
     protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
+    }
+
+    /**
+     * @return array
+     */
+    protected function getModuleData(): array
+    {
+        $moduleName = $this->request->getAttribute('route')?->getOption('moduleName') ?? '';
+
+        return $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
     }
 }
