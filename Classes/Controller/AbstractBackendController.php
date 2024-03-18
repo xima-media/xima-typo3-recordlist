@@ -106,9 +106,17 @@ abstract class AbstractBackendController implements BackendControllerInterface
         if ($this->request->getMethod() === 'POST') {
             $body = $this->request->getParsedBody();
             unset($body['__referrer'], $body['__trustedProperties']);
+
+            // clear moduleData + current request body in case reset button is used for submit
+            if (isset($body['reset'])) {
+                $body = [];
+                $this->request = $this->request->withParsedBody([]);
+            }
+
             $moduleData['search'] = $body;
             $backendAuthentication->pushModuleData($moduleName, $moduleData);
         } elseif (!empty($moduleData['search'])) {
+            // fake request body from moduleData
             $this->request = $this->request->withParsedBody($moduleData['search']);
         }
 

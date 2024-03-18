@@ -1,4 +1,4 @@
-define(['./tslib.es6-lce-iSb7', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TYPO3/CMS/Backend/Modal', 'TYPO3/CMS/Backend/Enum/Severity', 'jquery', 'TYPO3/CMS/Backend/Utility'], (function (tslib_es6, AjaxRequest, Notification, Modal, severity_js, $, Utility) { 'use strict';
+define(['./tslib.es6-CiN4LreV', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Notification', 'TYPO3/CMS/Backend/Modal', 'TYPO3/CMS/Backend/Enum/Severity', 'jquery', 'TYPO3/CMS/Backend/Utility'], (function (tslib_es6, AjaxRequest, Notification, Modal, severity_js, $, Utility) { 'use strict';
 
     class Workspace {
         constructor() {
