@@ -85,7 +85,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->site = $site;
 
         // check access + redirect
-        $currentPid = (int)($request->getQueryParams()['id'] ?? $request->getParsedBody()['id'] ?? 0);
+        $currentPid = (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
         $accessiblePages = $this->getAccessibleChildPages($this->getRecordPid());
         $accessiblePids = array_column($accessiblePages, 'uid');
         if (!count($accessiblePids)) {
@@ -93,11 +93,24 @@ abstract class AbstractBackendController implements BackendControllerInterface
         }
 
         // module: get name + settings
-        $moduleName = $request->getAttribute('route')?->getOption('moduleName') ?? '';
-        $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
+        $moduleName = $this->request->getAttribute('route')?->getOption('moduleName') ?? '';
+        /** @var BackendUserAuthentication $backendAuthentication */
+        $backendAuthentication = $GLOBALS['BE_USER'];
+        $moduleData = $backendAuthentication->getModuleData($moduleName) ?? [];
+        $moduleData = is_array($moduleData) ? $moduleData : [];
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $moduleName);
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
+
+        // module data: saved search values
+        if ($this->request->getMethod() === 'POST') {
+            $body = $this->request->getParsedBody();
+            unset($body['__referrer'], $body['__trustedProperties']);
+            $moduleData['search'] = $body;
+            $backendAuthentication->pushModuleData($moduleName, $moduleData);
+        } elseif (!empty($moduleData['search'])) {
+            $this->request = $this->request->withParsedBody($moduleData['search']);
+        }
 
         $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
         if (!in_array($currentPid, $accessiblePids)) {
@@ -157,13 +170,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $backendUser->pushModuleData($moduleName, $moduleData);
         }
 
-        // store search values in module data
-        if ($this->request->getParsedBody()) {
-            $moduleData['settings'] ??= [];
-            $moduleData['settings']['searchValues'] = $this->request->getParsedBody();
-            $backendUser->pushModuleData($moduleName, $moduleData);
-        }
-
         $this->view->assign('settings', $moduleData['settings'] ?? []);
         $activeLanguage = $moduleData['settings']['language'] ?? -1;
         foreach ($languages as &$language) {
@@ -180,7 +186,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // demand: search word
         $additionalConstraints = [];
-        $body = $request->getParsedBody();
+        $body = $this->request->getParsedBody();
         $moduleDataSearchValues = $moduleData['settings']['searchValues'] ?? [];
         if (isset($moduleDataSearchValues['search_field']) && $moduleDataSearchValues['search_field']) {
             $body['search_field'] = $moduleDataSearchValues['search_field'];
@@ -217,9 +223,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // demand: offline records (1/2)
         $onlyOfflineRecords = false;
-        if (isset($moduleDataSearchValues['is_offline']) && $moduleDataSearchValues['is_offline']) {
-            $body['is_offline'] = $moduleDataSearchValues['is_offline'];
-        }
         if (isset($body['is_offline']) && $body['is_offline'] === '1') {
             $this->view->assign('is_offline', 1);
             $onlyOfflineRecords = true;
@@ -227,9 +230,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // demand: readyToPublish (1/2)
         $onlyReadyToPublish = false;
-        if (isset($moduleDataSearchValues['is_ready_to_publish']) && $moduleDataSearchValues['is_ready_to_publish']) {
-            $body['is_ready_to_publish'] = $moduleDataSearchValues['is_ready_to_publish'];
-        }
         if (isset($body['is_ready_to_publish']) && $body['is_ready_to_publish'] === '1') {
             $this->view->assign('is_ready_to_publish', 1);
             $onlyReadyToPublish = true;
@@ -379,7 +379,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $content = $this->view->render();
 
         // build module template
-        $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         // new buttons
         foreach ($accessiblePages as $key => $page) {
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
@@ -575,15 +575,5 @@ abstract class AbstractBackendController implements BackendControllerInterface
     protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
-    }
-
-    /**
-     * @return array
-     */
-    protected function getModuleData(): array
-    {
-        $moduleName = $this->request->getAttribute('route')?->getOption('moduleName') ?? '';
-
-        return $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
     }
 }
