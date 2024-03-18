@@ -195,10 +195,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
         // demand: search word
         $additionalConstraints = [];
         $body = $this->request->getParsedBody();
-        $moduleDataSearchValues = $moduleData['settings']['searchValues'] ?? [];
-        if (isset($moduleDataSearchValues['search_field']) && $moduleDataSearchValues['search_field']) {
-            $body['search_field'] = $moduleDataSearchValues['search_field'];
-        }
         if (isset($body['search_field']) && $body['search_field']) {
             $searchInput = $body['search_field'];
             $searchFields = $GLOBALS['TCA'][$tableName]['ctrl']['searchFields'] ?? '';
