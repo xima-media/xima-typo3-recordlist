@@ -1,2 +1,4 @@
 # cat=basic/enable; type=string; label=Name of tables that should display full workspace history
 tables_for_full_history =
+# cat=basic/enable; type=string; label=Identifier of the site configuration to use
+siteIdentifier = default

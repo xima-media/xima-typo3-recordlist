@@ -15,6 +15,9 @@ use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Configuration\Exception\ExtensionConfigurationExtensionNotConfiguredException;
+use TYPO3\CMS\Core\Configuration\Exception\ExtensionConfigurationPathDoesNotExistException;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
@@ -76,8 +79,16 @@ abstract class AbstractBackendController implements BackendControllerInterface
         // Get site
         $site = $request->getAttribute('site');
         if (!$site instanceof Site) {
+            try {
+                $siteIdentifier = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get(
+                    'xima_typo3_recordlist',
+                    'siteIdentifier'
+                );
+            } catch (ExtensionConfigurationExtensionNotConfiguredException|ExtensionConfigurationPathDoesNotExistException $e) {
+                $siteIdentifier = 'default';
+            }
             $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
-            $site = current($siteFinder->getAllSites());
+            $site = $siteFinder->getSiteByIdentifier($siteIdentifier);
         }
         if (!$site instanceof Site) {
             throw new SiteNotFoundException('Could not determine which site configuration to use', 1688298643);
