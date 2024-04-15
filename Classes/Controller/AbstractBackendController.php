@@ -74,10 +74,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->request = $request;
 
         // Get site
-        $site = $request->getAttribute('site');
+        $site = $this->request->getAttribute('site');
         if (!$site instanceof Site) {
-            $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
-            $site = current($siteFinder->getAllSites());
+            $site = $this->findSiteByCurrentHostname();
         }
         if (!$site instanceof Site) {
             throw new SiteNotFoundException('Could not determine which site configuration to use', 1688298643);
@@ -462,6 +461,19 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         $moduleTemplate->setContent($content);
         return new HtmlResponse($moduleTemplate->renderContent());
+    }
+
+    private function findSiteByCurrentHostname(): ?Site
+    {
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+        foreach ($siteFinder->getAllSites() as $foundSite) {
+            foreach ($foundSite->getAllLanguages() as $siteLanguage) {
+                if ($siteLanguage->getBase()->getHost() === $this->request->getUri()->getHost()) {
+                    return $foundSite;
+                }
+            }
+        }
+        return null;
     }
 
     /**
