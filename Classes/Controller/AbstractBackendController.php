@@ -191,6 +191,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
 
+        // Fetch count of all records without search demand
+        $this->addFullRecordCountToView();
+
         // demand: search word
         $additionalConstraints = [];
         $body = $this->request->getParsedBody();
@@ -539,6 +542,21 @@ abstract class AbstractBackendController implements BackendControllerInterface
     public function getTableName(): string
     {
         return $this::TABLE_NAME;
+    }
+
+    protected function addFullRecordCountToView(): void
+    {
+        $tableName = $this->getTableName();
+        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
+        $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
+        $qb->getRestrictions()->removeByType(HiddenRestriction::class);
+
+        $count = $qb->count('*')
+            ->from($tableName)
+            ->executeQuery()
+            ->fetchNumeric();
+
+        $this->view->assign('fullRecordCount', $count ? $count[0] : 0);
     }
 
     /**

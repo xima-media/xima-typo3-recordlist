@@ -3,13 +3,12 @@
 <f:be.pageRenderer includeRequireJsModules="{0: 'TYPO3/CMS/Backend/Tooltip'}" />
 
 <f:render section="Headline" optional="true">
-	<h1>{recordCount} {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
+	<h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then: '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')} {fullRecordCount} ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
 </f:render>
 
 
 <div id="workspace-settings-form">
-	<input type="hidden" name="depth" value="9" /> <input type="hidden" name="languages" value="all" />
-	<input type="hidden" name="stage" value="-99" />
+	<input type="hidden" name="depth" value="9" /> <input type="hidden" name="languages" value="all" /> <input type="hidden" name="stage" value="-99" />
 </div>
 
 <f:form>
@@ -37,9 +36,7 @@
 	</div>
 
 	<f:if condition="{records->f:count()}">
-		<main class="recordlist"
-			  data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}"
-			  id="workspace-content-wrapper">
+		<main class="recordlist" data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}" id="workspace-content-wrapper">
 
 			<table class="table table-striped table-hover mb-0">
 				<thead>

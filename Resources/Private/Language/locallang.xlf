@@ -24,6 +24,9 @@
 			<trans-unit id="table.filter.label">
 				<source>Filter records</source>
 			</trans-unit>
+			<trans-unit id="table.label.of">
+				<source>of</source>
+			</trans-unit>
 			<trans-unit id="table.label.records">
 				<source>Records</source>
 			</trans-unit>
