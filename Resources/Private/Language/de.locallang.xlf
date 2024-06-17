@@ -91,6 +91,14 @@
 				<source />
 				<target>Änderungen anzeigen</target>
 			</trans-unit>
+			<trans-unit id="search.filtered.headline">
+				<source />
+				<target>Ansicht gefiltert</target>
+			</trans-unit>
+			<trans-unit id="search.filtered.text">
+				<source />
+				<target>Über die 🔍 Suche können die Veranstaltungen gefiltert werden</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
