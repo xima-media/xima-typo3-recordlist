@@ -191,9 +191,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
 
-        // Fetch count of all records without search demand
-        $this->addFullRecordCountToView();
-
         // demand: search word
         $additionalConstraints = [];
         $body = $this->request->getParsedBody();
@@ -258,6 +255,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
             )
             ->andWhere(...$additionalConstraints)
             ->addOrderBy($orderField, $orderDirection);
+
+        // Fetch count of all records without search demand
+        $this->addFullRecordCountToView($requestedPids);
 
         // hook to modify query in child class
         $this->modifyQueryBuilder($query);
@@ -544,7 +544,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
         return $this::TABLE_NAME;
     }
 
-    protected function addFullRecordCountToView(): void
+    /**
+     * @param int[] $requestedPids
+     * @throws Exception
+     */
+    protected function addFullRecordCountToView(array $requestedPids): void
     {
         $tableName = $this->getTableName();
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
@@ -553,6 +557,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         $count = $qb->count('*')
             ->from($tableName)
+            ->where(
+                $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
+            )
             ->executeQuery()
             ->fetchNumeric();
 
