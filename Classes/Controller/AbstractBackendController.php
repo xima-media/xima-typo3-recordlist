@@ -201,7 +201,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $searchConstraints = [];
             foreach ($searchFieldArray as $fieldName) {
                 $searchConstraints[] = $qb->expr()->like(
-                    $fieldName,
+                    't1.' . $fieldName,
                     $qb->createNamedParameter('%' . $searchInput . '%')
                 );
             }
@@ -243,18 +243,32 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // demand: language
         if ($activeLanguage !== -1) {
-            $additionalConstraints[] = $qb->expr()->eq('sys_language_uid', $activeLanguage);
+            $additionalConstraints[] = $qb->expr()->eq('t1.sys_language_uid', $activeLanguage);
         }
 
         // fetch records
         $requestedPids = $currentPid === $accessiblePids[0] ? $accessiblePids : [$currentPid];
-        $query = $qb->select('*')
-            ->from($tableName)
+        $query = $qb->select('t1.*')
+            ->from($tableName, 't1')
             ->where(
-                $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
+                $qb->expr()->in('t1.pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
             )
             ->andWhere(...$additionalConstraints)
-            ->addOrderBy($orderField, $orderDirection);
+            ->addGroupBy('t1.uid')
+            ->addOrderBy('t1.' . $orderField, $orderDirection)
+            ->addOrderBy('t1.sys_language_uid', 'ASC');
+
+        // get translated records
+        $transOrigPointerField = $GLOBALS['TCA'][$tableName]['ctrl']['transOrigPointerField'] ?? '';
+        if ($transOrigPointerField) {
+            $query->leftJoin(
+                't1',
+                $tableName,
+                't2',
+                $qb->expr()->eq('t2.' . $transOrigPointerField, 't1.uid')
+            );
+            $query->addSelectLiteral('GROUP_CONCAT(DISTINCT t2.sys_language_uid) as translated_languages');
+        }
 
         // Fetch count of all records without search demand
         $this->addFullRecordCountToView($requestedPids);
@@ -269,6 +283,14 @@ abstract class AbstractBackendController implements BackendControllerInterface
         foreach ($records as &$record) {
             if (!is_int($record['uid'])) {
                 continue;
+            }
+
+            if ($record['sys_language_uid'] === 0) {
+                $availableLanguages = array_diff(array_column($languages, 'uid'), [$record['sys_language_uid'], 'all']);
+                $record['possible_translations'] = array_diff(
+                    $availableLanguages,
+                    GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
+                );
             }
 
             $record['editable'] = true;
@@ -619,6 +641,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 ],
             ],
             'groupActions' => [
+                'Translate',
                 'Edit',
                 'Changelog',
                 'Revert',

@@ -91,6 +91,10 @@
 				<source />
 				<target>Änderungen anzeigen</target>
 			</trans-unit>
+			<trans-unit id="table.button.translate">
+				<source />
+				<target>Übersetzung erstellen</target>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source />
 				<target>Ansicht gefiltert</target>

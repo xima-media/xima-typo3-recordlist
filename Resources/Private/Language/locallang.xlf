@@ -69,6 +69,9 @@
 			<trans-unit id="table.button.changelog">
 				<source>View changes</source>
 			</trans-unit>
+			<trans-unit id="table.button.translate">
+				<source>Translate record</source>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source>View filtered</source>
 			</trans-unit>
