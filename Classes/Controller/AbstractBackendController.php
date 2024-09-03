@@ -287,10 +287,19 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
             if ($record['sys_language_uid'] === 0) {
                 $availableLanguages = array_diff(array_column($languages, 'uid'), [$record['sys_language_uid'], 'all']);
-                $record['possible_translations'] = array_diff(
+                $possibleTranslations = array_diff(
                     $availableLanguages,
                     GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
                 );
+                foreach ($possibleTranslations ?? [] as $languageUid) {
+                    $redirectUrl = (string)$this->uriBuilder->buildUriFromRoute($moduleName);
+                    $targetUrl = BackendUtility::getLinkToDataHandlerAction(
+                        '&cmd[' . $tableName . '][' . $record['uid'] . '][localize]=' . $languageUid,
+                        $redirectUrl
+                    );
+                    $record['possible_translations'] ??= [];
+                    $record['possible_translations'][$languageUid] = $targetUrl;
+                }
             }
 
             $record['editable'] = true;
