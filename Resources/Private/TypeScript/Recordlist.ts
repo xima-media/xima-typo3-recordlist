@@ -4,6 +4,8 @@ import AjaxRequest from '@typo3/core/ajax/ajax-request'
 import Modal from '@typo3/backend/modal'
 // @ts-expect-error
 import { SeverityEnum } from '@typo3/backend/enum/severity'
+// @ts-expect-error
+import Icons from '@typo3/backend/icons'
 
 class Recordlist {
   protected currentModal: any
@@ -25,6 +27,10 @@ class Recordlist {
 
     document.querySelectorAll('a[data-delete2]').forEach(a => {
       a.addEventListener('click', this.onDeleteLinkClick.bind(this))
+    })
+
+    document.querySelectorAll('a.btn.translate').forEach(a => {
+      a.addEventListener('click', this.onTranslateButtonClick.bind(this))
     })
 
     document.querySelector('.toggleSearchButton')?.addEventListener('click', e => {
@@ -141,6 +147,14 @@ class Recordlist {
         })
         $modal.modal('hide')
       }
+    })
+  }
+
+  protected onTranslateButtonClick(e: PointerEvent): void {
+    const btn = e.currentTarget as HTMLAnchorElement
+    Icons.getIcon('spinner-circle-dark', Icons.sizes.small, null, 'disabled').then((icon: string): void => {
+      btn.classList.add('active')
+      btn.innerHTML = icon
     })
   }
 }

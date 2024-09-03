@@ -1,4 +1,4 @@
-define(['./tslib.es6-CiN4LreV', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal', 'TYPO3/CMS/Backend/Enum/Severity'], (function (tslib_es6, AjaxRequest, Modal, severity_js) { 'use strict';
+define(['./tslib.es6-B452XZ8M', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Backend/Modal', 'TYPO3/CMS/Backend/Enum/Severity', 'TYPO3/CMS/Backend/Icons'], (function (tslib_es6, AjaxRequest, Modal, severity_js, Icons) { 'use strict';
 
     class Recordlist {
         constructor() {
@@ -14,6 +14,9 @@ define(['./tslib.es6-CiN4LreV', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
             });
             document.querySelectorAll('a[data-delete2]').forEach(a => {
                 a.addEventListener('click', this.onDeleteLinkClick.bind(this));
+            });
+            document.querySelectorAll('a.btn.translate').forEach(a => {
+                a.addEventListener('click', this.onTranslateButtonClick.bind(this));
             });
             (_a = document.querySelector('.toggleSearchButton')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', e => {
                 var _a;
@@ -121,6 +124,13 @@ define(['./tslib.es6-CiN4LreV', 'TYPO3/CMS/Core/Ajax/AjaxRequest', 'TYPO3/CMS/Ba
                     }));
                     $modal.modal('hide');
                 }
+            });
+        }
+        onTranslateButtonClick(e) {
+            const btn = e.currentTarget;
+            Icons.getIcon('spinner-circle-dark', Icons.sizes.small, null, 'disabled').then((icon) => {
+                btn.classList.add('active');
+                btn.innerHTML = icon;
             });
         }
     }
