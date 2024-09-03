@@ -285,7 +285,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 continue;
             }
 
-            if ($record['sys_language_uid'] === 0) {
+            if (array_key_exists('translated_languages', $record) && $record['sys_language_uid'] === 0) {
                 $availableLanguages = array_diff(array_column($languages, 'uid'), [$record['sys_language_uid'], 'all']);
                 $possibleTranslations = array_diff(
                     $availableLanguages,
