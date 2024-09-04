@@ -428,11 +428,12 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         // new buttons
         foreach ($accessiblePages as $key => $page) {
+            $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
                 $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                     ->setHref($this->uriBuilder->buildUriFromRoute(
                         'record_edit',
-                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $url]
+                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $url, 'defVals' => $defVals]
                     ))
                     ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
                     ->setTitle($key === 0 ? 'New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
