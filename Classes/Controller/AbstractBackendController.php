@@ -9,6 +9,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
+use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
@@ -26,6 +27,7 @@ use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
+use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Pagination\ArrayPaginator;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -33,34 +35,31 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
+use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
+use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 
-abstract class AbstractBackendController implements BackendControllerInterface
+abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
     public const WORKSPACE_ID = 0;
 
     public const TEMPLATE_NAME = 'Default';
 
-    protected StandaloneView $view;
-
     protected Site $site;
-
-    protected ServerRequestInterface $request;
 
     public function __construct(
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
-        protected UriBuilder $uriBuilder,
+        protected UriBuilder $backendUriBuilder,
         protected FlashMessageService $flashMessageService,
         protected ContainerInterface $container,
         protected ModuleTemplateFactory $moduleTemplateFactory,
         protected WorkspaceService $workspaceService,
-        protected LanguageService $languageService,
-        protected ConfigurationManager $configurationManager
     ) {
+        $this->languageService = $GLOBALS['LANG'] ?? GeneralUtility::makeInstance(LanguageService::class);
     }
 
     /**
@@ -69,7 +68,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
      * @throws RouteNotFoundException
      * @throws SiteNotFoundException
      */
-    public function mainAction(ServerRequestInterface $request): ResponseInterface
+    public function processRequest(RequestInterface $request): ResponseInterface
     {
         $this->request = $request;
 
@@ -85,14 +84,16 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // check access + redirect
         $currentPid = (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
-        $accessiblePages = $this->getAccessibleChildPages($this->getRecordPid());
+        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages($this->getRecordPid());
         $accessiblePids = array_column($accessiblePages, 'uid');
         if (!count($accessiblePids)) {
             return new HtmlResponse('No accessible child pages found.', 403);
         }
 
         // module: get name + settings
-        $moduleName = $this->request->getAttribute('route')?->getOption('moduleName') ?? '';
+        /** @var ExtbaseModule $module */
+        $module = $this->request->getAttribute('route')?->getOption('module');
+        $moduleName = $module->getIdentifier();
         /** @var BackendUserAuthentication $backendAuthentication */
         $backendAuthentication = $GLOBALS['BE_USER'];
         $moduleData = $backendAuthentication->getModuleData($moduleName) ?? [];
@@ -119,7 +120,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $this->request = $this->request->withParsedBody($moduleData['search']);
         }
 
-        $url = (string)$this->uriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
+        $url = (string)$this->backendUriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
         if (!in_array($currentPid, $accessiblePids)) {
             return new RedirectResponse($url);
         }
@@ -136,18 +137,18 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $this->pageRenderer->addInlineSetting(
                 'FormEngine',
                 'moduleUrl',
-                (string)$this->uriBuilder->buildUriFromRoute('record_edit')
+                (string)$this->backendUriBuilder->buildUriFromRoute('record_edit')
             );
             $this->pageRenderer->addInlineSetting(
                 'RecordHistory',
                 'moduleUrl',
-                (string)$this->uriBuilder->buildUriFromRoute('record_history')
+                (string)$this->backendUriBuilder->buildUriFromRoute('record_history')
             );
             $this->pageRenderer->addInlineSetting('Workspaces', 'id', $currentPid);
             $this->pageRenderer->addInlineSetting(
                 'WebLayout',
                 'moduleUrl',
-                (string)$this->uriBuilder->buildUriFromRoute(
+                (string)$this->backendUriBuilder->buildUriFromRoute(
                     trim($backendUser->getTSConfig()['options.']['overridePageModule'] ?? 'web_layout')
                 )
             );
@@ -159,6 +160,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->assign('storagePids', implode(',', $accessiblePids));
         $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
         $this->view->assign('currentPid', $currentPid);
+        $this->view->assign('workspaceId', self::WORKSPACE_ID);
 
         // language: get available
         $languages = GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($currentPid);
@@ -247,7 +249,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         }
 
         // fetch records
-        $requestedPids = $currentPid === $accessiblePids[0] ? $accessiblePids : [$currentPid];
+        $requestedPids = [0];
         $query = $qb->select('t1.*')
             ->from($tableName, 't1')
             ->where(
@@ -255,7 +257,6 @@ abstract class AbstractBackendController implements BackendControllerInterface
             )
             ->andWhere(...$additionalConstraints)
             ->addGroupBy('t1.uid')
-            ->addOrderBy('t1.' . $orderField, $orderDirection)
             ->addOrderBy('t1.sys_language_uid', 'ASC');
 
         // get translated records
@@ -277,7 +278,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->modifyQueryBuilder($query);
 
         $records = $query
-            ->execute()
+            ->executeQuery()
             ->fetchAllAssociative();
 
         foreach ($records as &$record) {
@@ -292,7 +293,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
                     GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
                 );
                 foreach ($possibleTranslations ?? [] as $languageUid) {
-                    $redirectUrl = (string)$this->uriBuilder->buildUriFromRoute($moduleName);
+                    $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($moduleName);
                     $targetUrl = BackendUtility::getLinkToDataHandlerAction(
                         '&cmd[' . $tableName . '][' . $record['uid'] . '][localize]=' . $languageUid,
                         $redirectUrl
@@ -399,7 +400,11 @@ abstract class AbstractBackendController implements BackendControllerInterface
 
         // init pager
         $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
-        $paginator = new ArrayPaginator($records, $currentPage, 100);
+        $paginator = new EditableArrayPaginator($records, $currentPage, 100);
+
+        // hook
+        $this->modifyPaginator($paginator);
+
         $records = $paginator->getPaginatedItems();
         $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
         $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
@@ -431,7 +436,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
                 $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                    ->setHref($this->uriBuilder->buildUriFromRoute(
+                    ->setHref($this->backendUriBuilder->buildUriFromRoute(
                         'record_edit',
                         ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $url, 'defVals' => $defVals]
                     ))
@@ -464,7 +469,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
             $menuItem = $languageMenu
                 ->makeMenuItem()
                 ->setTitle($language['title'])
-                ->setHref((string)$this->uriBuilder->buildUriFromRoute(
+                ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                     $moduleName,
                     ['id' => $currentPid, 'language' => $languageKey]
                 ));
@@ -476,23 +481,25 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
 
         // page selection menu
-        $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
-        $pageMenu->setIdentifier('pageSelector');
-        $pageMenu->setLabel('');
-        foreach ($accessiblePages as $page) {
-            $menuItem = $pageMenu
-                ->makeMenuItem()
-                ->setTitle($page['title'])
-                ->setHref((string)$this->uriBuilder->buildUriFromRoute(
-                    $moduleName,
-                    ['id' => $page['uid'], 'language' => $requestedLanguage ?? 0]
-                ));
-            if ($currentPid === $page['uid']) {
-                $menuItem->setActive(true);
+        if (count($accessiblePages) > 1) {
+            $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+            $pageMenu->setIdentifier('pageSelector');
+            $pageMenu->setLabel('');
+            foreach ($accessiblePages as $page) {
+                $menuItem = $pageMenu
+                    ->makeMenuItem()
+                    ->setTitle($page['title'])
+                    ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
+                        $moduleName,
+                        ['id' => $page['uid'], 'language' => $requestedLanguage ?? 0]
+                    ));
+                if ($currentPid === $page['uid']) {
+                    $menuItem->setActive(true);
+                }
+                $pageMenu->addMenuItem($menuItem);
             }
-            $pageMenu->addMenuItem($menuItem);
+            $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
-        $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
 
         $moduleTemplate->setContent($content);
         return new HtmlResponse($moduleTemplate->renderContent());
@@ -568,7 +575,7 @@ abstract class AbstractBackendController implements BackendControllerInterface
         $this->view->setTemplateRootPaths($typoScript['view']['templateRootPaths']);
         $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
         $this->view->setTemplate($templateName);
-        $this->view->getRequest()->setControllerExtensionName($controllerName);
+        $this->view->setRequest($this->request);
     }
 
     public function getTableName(): string
@@ -663,5 +670,9 @@ abstract class AbstractBackendController implements BackendControllerInterface
                 'ReadyToPublish',
             ],
         ];
+    }
+
+    protected function modifyPaginator(EditableArrayPaginator $paginator): void
+    {
     }
 }
