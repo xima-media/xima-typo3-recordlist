@@ -643,6 +643,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     'columnName' => $defaultColumns,
                     'partial' => 'Text',
                     'languageIndent' => true,
+                    'icon' => true,
                 ],
                 1 => [
                     'columnName' => 'workspace-status',
