@@ -1,14 +1,18 @@
-<f:be.pageRenderer includeRequireJsModules="{0: 'TYPO3/CMS/Backend/DateTimePicker'}" />
+<f:be.pageRenderer includeJavaScriptModules="{0: '@typo3/backend/form-engine/element/datetime-element.js'}" />
 
 <label for="{fieldName}" class="form-label">{label}</label>
 <div class="input-group">
-	<f:form.textfield
-					  value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'d.m.Y\', date: fieldValue)}')}"
-					  id="{fieldName}"
-					  additionalAttributes="{'autocomplete': 'off'}"
-					  class="form-control t3js-datetimepicker t3js-clearable"
-					  data="{date-type: 'datetime'}" />
-	<f:form.hidden name="{fieldName}" value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'c\', date: fieldValue)}')}" /> <label class="mb-0 btn btn-default" for="{fieldName}">
-	<core:icon identifier="actions-calendar" />
-</label>
+    <typo3-formengine-element-datetime class="formengine-field-item t3js-formengine-field-item d-flex w-100" recordfieldid="{fieldName}">
+        <f:form.textfield value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'c\', date: fieldValue)}')}"
+                          id="{fieldName}"
+                          type="date"
+                          name="{fieldName}"
+                          additionalAttributes="{'autocomplete': 'off'}"
+                          class="form-control form-control-clearable t3js-clearable input"
+                          data="{date-type: 'date', data-formengine-datepicker-real-input-name: '{fieldName}'}" />
+        <label class="mb-0 btn btn-default" for="{fieldName}">
+            <core:icon identifier="actions-calendar" />
+        </label>
+    </typo3-formengine-element-datetime>
+    </label>
 </div>
