@@ -103,6 +103,14 @@
 				<source />
 				<target>Über die 🔍 Suche können die Veranstaltungen gefiltert werden</target>
 			</trans-unit>
+			<trans-unit id="table.button.save">
+				<source />
+				<target>Speichern</target>
+			</trans-unit>
+			<trans-unit id="table.button.cancel">
+				<source />
+				<target>Abbrechen</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

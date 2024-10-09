@@ -93,4 +93,45 @@ class AjaxController
 
         return $this->responseFactory->createResponse();
     }
+
+    public function editRecord(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = $request->getParsedBody();
+        $table = $body['table'] ?? '';
+        $uid = $body['uid'] ?? '';
+        $column = $body['column'] ?? '';
+        $newValue = $body['newValue'] ?? '';
+
+        // access check #1
+        if (!$GLOBALS['BE_USER']->check('tables_modify', $table)) {
+            return $this->responseFactory->createResponse(403, 'No permissions to edit record');
+        }
+
+        // access check #2
+        $record = BackendUtility::getRecord($table, $uid);
+        if (!$record) {
+            return $this->responseFactory->createResponse(501, 'Record not found');
+        }
+        if ($record['pid'] !== 0) {
+            $access = BackendUtility::readPageAccess(
+                $record['pid'],
+                $GLOBALS['BE_USER']->getPagePermsClause(Permission::CONTENT_EDIT)
+            ) ?: [];
+            if (empty($access)) {
+                return $this->responseFactory->createResponse(403, 'No permissions to edit record');
+            }
+        }
+
+        $data = [];
+        $data[$table][$uid] = [
+            $column => $newValue,
+        ];
+
+        /** @var DataHandler $dataHandler */
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start($data, []);
+        $dataHandler->process_datamap();
+
+        return $this->responseFactory->createResponse(200);
+    }
 }

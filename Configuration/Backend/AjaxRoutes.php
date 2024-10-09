@@ -9,4 +9,8 @@ return [
         'path' => '/xima/recordlist/delete',
         'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::deleteRecord',
     ],
+    'xima_recordlist_inline_edit' => [
+        'path' => '/xima/recordlist/edit',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::editRecord',
+    ],
 ];

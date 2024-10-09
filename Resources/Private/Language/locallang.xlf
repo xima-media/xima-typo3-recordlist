@@ -78,6 +78,12 @@
 			<trans-unit id="search.filtered.text">
 				<source>By using the 🔍 search you can filter the event list</source>
 			</trans-unit>
+			<trans-unit id="table.button.save">
+				<source>Save</source>
+			</trans-unit>
+			<trans-unit id="table.button.cancel">
+				<source>Cancel</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
