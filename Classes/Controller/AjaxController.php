@@ -2,7 +2,6 @@
 
 namespace Xima\XimaTypo3Recordlist\Controller;
 
-use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\Exception;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -10,13 +9,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class AjaxController
 {
     public function __construct(
-        private readonly ResponseFactoryInterface $responseFactory
+        private readonly ResponseFactoryInterface $responseFactory,
+        private readonly ResourceFactory $resourceFactory
     ) {
     }
 
@@ -51,7 +52,6 @@ class AjaxController
 
     /**
      * @throws Exception
-     * @throws DBALException
      */
     public function deleteRecord(ServerRequestInterface $request): ResponseInterface
     {
@@ -90,6 +90,59 @@ class AjaxController
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
         $dataHandler->start([], $cmd);
         $dataHandler->process_cmdmap();
+
+        return $this->responseFactory->createResponse();
+    }
+
+    /**
+     * @throws Exception|\Doctrine\DBAL\Exception
+     */
+    public function deleteFile(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = $request->getParsedBody();
+        $sysFileMetaDataUid = $body['uid'] ?? '';
+
+        if (!$sysFileMetaDataUid) {
+            return $this->responseFactory->createResponse(501, 'No sys_file_metadata UID provided');
+        }
+
+        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_file_metadata');
+        $sysFileUid = $qb->select('file')
+            ->from('sys_file_metadata')
+            ->where($qb->expr()->eq('uid', $qb->createNamedParameter($sysFileMetaDataUid, \PDO::PARAM_INT)))
+            ->executeQuery()
+            ->fetchOne();
+
+        if (!$sysFileUid) {
+            // FAL record not found, try to delete sys_file_metadata record
+            if ($GLOBALS['BE_USER']->check('tables_modify', 'sys_file_metadata')) {
+                $cmd['sys_file_metadata'][$sysFileMetaDataUid]['delete'] = 1;
+                $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+                $dataHandler->start([], $cmd);
+                $dataHandler->process_cmdmap();
+
+                return $this->responseFactory->createResponse();
+            }
+            return $this->responseFactory->createResponse(501, 'File not found');
+        }
+
+        $isAllowedToDelete = false;
+        try {
+            $file = $this->resourceFactory->getFileObject($sysFileUid);
+            $storage = $file->getStorage();
+            $isAllowedToDelete = $storage?->checkFileActionPermission('delete', $file) ?? false;
+        } catch (\Exception) {
+        }
+
+        if (!$isAllowedToDelete) {
+            return $this->responseFactory->createResponse(403, 'No permissions to delete file');
+        }
+
+        try {
+            $storage?->deleteFile($file);
+        } catch (\Exception) {
+            return $this->responseFactory->createResponse(501, 'Error while deleting file');
+        }
 
         return $this->responseFactory->createResponse();
     }

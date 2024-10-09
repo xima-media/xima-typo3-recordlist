@@ -111,6 +111,30 @@
 				<source />
 				<target>Abbrechen</target>
 			</trans-unit>
+			<trans-unit id="modal.delete.title">
+				<source />
+				<target>Datei löschen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.message">
+				<source />
+				<target>Sind Sie sicher, dass Sie diese Datei löschen möchten?</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.cancel">
+				<source />
+				<target>Nein, abbrechen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.confirm">
+				<source />
+				<target>Ja, löschen</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.title">
+				<source />
+				<target>Datei gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.message">
+				<source />
+				<target>Die Datei wurde erfolgreich gelöscht</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

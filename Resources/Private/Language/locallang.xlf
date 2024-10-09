@@ -84,6 +84,24 @@
 			<trans-unit id="table.button.cancel">
 				<source>Cancel</source>
 			</trans-unit>
+			<trans-unit id="modal.delete.title">
+				<source>Delete file</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.message">
+				<source>Are you sure you want to delete this file?</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.cancel">
+				<source>No, cancel</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.confirm">
+				<source>Yes, delete</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.title">
+				<source>File deleted</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.message">
+				<source>The file has been deleted successfully</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
