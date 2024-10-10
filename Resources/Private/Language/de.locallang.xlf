@@ -27,6 +27,10 @@
 				<source />
 				<target>Suchen</target>
 			</trans-unit>
+			<trans-unit id="filter.label.search">
+				<source />
+				<target>Suche</target>
+			</trans-unit>
 			<trans-unit id="table.filter.label">
 				<source />
 				<target>Einträge filtern</target>

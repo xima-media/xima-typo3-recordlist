@@ -30,6 +30,9 @@
 			<trans-unit id="table.label.records">
 				<source>Records</source>
 			</trans-unit>
+			<trans-unit id="filter.label.search">
+				<source>Search</source>
+			</trans-unit>
 			<trans-unit id="table.label.searchField">
 				<source>Enter search phrase</source>
 			</trans-unit>

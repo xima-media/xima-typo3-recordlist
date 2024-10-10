@@ -16,20 +16,19 @@
 
 <f:form>
 	<div class="row">
-		<div class="col-xl-6">
+		<div class="col-12">
 			<div id="searchInputs" class="card p-3 mb-5 {f:if(condition:settings.isSearchButtonActive, else:'hidden')}">
 
 				<f:form.hidden name="order_field" value="{order_field}" />
 				<f:form.hidden name="order_direction" value="{order_direction}" />
 
-				<div class="row mb-3">
-					<div class="col-12">
-						<h5>{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.filter')}</h5>
-						<f:render partial="Filter/SearchField" arguments="{_all}" />
-					</div>
-				</div>
-
-				<f:render section="SearchInputs" optional="true" />
+				<f:render section="SearchInputs" optional="true">
+                    <div class="row mb-3">
+                        <div class="col-12 col-xl-6">
+                            <f:render partial="Filter/SearchField" arguments="{_all}" />
+                        </div>
+                    </div>
+                </f:render>
 
 				<div class="row mb-6">
 					<div class="col col-auto">
