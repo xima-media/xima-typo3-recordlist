@@ -1,0 +1,35 @@
+<f:be.pageRenderer includeJavaScriptModules="{0: '@typo3/backend/form-engine/element/category-element.js'}" />
+
+<label class="form-label" for="{fieldName}"> {label}</label>
+<typo3-formengine-element-category class="formengine-field-item t3js-formengine-field-item"
+                                   recordfieldid="{fieldName}"
+                                   treewrapperid="tree_{fieldName}">
+    <input id="{fieldName}"
+           type="hidden"
+           class="treeRecord"
+           name="{fieldName}"
+           value="{fieldValue}"
+           data-uid="1"
+           data-command="new"
+           data-fieldname="{fieldName}"
+           data-tablename="{tableName}"
+           data-read-only=""
+           data-tree-show-toolbar="0"
+           data-recordtypevalue="1"
+           data-relatedfieldname=""
+           data-flexformsheetname=""
+           data-flexformfieldname=""
+           data-tree-exclusive-keys=""
+           data-flexformcontainername=""
+           data-datastructureidentifier=""
+           data-tree-expand-up-to-level="999"
+           data-flexformcontainerfieldname=""
+           data-flexformcontaineridentifier=""
+           data-formengine-validation-rules="[{&quot;type&quot;:&quot;category&quot;,&quot;minItems&quot;:0,&quot;maxItems&quot;:99999}]"
+           data-flexformsectioncontainerisnew=""
+           data-overridevalues="[{fieldValue}]"
+           data-defaultvalues="[]">
+
+    <div id="tree_{fieldName}" class="svg-tree-element" style="height: 400px;"></div>
+
+</typo3-formengine-element-category>
