@@ -65,9 +65,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     /**
      * @throws Exception
-     * @throws DBALException
      * @throws RouteNotFoundException
-     * @throws SiteNotFoundException
      */
     public function processRequest(RequestInterface $request): ResponseInterface
     {
@@ -165,15 +163,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $languages[-1]['uid'] = 'all';
         }
         // language: override from request
-        $requestedLanguage = GeneralUtility::_GET('language');
-        if (isset($requestedLanguage) && is_string($requestedLanguage) && in_array(
-                (int)$requestedLanguage,
-                array_keys($languages)
-            )) {
-            $moduleData['settings'] ??= [];
-            $moduleData['settings']['language'] = (int)$requestedLanguage;
-            $backendUser->pushModuleData($moduleName, $moduleData);
-        }
         $requestedLanguage = $this->getRequestedLanguage();
 
         $this->view->assign('settings', $moduleData['settings'] ?? []);
@@ -436,7 +425,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // build module template
         $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->configureModuleTemplate($moduleTemplate);
+        $this->configureModuleTemplateDocHeader($moduleTemplate);
 
         $moduleTemplate->setContent($content);
         return new HtmlResponse($moduleTemplate->renderContent());
@@ -538,14 +527,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
         $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
 
-        $controllerName = (new \ReflectionClass($this::class))->getShortName();
-        $templateName = $this::TEMPLATE_NAME;
-
         $this->view = GeneralUtility::makeInstance(StandaloneView::class);
         $this->view->setLayoutRootPaths($typoScript['view']['layoutRootPaths']);
         $this->view->setTemplateRootPaths($typoScript['view']['templateRootPaths']);
         $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
-        $this->view->setTemplate($templateName);
+        $this->view->setTemplate($this::TEMPLATE_NAME);
         $this->view->setRequest($this->request);
     }
 
@@ -588,7 +574,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     /**
      * @param int[] $requestedPids
-     * @throws Exception
+     * @throws Exception|\Doctrine\DBAL\Exception
      */
     protected function addFullRecordCountToView(array $requestedPids): void
     {
@@ -672,9 +658,23 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ];
     }
 
-    private function configureModuleTemplate(ModuleTemplate $moduleTemplate): void
+    private function configureModuleTemplateDocHeader(ModuleTemplate $moduleTemplate): void
     {
         // new buttons
+        $this->addNewButtonToModuleTemplate($moduleTemplate);
+
+        // search button
+        $this->addSearchButtonToNewModuleTemplate($moduleTemplate);
+
+        // language menu
+        $this->addLanguageSelectionToModuleTemplate($moduleTemplate);
+
+        // page selection menu
+        $this->addPidSelectionToModuleTemplate($moduleTemplate);
+    }
+
+    protected function addNewButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
         $accessiblePages = $this->getAccessibleChildPages();
         $activeLanguage = $this->getActiveLanguage();
         $tableName = $this->getTableName();
@@ -692,7 +692,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
             );
         }
-        // search button
+    }
+
+    private function addSearchButtonToNewModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
         $isSearchButtonActive = (string)($moduleData['settings']['isSearchButtonActive'] ?? '');
         $searchClass = $isSearchButtonActive ? 'active' : '';
         $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
@@ -705,8 +708,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ButtonBar::BUTTON_POSITION_LEFT,
             2
         );
+    }
 
-        // language menu
+    protected function addLanguageSelectionToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
         $languageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
         $languageMenu->setIdentifier('languageSelector');
         $languageMenu->setLabel('');
@@ -719,14 +724,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->getModuleName(),
                     ['id' => $this->getCurrentPid(), 'language' => $languageKey]
                 ));
-            if ($activeLanguage === $languageKey) {
+            if ($this->getActiveLanguage() === $languageKey) {
                 $menuItem->setActive(true);
             }
             $languageMenu->addMenuItem($menuItem);
         }
         $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
+    }
 
-        // page selection menu
+    protected function addPidSelectionToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
+        $accessiblePages = $this->getAccessiblePids();
         if (count($accessiblePages) > 1) {
             $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
             $pageMenu->setIdentifier('pageSelector');
