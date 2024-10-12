@@ -13,6 +13,7 @@ use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -83,21 +84,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->site = $site;
 
         // check access + redirect
-        $currentPid = (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
-        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages($this->getRecordPid());
-        $accessiblePids = array_column($accessiblePages, 'uid');
+        $currentPid = $this->getCurrentPid();
+        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages();
+        $accessiblePids = $this->getAccessiblePids();
         if (!count($accessiblePids)) {
             return new HtmlResponse('No accessible child pages found.', 403);
         }
 
         // module: get name + settings
-        /** @var ExtbaseModule $module */
-        $module = $this->request->getAttribute('route')?->getOption('module');
-        $moduleName = $module->getIdentifier();
-        /** @var BackendUserAuthentication $backendAuthentication */
-        $backendAuthentication = $GLOBALS['BE_USER'];
-        $moduleData = $backendAuthentication->getModuleData($moduleName) ?? [];
-        $moduleData = is_array($moduleData) ? $moduleData : [];
+        $moduleName = $this->getModuleName();
+        $moduleData = $this->getModuleData();
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $moduleName);
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
@@ -114,13 +110,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             $moduleData['search'] = $body;
-            $backendAuthentication->pushModuleData($moduleName, $moduleData);
+            $this->getBackendAuthentication()->pushModuleData($moduleName, $moduleData);
         } elseif (!empty($moduleData['search'])) {
             // fake request body from moduleData
             $this->request = $this->request->withParsedBody($moduleData['search']);
         }
 
-        $url = (string)$this->backendUriBuilder->buildUriFromRoute($moduleName, ['id' => $accessiblePids[0]]);
+        $url = $this->getCurrentUrl();
         if (!in_array($currentPid, $accessiblePids)) {
             return new RedirectResponse($url);
         }
@@ -163,7 +159,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->view->assign('workspaceId', self::WORKSPACE_ID);
 
         // language: get available
-        $languages = GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($currentPid);
+        $languages = $this->getLanguages();
         $this->view->assign('languages', $languages);
         if (isset($languages[-1])) {
             $languages[-1]['uid'] = 'all';
@@ -171,16 +167,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // language: override from request
         $requestedLanguage = GeneralUtility::_GET('language');
         if (isset($requestedLanguage) && is_string($requestedLanguage) && in_array(
-            (int)$requestedLanguage,
-            array_keys($languages)
-        )) {
+                (int)$requestedLanguage,
+                array_keys($languages)
+            )) {
             $moduleData['settings'] ??= [];
             $moduleData['settings']['language'] = (int)$requestedLanguage;
             $backendUser->pushModuleData($moduleName, $moduleData);
         }
+        $requestedLanguage = $this->getRequestedLanguage();
 
         $this->view->assign('settings', $moduleData['settings'] ?? []);
-        $activeLanguage = $moduleData['settings']['language'] ?? -1;
+        $activeLanguage = $this->getActiveLanguage();
         foreach ($languages as &$language) {
             // needs to be strict type checking as this is not possible in fluid
             if ((string)$language['uid'] === $activeLanguage) {
@@ -427,79 +424,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->view->assign('table', $tableName);
         $this->view->assign('tableConfiguration', $tableConfiguration);
 
+        // download button
+        $downloadSettingUrl = $this->backendUriBuilder->buildUriFromRoute('ajax_record_download_settings', [
+            'table' => $tableName,
+            'id' => $currentPid,
+
+        ]);
+        $this->view->assign('downloadSettingUrl', (string)$downloadSettingUrl);
+
         $content = $this->view->render();
 
         // build module template
         $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        // new buttons
-        foreach ($accessiblePages as $key => $page) {
-            $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
-            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-                $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                    ->setHref($this->backendUriBuilder->buildUriFromRoute(
-                        'record_edit',
-                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $url, 'defVals' => $defVals]
-                    ))
-                    ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
-                    ->setTitle($key === 0 ? 'New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
-                    ->setShowLabelText(true)
-                    ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
-            );
-        }
-        // search button
-        $isSearchButtonActive = (string)($moduleData['settings']['isSearchButtonActive'] ?? '');
-        $searchClass = $isSearchButtonActive ? 'active' : '';
-        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                ->setHref('#')
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
-                ->setShowLabelText(false)
-                ->setClasses($searchClass . ' toggleSearchButton')
-                ->setIcon($this->iconFactory->getIcon('actions-search', ICON::SIZE_SMALL)),
-            ButtonBar::BUTTON_POSITION_LEFT,
-            2
-        );
-
-        // language menu
-        $languageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
-        $languageMenu->setIdentifier('languageSelector');
-        $languageMenu->setLabel('');
-        unset($language);
-        foreach ($languages as $languageKey => $language) {
-            $menuItem = $languageMenu
-                ->makeMenuItem()
-                ->setTitle($language['title'])
-                ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
-                    $moduleName,
-                    ['id' => $currentPid, 'language' => $languageKey]
-                ));
-            if ($activeLanguage === $languageKey) {
-                $menuItem->setActive(true);
-            }
-            $languageMenu->addMenuItem($menuItem);
-        }
-        $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
-
-        // page selection menu
-        if (count($accessiblePages) > 1) {
-            $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
-            $pageMenu->setIdentifier('pageSelector');
-            $pageMenu->setLabel('');
-            foreach ($accessiblePages as $page) {
-                $menuItem = $pageMenu
-                    ->makeMenuItem()
-                    ->setTitle($page['title'])
-                    ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
-                        $moduleName,
-                        ['id' => $page['uid'], 'language' => $requestedLanguage ?? 0]
-                    ));
-                if ($currentPid === $page['uid']) {
-                    $menuItem->setActive(true);
-                }
-                $pageMenu->addMenuItem($menuItem);
-            }
-            $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
-        }
+        $this->configureModuleTemplate($moduleTemplate);
 
         $moduleTemplate->setContent($content);
         return new HtmlResponse($moduleTemplate->renderContent());
@@ -518,12 +455,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return null;
     }
 
-    /**
-     * @throws DBALException
-     * @throws Exception
-     */
-    protected function getAccessibleChildPages(int $pageUid): array
+    protected function getCurrentPid(): int
     {
+        return (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
+    }
+
+    /**
+     * @throws Exception|\Doctrine\DBAL\Exception
+     */
+    protected function getAccessibleChildPages(): array
+    {
+        $pageUid = $this->getRecordPid();
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $result = $qb->select('uid', 'title')
             ->from('pages')
@@ -561,6 +503,35 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $accessiblePages;
     }
 
+    protected function getAccessiblePids(): array
+    {
+        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages();
+        return array_column($accessiblePages, 'uid');
+    }
+
+    private function getModuleName(): string
+    {
+        /** @var ExtbaseModule $module */
+        $module = $this->request->getAttribute('route')?->getOption('module');
+        return $module->getIdentifier();
+    }
+
+    private function getModuleData(): array
+    {
+        $moduleData = $this->getBackendAuthentication()->getModuleData($this->getModuleName()) ?? [];
+        return is_array($moduleData) ? $moduleData : [];
+    }
+
+    protected function getBackendAuthentication(): BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'];
+    }
+
+    protected function getCurrentUrl(): string
+    {
+        return (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName(), ['id' => $this->getAccessiblePids()[0]]);
+    }
+
     protected function initializeView(): void
     {
         $settings = $this->configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
@@ -578,9 +549,41 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->view->setRequest($this->request);
     }
 
+    protected function getLanguages(): array
+    {
+        return GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($this->getCurrentPid());
+    }
+
+    protected function getRequestedLanguage()
+    {
+        $requestedLanguage = GeneralUtility::_GET('language');
+        if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists((int)$requestedLanguage,
+                $this->getLanguages())) {
+            $moduleData = $this->getModuleData();
+            $moduleData['settings'] ??= [];
+            $moduleData['settings']['language'] = (int)$requestedLanguage;
+            $this->getBackendAuthentication()->pushModuleData($this->getModuleName(), $moduleData);
+        }
+        return $requestedLanguage;
+    }
+
+    private function getActiveLanguage(): int
+    {
+        $moduleData = $this->getModuleData();
+        return $moduleData['settings']['language'] ?? -1;
+    }
+
     public function getTableName(): string
     {
         return $this::TABLE_NAME;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function addAdditionalConstraints(): array
+    {
+        return [];
     }
 
     /**
@@ -605,14 +608,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->view->assign('fullRecordCount', $count ? $count[0] : 0);
     }
 
-    /**
-     * @return array<int, string>
-     */
-    public function addAdditionalConstraints(): array
-    {
-        return [];
-    }
-
     public function modifyQueryBuilder(QueryBuilder $qb): void
     {
     }
@@ -626,6 +621,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
      * @param mixed[] $record
      */
     public function modifyRecord(array &$record): void
+    {
+    }
+
+    protected function modifyPaginator(EditableArrayPaginator $paginator): void
     {
     }
 
@@ -673,7 +672,79 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ];
     }
 
-    protected function modifyPaginator(EditableArrayPaginator $paginator): void
+    private function configureModuleTemplate(ModuleTemplate $moduleTemplate): void
     {
+        // new buttons
+        $accessiblePages = $this->getAccessibleChildPages();
+        $activeLanguage = $this->getActiveLanguage();
+        $tableName = $this->getTableName();
+        foreach ($accessiblePages as $key => $page) {
+            $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+                $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                    ->setHref($this->backendUriBuilder->buildUriFromRoute(
+                        'record_edit',
+                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals]
+                    ))
+                    ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
+                    ->setTitle($key === 0 ? 'New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
+                    ->setShowLabelText(true)
+                    ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
+            );
+        }
+        // search button
+        $isSearchButtonActive = (string)($moduleData['settings']['isSearchButtonActive'] ?? '');
+        $searchClass = $isSearchButtonActive ? 'active' : '';
+        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref('#')
+                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
+                ->setShowLabelText(false)
+                ->setClasses($searchClass . ' toggleSearchButton')
+                ->setIcon($this->iconFactory->getIcon('actions-search', ICON::SIZE_SMALL)),
+            ButtonBar::BUTTON_POSITION_LEFT,
+            2
+        );
+
+        // language menu
+        $languageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+        $languageMenu->setIdentifier('languageSelector');
+        $languageMenu->setLabel('');
+        $languages = $this->getLanguages();
+        foreach ($languages as $languageKey => $language) {
+            $menuItem = $languageMenu
+                ->makeMenuItem()
+                ->setTitle($language['title'])
+                ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
+                    $this->getModuleName(),
+                    ['id' => $this->getCurrentPid(), 'language' => $languageKey]
+                ));
+            if ($activeLanguage === $languageKey) {
+                $menuItem->setActive(true);
+            }
+            $languageMenu->addMenuItem($menuItem);
+        }
+        $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
+
+        // page selection menu
+        if (count($accessiblePages) > 1) {
+            $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+            $pageMenu->setIdentifier('pageSelector');
+            $pageMenu->setLabel('');
+            foreach ($accessiblePages as $page) {
+                $menuItem = $pageMenu
+                    ->makeMenuItem()
+                    ->setTitle($page['title'])
+                    ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
+                        $this->getModuleName(),
+                        ['id' => $page['uid'], 'language' => $this->getRequestedLanguage() ?? 0]
+                    ));
+                if ($this->getCurrentPid() === $page['uid']) {
+                    $menuItem->setActive(true);
+                }
+                $pageMenu->addMenuItem($menuItem);
+            }
+            $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
+        }
     }
 }
