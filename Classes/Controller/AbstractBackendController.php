@@ -29,6 +29,7 @@ use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Package\PackageManager;
+use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Pagination\ArrayPaginator;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -51,6 +52,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected Site $site;
 
+    protected array $additionalConstraints = [];
+
     public function __construct(
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
@@ -60,7 +63,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         protected ModuleTemplateFactory $moduleTemplateFactory,
         protected WorkspaceService $workspaceService,
     ) {
-        $this->languageService = $GLOBALS['LANG'] ?? GeneralUtility::makeInstance(LanguageService::class);
     }
 
     /**
@@ -180,7 +182,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
 
         // demand: search word
-        $additionalConstraints = [];
         $body = $this->request->getParsedBody();
         if (isset($body['search_field']) && $body['search_field']) {
             $searchInput = $body['search_field'];
@@ -193,15 +194,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $qb->createNamedParameter('%' . $searchInput . '%')
                 );
             }
-            $additionalConstraints[] = $qb->expr()->orX(...$searchConstraints);
+            $this->additionalConstraints[] = $qb->expr()->orX(...$searchConstraints);
             $this->view->assign('search_field', $searchInput);
         }
 
         // demand: additional constraints from child class
-        $addedAdditionalConstraints = $this->addAdditionalConstraints();
-        if (count($addedAdditionalConstraints)) {
-            $additionalConstraints[] = $qb->expr()->andX(...$this->addAdditionalConstraints());
-        }
+        $this->addAdditionalConstraints();
 
         // demand: order
         $defaultOrderField = $GLOBALS['TCA'][$tableName]['ctrl']['default_sortby'] ?? '';
@@ -231,7 +229,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // demand: language
         if ($activeLanguage !== -1) {
-            $additionalConstraints[] = $qb->expr()->eq('t1.sys_language_uid', $activeLanguage);
+            $this->additionalConstraints[] = $qb->expr()->eq('t1.sys_language_uid', $activeLanguage);
         }
 
         // fetch records
@@ -241,7 +239,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->where(
                 $qb->expr()->in('t1.pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
             )
-            ->andWhere(...$additionalConstraints)
+            ->andWhere(...$this->additionalConstraints)
             ->addGroupBy('t1.uid')
             ->addOrderBy('t1.sys_language_uid', 'ASC');
 
@@ -403,7 +401,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         foreach ($tableConfiguration['columns'] as &$column) {
             if (!isset($column['label'])) {
                 $tcaLabel = $GLOBALS['TCA'][$tableName]['columns'][$column['columnName']]['label'] ?? '';
-                $column['label'] = $this->languageService->sL($tcaLabel);
+                $column['label'] = $this->getLanguageService()->sL($tcaLabel);
             }
         }
         $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
@@ -564,12 +562,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $this::TABLE_NAME;
     }
 
-    /**
-     * @return array<int, string>
-     */
-    public function addAdditionalConstraints(): array
+    public function addAdditionalConstraints(): void
     {
-        return [];
     }
 
     /**
@@ -687,7 +681,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals]
                     ))
                     ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
-                    ->setTitle($key === 0 ? 'New ' . $this->languageService->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
+                    ->setTitle($key === 0 ? 'New ' . $this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
                     ->setShowLabelText(true)
                     ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
             );
