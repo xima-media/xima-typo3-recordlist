@@ -1,8 +1,9 @@
 <f:be.pageRenderer includeJavaScriptModules="{0: '@typo3/backend/form-engine/element/datetime-element.js'}" />
 
 <label for="{fieldName}" class="form-label">{label}</label>
-<div class="input-group">
-    <typo3-formengine-element-datetime class="formengine-field-item t3js-formengine-field-item d-flex w-100" recordfieldid="{fieldName}">
+
+<typo3-formengine-element-datetime class="formengine-field-item t3js-formengine-field-item d-flex w-100" recordfieldid="{fieldName}">
+    <div class="input-group">
         <f:form.textfield value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'c\', date: fieldValue)}')}"
                           id="{fieldName}"
                           type="date"
@@ -13,6 +14,5 @@
         <label class="mb-0 btn btn-default" for="{fieldName}">
             <core:icon identifier="actions-calendar" />
         </label>
-    </typo3-formengine-element-datetime>
-    </label>
-</div>
+    </div>
+</typo3-formengine-element-datetime>
