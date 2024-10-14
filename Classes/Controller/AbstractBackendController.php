@@ -2,12 +2,10 @@
 
 namespace Xima\XimaTypo3Recordlist\Controller;
 
-use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Result;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
@@ -28,10 +26,8 @@ use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
-use TYPO3\CMS\Core\Package\PackageManager;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Page\PageRenderer;
-use TYPO3\CMS\Core\Pagination\ArrayPaginator;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
@@ -54,6 +50,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $additionalConstraints = [];
 
+    protected QueryBuilder $queryBuilder;
+
+    protected array $languages = [];
+
+    protected array $records = [];
+
     public function __construct(
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
@@ -74,6 +76,68 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->request = $request;
 
         // Get site
+        $this->setSite();
+
+        // check access + redirect
+        $this->accessCheck();
+
+        if (!in_array($this->getCurrentPid(), $this->getAccessiblePids(), true)) {
+            return new RedirectResponse($this->getCurrentUrl());
+        }
+
+        // module: get name + settings
+        $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $this->getModuleName());
+        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
+        $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
+
+        // module data: save search values
+        $this->updateModuleDataFromRequest();
+
+        $this->setLanguages();
+
+        $this->loadWorkspaceScripts();
+
+        // build view
+        $this->initializeView();
+        $this->view->assign('settings', $this->getModuleData()['settings'] ?? []);
+        $this->view->assign('moduleName', $this->getModuleName());
+        $this->view->assign('storagePids', implode(',', $this->getAccessiblePids()));
+        $this->view->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
+        $this->view->assign('currentPid', $this->getCurrentPid());
+        $this->view->assign('workspaceId', self::WORKSPACE_ID);
+        $this->view->assign('languages', $this->getLanguages());
+        $this->view->assign('fullRecordCount', $this->getFullRecordCount());
+        $this->view->assign('table', $this->getTableName());
+
+        // build and execute query
+        $this->createQueryBuilder();
+        $this->addSearchConstraint();
+        $this->addLanguageConstraint();
+        $this->addAdditionalConstraints();
+        $this->addOrderConstraint();
+        $this->addTranslationsToQuery();
+        $this->addBasicQueryConstraints();
+        $this->modifyQueryBuilder();
+        $this->fetchRecords();
+
+        // modify records (can unset records)
+        $this->modifyAllRecords();
+        $this->view->assign('recordCount', count($this->records));
+
+        // init pager -> modifies all records!
+        $this->createPaginator();
+
+        $this->createColumnConfiguration();
+
+        // build and render module template
+        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+        $this->configureModuleTemplateDocHeader($moduleTemplate);
+        $moduleTemplate->setContent($this->view->render());
+        return new HtmlResponse($moduleTemplate->renderContent());
+    }
+
+    protected function setSite(): void
+    {
         $site = $this->request->getAttribute('site');
         if (!$site instanceof Site) {
             $site = $this->findSiteByCurrentHostname();
@@ -82,351 +146,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
             throw new SiteNotFoundException('Could not determine which site configuration to use', 1688298643);
         }
         $this->site = $site;
-
-        // check access + redirect
-        $currentPid = $this->getCurrentPid();
-        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages();
-        $accessiblePids = $this->getAccessiblePids();
-        if (!count($accessiblePids)) {
-            return new HtmlResponse('No accessible child pages found.', 403);
-        }
-
-        // module: get name + settings
-        $moduleName = $this->getModuleName();
-        $moduleData = $this->getModuleData();
-        $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $moduleName);
-        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
-        $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
-
-        // module data: saved search values
-        if ($this->request->getMethod() === 'POST') {
-            $body = $this->request->getParsedBody();
-            unset($body['__referrer'], $body['__trustedProperties']);
-
-            // clear moduleData + current request body in case reset button is used for submit
-            if (isset($body['reset'])) {
-                $body = [];
-                $this->request = $this->request->withParsedBody([]);
-            }
-
-            $moduleData['search'] = $body;
-            $this->getBackendAuthentication()->pushModuleData($moduleName, $moduleData);
-        } elseif (!empty($moduleData['search'])) {
-            // fake request body from moduleData
-            $this->request = $this->request->withParsedBody($moduleData['search']);
-        }
-
-        $url = $this->getCurrentUrl();
-        if (!in_array($currentPid, $accessiblePids)) {
-            return new RedirectResponse($url);
-        }
-
-        /** @var BackendUserAuthentication $backendUser */
-        $backendUser = $GLOBALS['BE_USER'];
-        $isWorkspaceAdmin = false;
-        // load workspace related stuff
-        if ($this::WORKSPACE_ID) {
-            $isWorkspaceAdmin = $backendUser->workspacePublishAccess($this::WORKSPACE_ID);
-            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
-            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Workspace');
-            $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
-            $this->pageRenderer->addInlineSetting(
-                'FormEngine',
-                'moduleUrl',
-                (string)$this->backendUriBuilder->buildUriFromRoute('record_edit')
-            );
-            $this->pageRenderer->addInlineSetting(
-                'RecordHistory',
-                'moduleUrl',
-                (string)$this->backendUriBuilder->buildUriFromRoute('record_history')
-            );
-            $this->pageRenderer->addInlineSetting('Workspaces', 'id', $currentPid);
-            $this->pageRenderer->addInlineSetting(
-                'WebLayout',
-                'moduleUrl',
-                (string)$this->backendUriBuilder->buildUriFromRoute(
-                    trim($backendUser->getTSConfig()['options.']['overridePageModule'] ?? 'web_layout')
-                )
-            );
-        }
-
-        // build view
-        $this->initializeView();
-        $this->view->assign('moduleName', $moduleName);
-        $this->view->assign('storagePids', implode(',', $accessiblePids));
-        $this->view->assign('isWorkspaceAdmin', $isWorkspaceAdmin);
-        $this->view->assign('currentPid', $currentPid);
-        $this->view->assign('workspaceId', self::WORKSPACE_ID);
-
-        // language: get available
-        $languages = $this->getLanguages();
-        $this->view->assign('languages', $languages);
-        if (isset($languages[-1])) {
-            $languages[-1]['uid'] = 'all';
-        }
-        // language: override from request
-        $requestedLanguage = $this->getRequestedLanguage();
-
-        $this->view->assign('settings', $moduleData['settings'] ?? []);
-        $activeLanguage = $this->getActiveLanguage();
-        foreach ($languages as &$language) {
-            // needs to be strict type checking as this is not possible in fluid
-            if ((string)$language['uid'] === $activeLanguage) {
-                $language['active'] = true;
-            }
-        }
-
-        // Add data to template
-        $tableName = $this->getTableName();
-        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
-        $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
-
-        // demand: search word
-        $body = $this->request->getParsedBody();
-        if (isset($body['search_field']) && $body['search_field']) {
-            $searchInput = $body['search_field'];
-            $searchFields = $GLOBALS['TCA'][$tableName]['ctrl']['searchFields'] ?? '';
-            $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
-            $searchConstraints = [];
-            foreach ($searchFieldArray as $fieldName) {
-                $searchConstraints[] = $qb->expr()->like(
-                    't1.' . $fieldName,
-                    $qb->createNamedParameter('%' . $searchInput . '%')
-                );
-            }
-            $this->additionalConstraints[] = $qb->expr()->orX(...$searchConstraints);
-            $this->view->assign('search_field', $searchInput);
-        }
-
-        // demand: additional constraints from child class
-        $this->addAdditionalConstraints();
-
-        // demand: order
-        $defaultOrderField = $GLOBALS['TCA'][$tableName]['ctrl']['default_sortby'] ?? '';
-        $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? '';
-        $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['label'];
-        $orderField = $body['order_field'] ?? $defaultOrderField;
-        $orderDirection = $body['order_direction'] ?? 'ASC';
-        $this->view->assign('order_field', $orderField);
-        $this->view->assign('order_direction', $orderDirection);
-
-        // demand: offline records (1/2)
-        $onlyOfflineRecords = false;
-        if (isset($body['is_offline']) && $body['is_offline'] === '1') {
-            $this->view->assign('is_offline', 1);
-            $onlyOfflineRecords = true;
-        }
-
-        // demand: readyToPublish (1/2)
-        $onlyReadyToPublish = false;
-        if (isset($body['is_ready_to_publish']) && $body['is_ready_to_publish'] === '1') {
-            $this->view->assign('is_ready_to_publish', 1);
-            $onlyReadyToPublish = true;
-        }
-
-        // display hidden records
-        $qb->getRestrictions()->removeByType(HiddenRestriction::class);
-
-        // demand: language
-        if ($activeLanguage !== -1) {
-            $this->additionalConstraints[] = $qb->expr()->eq('t1.sys_language_uid', $activeLanguage);
-        }
-
-        // fetch records
-        $requestedPids = [0];
-        $query = $qb->select('t1.*')
-            ->from($tableName, 't1')
-            ->where(
-                $qb->expr()->in('t1.pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
-            )
-            ->andWhere(...$this->additionalConstraints)
-            ->addGroupBy('t1.uid')
-            ->addOrderBy('t1.sys_language_uid', 'ASC');
-
-        // get translated records
-        $transOrigPointerField = $GLOBALS['TCA'][$tableName]['ctrl']['transOrigPointerField'] ?? '';
-        if ($transOrigPointerField) {
-            $query->leftJoin(
-                't1',
-                $tableName,
-                't2',
-                $qb->expr()->eq('t2.' . $transOrigPointerField, 't1.uid')
-            );
-            $query->addSelectLiteral('GROUP_CONCAT(DISTINCT t2.sys_language_uid) as translated_languages');
-        }
-
-        // Fetch count of all records without search demand
-        $this->addFullRecordCountToView($requestedPids);
-
-        // hook to modify query in child class
-        $this->modifyQueryBuilder($query);
-
-        $records = $query
-            ->executeQuery()
-            ->fetchAllAssociative();
-
-        foreach ($records as &$record) {
-            if (!is_int($record['uid'])) {
-                continue;
-            }
-
-            if (array_key_exists('translated_languages', $record) && $record['sys_language_uid'] === 0) {
-                $availableLanguages = array_diff(array_column($languages, 'uid'), [$record['sys_language_uid'], 'all']);
-                $possibleTranslations = array_diff(
-                    $availableLanguages,
-                    GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
-                );
-                foreach ($possibleTranslations ?? [] as $languageUid) {
-                    $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($moduleName);
-                    $targetUrl = BackendUtility::getLinkToDataHandlerAction(
-                        '&cmd[' . $tableName . '][' . $record['uid'] . '][localize]=' . $languageUid,
-                        $redirectUrl
-                    );
-                    $record['possible_translations'] ??= [];
-                    $record['possible_translations'][$languageUid] = $targetUrl;
-                }
-            }
-
-            $record['editable'] = true;
-            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $tableName, $record['uid']);
-
-            // has version record => replace with versioned record
-            if (is_array($vRecord)) {
-                $record = $vRecord;
-                $record['editable'] = true;
-                $record['state'] = 'modified';
-
-                $workspaceStatus = [];
-                $workspaceStatus['level'] = 'warning';
-                $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy');
-
-                // newly created record
-                if ($record['t3ver_oid'] === 0) {
-                    $record['state'] = 'new';
-                }
-
-                // newly deleted recrod
-                if ($record['t3ver_state'] === 2) {
-                    $record['state'] = 'deleted';
-                }
-
-                // stage "Ready to publish"
-                if ($record['t3ver_stage'] === -10) {
-                    $workspaceStatus['level'] = 'success';
-                    $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
-                    $record['editable'] = $isWorkspaceAdmin;
-
-                    $referencesToPublish = [];
-                    foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $column) {
-                        if (($column['config']['foreign_table'] ?? false) && $column['config']['foreign_table'] === 'sys_file_reference') {
-                            // new/modified records
-                            $references = BackendUtility::resolveFileReferences(
-                                $tableName,
-                                $columnName,
-                                $record,
-                                $this::WORKSPACE_ID
-                            );
-                            foreach ($references ?? [] as $reference) {
-                                if ($reference->getProperty('t3ver_stage') !== -10) {
-                                    continue;
-                                }
-                                $referencesToPublish[] = [
-                                    'liveId' => $reference->getProperty('t3ver_oid') ?: $reference->getUid(),
-                                    'table' => 'sys_file_reference',
-                                    'versionId' => $reference->getUid(),
-                                ];
-                            }
-                            // deleted records
-                            $references = BackendUtility::resolveFileReferences($tableName, $columnName, $record);
-                            foreach ($references ?? [] as $reference) {
-                                $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord(
-                                    $this::WORKSPACE_ID,
-                                    'sys_file_reference',
-                                    $reference->getUid()
-                                );
-                                $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === 2;
-                                $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === -10;
-                                if ($isDeleted || $isModified) {
-                                    $referencesToPublish[] = [
-                                        'liveId' => $referenceOverlay['t3ver_oid'] ?: $referenceOverlay['uid'],
-                                        'table' => 'sys_file_reference',
-                                        'versionId' => $referenceOverlay['uid'],
-                                    ];
-                                }
-                            }
-                        }
-                    }
-                    $record['referencesToPublish'] = $referencesToPublish;
-                }
-
-                $record['status'] ??= [];
-                $record['status'][] = $workspaceStatus;
-            }
-
-            // demand: readyToPublish (2/2)
-            if ($onlyReadyToPublish && (!is_array($vRecord) || $record['t3ver_stage'] !== -10)) {
-                $record = null;
-                continue;
-            }
-
-            // demand: offline records (2/2)
-            if ($onlyOfflineRecords && !is_array($vRecord)) {
-                $record = null;
-                continue;
-            }
-
-            $this->modifyRecord($record);
-        }
-
-        // remove unset records
-        $records = array_filter($records);
-        $this->view->assign('recordCount', count($records));
-
-        // init pager
-        $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
-        $paginator = new EditableArrayPaginator($records, $currentPage, 100);
-
-        // hook
-        $this->modifyPaginator($paginator);
-
-        $records = $paginator->getPaginatedItems();
-        $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
-        $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
-        $this->view->assign('current_page', $currentPage);
-        $this->view->assign('next_page', $nextPage);
-        $this->view->assign('prev_page', $prevPage);
-
-        // Table column configuration
-        $tableConfiguration = $this->getTableConfiguration();
-        foreach ($tableConfiguration['columns'] as &$column) {
-            if (!isset($column['label'])) {
-                $tcaLabel = $GLOBALS['TCA'][$tableName]['columns'][$column['columnName']]['label'] ?? '';
-                $column['label'] = $this->getLanguageService()->sL($tcaLabel);
-            }
-        }
-        $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
-
-        $this->view->assign('records', $records);
-        $this->view->assign('paginator', $paginator);
-        $this->view->assign('table', $tableName);
-        $this->view->assign('tableConfiguration', $tableConfiguration);
-
-        // download button
-        $downloadSettingUrl = $this->backendUriBuilder->buildUriFromRoute('ajax_record_download_settings', [
-            'table' => $tableName,
-            'id' => $currentPid,
-
-        ]);
-        $this->view->assign('downloadSettingUrl', (string)$downloadSettingUrl);
-
-        $content = $this->view->render();
-
-        // build module template
-        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->configureModuleTemplateDocHeader($moduleTemplate);
-
-        $moduleTemplate->setContent($content);
-        return new HtmlResponse($moduleTemplate->renderContent());
     }
 
     private function findSiteByCurrentHostname(): ?Site
@@ -442,9 +161,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return null;
     }
 
-    protected function getCurrentPid(): int
+    protected function accessCheck(): void
     {
-        return (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
+        $accessiblePids = $this->getAccessiblePids();
+        if (!count($accessiblePids)) {
+            throw new RouteNotFoundException('No accessible child pages found.', 403);
+        }
+    }
+
+    protected function getAccessiblePids(): array
+    {
+        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages();
+        return array_column($accessiblePages, 'uid');
     }
 
     /**
@@ -478,7 +206,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             $access = BackendUtility::readPageAccess(
                 $page['uid'],
-                $GLOBALS['BE_USER']->getPagePermsClause(Permission::PAGE_SHOW)
+                $this->getBackendAuthentication()->getPagePermsClause(Permission::PAGE_SHOW)
             ) ?: [];
 
             if (empty($access)) {
@@ -490,10 +218,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $accessiblePages;
     }
 
-    protected function getAccessiblePids(): array
+    protected function getBackendAuthentication(): BackendUserAuthentication
     {
-        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages();
-        return array_column($accessiblePages, 'uid');
+        return $GLOBALS['BE_USER'];
+    }
+
+    protected function getCurrentPid(): int
+    {
+        return (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
+    }
+
+    protected function getCurrentUrl(): string
+    {
+        return (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName(), ['id' => $this->getAccessiblePids()[0]]);
     }
 
     private function getModuleName(): string
@@ -503,20 +240,115 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $module->getIdentifier();
     }
 
+    protected function updateModuleDataFromRequest(): void
+    {
+        $moduleData = $this->getModuleData();
+        $body = $this->request->getParsedBody();
+
+        if ($this->request->getMethod() === 'POST') {
+            unset($body['__referrer'], $body['__trustedProperties']);
+
+            // clear moduleData + current request body in case reset button is used for submit
+            if (isset($body['reset'])) {
+                $body = [];
+                $this->request = $this->request->withParsedBody([]);
+            }
+
+            $moduleData['search'] = $body;
+            $this->getBackendAuthentication()->pushModuleData($this->getModuleName(), $moduleData);
+        } elseif (!empty($moduleData['search'])) {
+            // fake request body from moduleData
+            $this->request = $this->request->withParsedBody($moduleData['search']);
+        }
+
+        // add requested language to module settings
+        $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
+        if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists((int)$requestedLanguage,
+                $this->getLanguages())) {
+            $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
+        }
+
+        // demand: offline records (1/2)
+        $onlyOfflineRecords = false;
+        if (isset($body['is_offline']) && $body['is_offline'] === '1') {
+            $this->view->assign('is_offline', 1);
+            $onlyOfflineRecords = true;
+        }
+        $this->addToModuleDataSettings(['onlyOfflineRecords' => $onlyOfflineRecords]);
+
+        // demand: readyToPublish (1/2)
+        $onlyReadyToPublish = false;
+        if (isset($body['is_ready_to_publish']) && $body['is_ready_to_publish'] === '1') {
+            $this->view->assign('is_ready_to_publish', 1);
+            $onlyReadyToPublish = true;
+        }
+        $this->addToModuleDataSettings(['onlyReadyToPublish' => $onlyReadyToPublish]);
+    }
+
     private function getModuleData(): array
     {
         $moduleData = $this->getBackendAuthentication()->getModuleData($this->getModuleName()) ?? [];
         return is_array($moduleData) ? $moduleData : [];
     }
 
-    protected function getBackendAuthentication(): BackendUserAuthentication
+    protected function getLanguages(): array
     {
-        return $GLOBALS['BE_USER'];
+        return $this->languages;
     }
 
-    protected function getCurrentUrl(): string
+    protected function setLanguages(): void
     {
-        return (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName(), ['id' => $this->getAccessiblePids()[0]]);
+        $languages = GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($this->getCurrentPid());
+        if (isset($languages[-1])) {
+            $languages[-1]['uid'] = 'all';
+        }
+
+        $activeLanguage = $this->getActiveLanguage();
+        foreach ($languages as &$language) {
+            // needs to be strict type checking as this is not possible in fluid
+            if ((string)$language['uid'] === $activeLanguage) {
+                $language['active'] = true;
+            }
+        }
+
+        $this->languages = $languages;
+    }
+
+    protected function addToModuleDataSettings(array $settings): void
+    {
+        $moduleData = $this->getModuleData();
+        $moduleData['settings'] ??= [];
+        foreach ($settings as $setting => $value) {
+            $moduleData['settings'][$setting] = $value;
+        }
+        $this->getBackendAuthentication()->pushModuleData($this->getModuleName(), $moduleData);
+    }
+
+    protected function loadWorkspaceScripts(): void
+    {
+        if ($this::WORKSPACE_ID) {
+            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
+            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Workspace');
+            $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
+            $this->pageRenderer->addInlineSetting(
+                'FormEngine',
+                'moduleUrl',
+                (string)$this->backendUriBuilder->buildUriFromRoute('record_edit')
+            );
+            $this->pageRenderer->addInlineSetting(
+                'RecordHistory',
+                'moduleUrl',
+                (string)$this->backendUriBuilder->buildUriFromRoute('record_history')
+            );
+            $this->pageRenderer->addInlineSetting('Workspaces', 'id', $this->getCurrentPid());
+            $this->pageRenderer->addInlineSetting(
+                'WebLayout',
+                'moduleUrl',
+                (string)$this->backendUriBuilder->buildUriFromRoute(
+                    trim($this->getBackendAuthentication()->getTSConfig()['options.']['overridePageModule'] ?? 'web_layout')
+                )
+            );
+        }
     }
 
     protected function initializeView(): void
@@ -533,44 +365,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->view->setRequest($this->request);
     }
 
-    protected function getLanguages(): array
+    protected function isWorkspaceAdmin(): bool
     {
-        return GeneralUtility::makeInstance(TranslationConfigurationProvider::class)->getSystemLanguages($this->getCurrentPid());
-    }
-
-    protected function getRequestedLanguage()
-    {
-        $requestedLanguage = GeneralUtility::_GET('language');
-        if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists((int)$requestedLanguage,
-                $this->getLanguages())) {
-            $moduleData = $this->getModuleData();
-            $moduleData['settings'] ??= [];
-            $moduleData['settings']['language'] = (int)$requestedLanguage;
-            $this->getBackendAuthentication()->pushModuleData($this->getModuleName(), $moduleData);
-        }
-        return $requestedLanguage;
-    }
-
-    private function getActiveLanguage(): int
-    {
-        $moduleData = $this->getModuleData();
-        return $moduleData['settings']['language'] ?? -1;
-    }
-
-    public function getTableName(): string
-    {
-        return $this::TABLE_NAME;
-    }
-
-    public function addAdditionalConstraints(): void
-    {
+        return $this->getBackendAuthentication()->workspacePublishAccess($this::WORKSPACE_ID);
     }
 
     /**
-     * @param int[] $requestedPids
      * @throws Exception|\Doctrine\DBAL\Exception
      */
-    protected function addFullRecordCountToView(array $requestedPids): void
+    protected function getFullRecordCount(): int
     {
         $tableName = $this->getTableName();
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
@@ -580,21 +383,271 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $count = $qb->count('*')
             ->from($tableName)
             ->where(
-                $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($requestedPids))
+                $qb->expr()->in('pid', $qb->quoteArrayBasedValueListToIntegerList($this->getRequestedPids()))
             )
             ->executeQuery()
             ->fetchNumeric();
 
-        $this->view->assign('fullRecordCount', $count ? $count[0] : 0);
+        return $count ? $count[0] : 0;
     }
 
-    public function modifyQueryBuilder(QueryBuilder $qb): void
+    public function getTableName(): string
     {
+        return $this::TABLE_NAME;
+    }
+
+    protected function getRequestedPids(): array
+    {
+        return $this->getCurrentPid() === $this->getAccessiblePids()[0] ? $this->getAccessiblePids() : [$this->getCurrentPid()];
+    }
+
+    private function createQueryBuilder(): void
+    {
+        $tableName = $this->getTableName();
+        $this->queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
+        $this->queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
+        $this->queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
+    }
+
+    private function addSearchConstraint(): void
+    {
+        $body = $this->request->getParsedBody();
+        if (isset($body['search_field']) && $body['search_field']) {
+            $searchInput = $body['search_field'];
+            $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? '';
+            $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
+            $searchConstraints = [];
+            foreach ($searchFieldArray as $fieldName) {
+                $searchConstraints[] = $this->queryBuilder->expr()->like(
+                    't1.' . $fieldName,
+                    $this->queryBuilder->createNamedParameter('%' . $searchInput . '%')
+                );
+            }
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->orX(...$searchConstraints);
+            $this->view->assign('search_field', $searchInput);
+        }
+    }
+
+    protected function addLanguageConstraint(): void
+    {
+        $activeLanguage = $this->getActiveLanguage();
+        if ($activeLanguage !== -1) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.sys_language_uid', $activeLanguage);
+        }
+    }
+
+    private function getActiveLanguage(): int
+    {
+        return $this->getModuleDataSetting('language') ?? -1;
+    }
+
+    protected function getModuleDataSetting(string $setting): mixed
+    {
+        return $this->getModuleData()['settings'][$setting] ?? null;
+    }
+
+    public function addAdditionalConstraints(): void
+    {
+    }
+
+    protected function addOrderConstraint(): void
+    {
+        $body = $this->request->getParsedBody();
+        $tableName = $this->getTableName();
+        $defaultOrderField = $GLOBALS['TCA'][$tableName]['ctrl']['default_sortby'] ?? '';
+        $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? '';
+        $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['label'];
+        $orderField = $body['order_field'] ?? $defaultOrderField;
+        $orderDirection = $body['order_direction'] ?? 'ASC';
+        $this->view->assign('order_field', $orderField);
+        $this->view->assign('order_direction', $orderDirection);
+    }
+
+    protected function addTranslationsToQuery(): void
+    {
+        // get translated records
+        $transOrigPointerField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['transOrigPointerField'] ?? '';
+        if ($transOrigPointerField) {
+            $this->queryBuilder->leftJoin(
+                't1',
+                $this->getTableName(),
+                't2',
+                $this->queryBuilder->expr()->eq('t2.' . $transOrigPointerField, 't1.uid')
+            );
+            $this->queryBuilder->addSelectLiteral('GROUP_CONCAT(DISTINCT t2.sys_language_uid) as translated_languages');
+        }
+    }
+
+    protected function addBasicQueryConstraints(): void
+    {
+        $this->queryBuilder->select('t1.*')
+            ->from($this->getTableName(), 't1')
+            ->where(
+                $this->queryBuilder->expr()->in('t1.pid',
+                    $this->queryBuilder->quoteArrayBasedValueListToIntegerList($this->getRequestedPids()))
+            )
+            ->andWhere(...$this->additionalConstraints)
+            ->addGroupBy('t1.uid')
+            ->addOrderBy('t1.sys_language_uid', 'ASC');
+    }
+
+    public function modifyQueryBuilder(): void
+    {
+    }
+
+    private function fetchRecords(): void
+    {
+        $this->records = $this->queryBuilder
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    protected function modifyAllRecords(): void
+    {
+        foreach ($this->records as &$record) {
+            if (!is_int($record['uid'])) {
+                continue;
+            }
+
+            if (array_key_exists('translated_languages', $record) && $record['sys_language_uid'] === 0) {
+                $availableLanguages = array_diff(array_column($this->getLanguages(), 'uid'), [$record['sys_language_uid'], 'all']);
+                $possibleTranslations = array_diff(
+                    $availableLanguages,
+                    GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
+                );
+                foreach ($possibleTranslations ?? [] as $languageUid) {
+                    $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName());
+                    $targetUrl = BackendUtility::getLinkToDataHandlerAction(
+                        '&cmd[' . $this->getTableName() . '][' . $record['uid'] . '][localize]=' . $languageUid,
+                        $redirectUrl
+                    );
+                    $record['possible_translations'] ??= [];
+                    $record['possible_translations'][$languageUid] = $targetUrl;
+                }
+            }
+
+            $record['editable'] = true;
+            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
+
+            // has version record => replace with versioned record
+            if (is_array($vRecord)) {
+                $record = $vRecord;
+                $record['editable'] = true;
+                $record['state'] = 'modified';
+
+                $workspaceStatus = [];
+                $workspaceStatus['level'] = 'warning';
+                $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy');
+
+                // newly created record
+                if ($record['t3ver_oid'] === 0) {
+                    $record['state'] = 'new';
+                }
+
+                // newly deleted recrod
+                if ($record['t3ver_state'] === 2) {
+                    $record['state'] = 'deleted';
+                }
+
+                // stage "Ready to publish"
+                if ($record['t3ver_stage'] === -10) {
+                    $workspaceStatus['level'] = 'success';
+                    $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
+                    $record['editable'] = $this->isWorkspaceAdmin();
+
+                    $referencesToPublish = [];
+                    foreach ($GLOBALS['TCA'][$this->getTableName()]['columns'] as $columnName => $column) {
+                        if (($column['config']['foreign_table'] ?? false) && $column['config']['foreign_table'] === 'sys_file_reference') {
+                            // new/modified records
+                            $references = BackendUtility::resolveFileReferences(
+                                $this->getTableName(),
+                                $columnName,
+                                $record,
+                                $this::WORKSPACE_ID
+                            );
+                            foreach ($references ?? [] as $reference) {
+                                if ($reference->getProperty('t3ver_stage') !== -10) {
+                                    continue;
+                                }
+                                $referencesToPublish[] = [
+                                    'liveId' => $reference->getProperty('t3ver_oid') ?: $reference->getUid(),
+                                    'table' => 'sys_file_reference',
+                                    'versionId' => $reference->getUid(),
+                                ];
+                            }
+                            // deleted records
+                            $references = BackendUtility::resolveFileReferences($this->getTableName(), $columnName, $record);
+                            foreach ($references ?? [] as $reference) {
+                                $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord(
+                                    $this::WORKSPACE_ID,
+                                    'sys_file_reference',
+                                    $reference->getUid()
+                                );
+                                $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === 2;
+                                $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === -10;
+                                if ($isDeleted || $isModified) {
+                                    $referencesToPublish[] = [
+                                        'liveId' => $referenceOverlay['t3ver_oid'] ?: $referenceOverlay['uid'],
+                                        'table' => 'sys_file_reference',
+                                        'versionId' => $referenceOverlay['uid'],
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                    $record['referencesToPublish'] = $referencesToPublish;
+                }
+
+                $record['status'] ??= [];
+                $record['status'][] = $workspaceStatus;
+            }
+
+            // demand: readyToPublish (2/2)
+            if ($this->getModuleDataSetting('onlyReadyToPublish') && (!is_array($vRecord) || $record['t3ver_stage'] !== -10)) {
+                $record = null;
+                continue;
+            }
+
+            // demand: offline records (2/2)
+            if ($this->getModuleDataSetting('onlyOfflineRecords') && !is_array($vRecord)) {
+                $record = null;
+                continue;
+            }
+        }
+
+        $this->records = array_filter($this->records);
     }
 
     protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
+    }
+
+    protected function createPaginator(): void
+    {
+        $body = $this->request->getParsedBody();
+        $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
+
+        $paginator = new EditableArrayPaginator($this->records, $currentPage, 100);
+
+        $items = [];
+        foreach ($paginator->getPaginatedItems() as &$item) {
+            $this->modifyRecord($item);
+            $items[] = $item;
+        }
+        unset($item);
+
+        $this->records = $items;
+        $paginator->setPaginatedItems($items);
+
+        $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
+        $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
+
+        $this->view->assign('records', $this->records);
+        $this->view->assign('paginator', $paginator);
+        $this->view->assign('current_page', $currentPage);
+        $this->view->assign('next_page', $nextPage);
+        $this->view->assign('prev_page', $prevPage);
     }
 
     /**
@@ -604,8 +657,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
     }
 
-    protected function modifyPaginator(EditableArrayPaginator $paginator): void
+    protected function createColumnConfiguration(): void
     {
+        $tableConfiguration = $this->getTableConfiguration();
+        foreach ($tableConfiguration['columns'] as &$column) {
+            if (!isset($column['label'])) {
+                $tcaLabel = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['label'] ?? '';
+                $column['label'] = $this->getLanguageService()->sL($tcaLabel);
+            }
+        }
+        unset($column);
+        $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
+        $this->view->assign('tableConfiguration', $tableConfiguration);
     }
 
     /**
@@ -657,6 +720,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // new buttons
         $this->addNewButtonToModuleTemplate($moduleTemplate);
 
+        // download button
+        $this->addDownloadButtonToModuleTemplate($moduleTemplate);
+
         // search button
         $this->addSearchButtonToNewModuleTemplate($moduleTemplate);
 
@@ -688,9 +754,27 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
+    protected function addDownloadButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-download-button.js')
+        );
+
+        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref('#')
+                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.download'))
+                ->setShowLabelText(true)
+                ->setClasses('downloadButton')
+                ->setIcon($this->iconFactory->getIcon('actions-download', ICON::SIZE_SMALL)),
+            ButtonBar::BUTTON_POSITION_RIGHT,
+            3
+        );
+    }
+
     private function addSearchButtonToNewModuleTemplate(ModuleTemplate $moduleTemplate): void
     {
-        $isSearchButtonActive = (string)($moduleData['settings']['isSearchButtonActive'] ?? '');
+        $isSearchButtonActive = (string)$this->getModuleDataSetting('isSearchButtonActive');
         $searchClass = $isSearchButtonActive ? 'active' : '';
         $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
@@ -739,7 +823,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ->setTitle($page['title'])
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
-                        ['id' => $page['uid'], 'language' => $this->getRequestedLanguage() ?? 0]
+                        ['id' => $page['uid'], 'language' => $this->getActiveLanguage() ?? 0]
                     ));
                 if ($this->getCurrentPid() === $page['uid']) {
                     $menuItem->setActive(true);
