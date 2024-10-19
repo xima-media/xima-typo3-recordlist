@@ -17,4 +17,8 @@ return [
         'path' => '/xima/recordlist/edit',
         'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::editRecord',
     ],
+    'xima_recordlist_downloadsettings' => [
+        'path' => '/xima/recordlist/downloadsettings',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::downloadSettings',
+    ],
 ];

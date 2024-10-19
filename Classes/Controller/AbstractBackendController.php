@@ -6,6 +6,7 @@ use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Result;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
@@ -14,6 +15,7 @@ use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Backend\View\BackendViewFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
@@ -63,7 +65,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         protected FlashMessageService $flashMessageService,
         protected ContainerInterface $container,
         protected ModuleTemplateFactory $moduleTemplateFactory,
-        protected WorkspaceService $workspaceService,
+        protected WorkspaceService $workspaceService
     ) {
     }
 
@@ -758,6 +760,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-download-button.js')
+                ->instance($this->getTableName(), $this->getTableConfiguration())
         );
 
         $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
@@ -765,7 +768,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setHref('#')
                 ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.download'))
                 ->setShowLabelText(true)
-                ->setClasses('downloadButton')
+                ->setClasses('recordlist-download-button')
                 ->setIcon($this->iconFactory->getIcon('actions-download', ICON::SIZE_SMALL)),
             ButtonBar::BUTTON_POSITION_RIGHT,
             3

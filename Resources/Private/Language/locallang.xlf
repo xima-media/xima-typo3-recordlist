@@ -105,6 +105,9 @@
 			<trans-unit id="notification.delete.success.message">
 				<source>The file has been deleted successfully</source>
 			</trans-unit>
+            <trans-unit id="header.button.download">
+				<source>Download</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
