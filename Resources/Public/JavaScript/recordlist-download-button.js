@@ -16,6 +16,8 @@ export default class RecordlistDownloadButton {
         }
 
         this.initEventListener()
+
+        console.log(document.querySelectorAll('form'))
     }
 
     cacheDom() {
@@ -32,12 +34,15 @@ export default class RecordlistDownloadButton {
     onButtonClick(e) {
         e.preventDefault()
 
+        const downloadSettingFields = document.querySelector('#downloadSettingsForm')
+        downloadSettingFields.querySelector('input[name="is_download"]').value = 1
+
         const modal = Modal.advanced({
-            content: TYPO3.settings.ajaxUrls.xima_recordlist_downloadsettings,
+            content: '',
             title: 'Download records',
             severity: SeverityEnum.notice,
             size: Modal.sizes.small,
-            type: Modal.types.ajax,
+            type: Modal.types.default,
             buttons: [
                 {
                     text: 'Close',
@@ -51,15 +56,34 @@ export default class RecordlistDownloadButton {
                     btnClass: 'btn-primary',
                     name: 'download',
                     trigger: () => {
-                        const form = modal.querySelector('form')
+                        const form = document.querySelector('form')
                         form.submit()
-                        modal.dismiss()
+                        Modal.dismiss()
                     }
                 }
             ],
-            ajaxCallback: () => {
-
+            callback: () => {
+                modal.querySelector('.modal-body').innerHTML = downloadSettingFields.innerHTML
+                modal.querySelector('.modal-body').querySelectorAll('input[type="text"]').forEach(input => {
+                    input.addEventListener('change', (e) => {
+                        downloadSettingFields.querySelector(`input[name="${e.currentTarget.name}"]`).value = e.currentTarget.value
+                    })
+                })
+                modal.querySelector('.modal-body').querySelectorAll('select').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        downloadSettingFields.querySelector(`select[name="${e.currentTarget.name}"]`).value = e.currentTarget.value
+                    })
+                })
+                modal.querySelector('.modal-body').querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        downloadSettingFields.querySelector(`input[name="${e.currentTarget.name}"]`).checked = e.currentTarget.checked
+                    })
+                })
             }
+        })
+
+        modal.addEventListener('typo3-modal-hidden', () => {
+            downloadSettingFields.querySelector('input[name="is_download"]').value = 0
         })
     }
 }

@@ -23,6 +23,7 @@ use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\HtmlResponse;
+use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
@@ -34,6 +35,7 @@ use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
+use TYPO3\CMS\Core\Utility\CsvUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
@@ -47,6 +49,27 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public const WORKSPACE_ID = 0;
 
     public const TEMPLATE_NAME = 'Default';
+
+    protected const DOWNLOAD_FORMATS = [
+        'csv' => [
+            'options' => [
+                'delimiter' => [
+                    'comma' => ',',
+                    'semicolon' => ';',
+                    'pipe' => '|',
+                ],
+                'quote' => [
+                    'doublequote' => '"',
+                    'singlequote' => '\'',
+                    'space' => ' ',
+                ],
+            ],
+            'defaults' => [
+                'delimiter' => ',',
+                'quote' => '"',
+            ],
+        ],
+    ];
 
     protected Site $site;
 
@@ -125,6 +148,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // modify records (can unset records)
         $this->modifyAllRecords();
         $this->view->assign('recordCount', count($this->records));
+
+        if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
+            return $this->downloadRecords();
+        }
 
         // init pager -> modifies all records!
         $this->createPaginator();
@@ -248,7 +275,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $body = $this->request->getParsedBody();
 
         if ($this->request->getMethod() === 'POST') {
-            unset($body['__referrer'], $body['__trustedProperties']);
+            unset($body['__referrer'], $body['__trustedProperties'], $body['is_download']);
 
             // clear moduleData + current request body in case reset button is used for submit
             if (isset($body['reset'])) {
@@ -625,6 +652,32 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $GLOBALS['LANG'];
     }
 
+    private function downloadRecords(): ResponseInterface
+    {
+        $format = $this->request->getParsedBody()['format'] ?? 'csv';
+        $filename = ($this->request->getParsedBody()['filename'] ?? $this->getTableName()) ?: $this->getTableName();
+
+        $csvDelimiter = $this->request->getParsedBody()['csv']['delimiter'] ?? ',';
+        $csvQuote = $this->request->getParsedBody()['csv']['quote'] ?? '"';
+        $csvColumns = $this->request->getParsedBody()['allColumns'] ?? true;
+        $headerRow = array_keys($this->records[0]);
+
+
+        // Create result
+        $result = [];
+        $result[] = CsvUtility::csvValues($headerRow, $csvDelimiter, $csvQuote);
+        foreach ($this->records as $record) {
+            $result[] = CsvUtility::csvValues($record, $csvDelimiter, $csvQuote);
+        }
+
+        $response = $this->responseFactory->createResponse()
+            ->withHeader('Content-Type', 'application/octet-stream')
+            ->withHeader('Content-Disposition', 'attachment; filename=' . $filename. '.' . $format);
+        $response->getBody()->write(implode(CRLF, $result));
+
+        return $response;
+    }
+
     protected function createPaginator(): void
     {
         $body = $this->request->getParsedBody();
@@ -763,9 +816,20 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->instance($this->getTableName(), $this->getTableConfiguration())
         );
 
+        $url = $this->backendUriBuilder->buildUriFromRoutePath($this->request->getAttribute('module')->getPath());
+
+        $downloadArguments = $this->request->getQueryParams();
+
+        $this->view->assignMultiple([
+            'table' => $this->getTableName(),
+            'downloadArguments' => $downloadArguments,
+            'formats' => array_keys(self::DOWNLOAD_FORMATS),
+            'formatOptions' => self::DOWNLOAD_FORMATS,
+        ]);
+
         $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                ->setHref('#')
+                ->setHref($url)
                 ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.download'))
                 ->setShowLabelText(true)
                 ->setClasses('recordlist-download-button')
