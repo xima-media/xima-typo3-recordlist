@@ -162,7 +162,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         $this->configureModuleTemplateDocHeader($moduleTemplate);
         $moduleTemplate->setContent($this->view->render());
-        return new HtmlResponse($moduleTemplate->renderContent());
+        return $this->htmlResponse($moduleTemplate->renderContent());
     }
 
     protected function setSite(): void
@@ -516,8 +516,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->queryBuilder->quoteArrayBasedValueListToIntegerList($this->getRequestedPids()))
             )
             ->andWhere(...$this->additionalConstraints)
-            ->addGroupBy('t1.uid')
-            ->addOrderBy('t1.sys_language_uid', 'ASC');
+            ->addGroupBy('t1.uid');
+
+        $langugeField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
+        if ($langugeField) {
+            $this->queryBuilder->addOrderBy('t1.' . $langugeField, 'ASC');
+        }
     }
 
     public function modifyQueryBuilder(): void
@@ -662,7 +666,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $csvColumns = $this->request->getParsedBody()['allColumns'] ?? true;
         $headerRow = array_keys($this->records[0]);
 
-
         // Create result
         $result = [];
         $result[] = CsvUtility::csvValues($headerRow, $csvDelimiter, $csvQuote);
@@ -672,7 +675,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $response = $this->responseFactory->createResponse()
             ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Disposition', 'attachment; filename=' . $filename. '.' . $format);
+            ->withHeader('Content-Disposition', 'attachment; filename=' . $filename . '.' . $format);
         $response->getBody()->write(implode(CRLF, $result));
 
         return $response;
@@ -857,6 +860,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addLanguageSelectionToModuleTemplate(ModuleTemplate $moduleTemplate): void
     {
+        $languageField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
+        if (!$languageField) {
+            return;
+        }
         $languageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
         $languageMenu->setIdentifier('languageSelector');
         $languageMenu->setLabel('');
