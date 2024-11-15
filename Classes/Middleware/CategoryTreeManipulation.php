@@ -11,7 +11,6 @@ use TYPO3\CMS\Core\Http\JsonResponse;
 
 class CategoryTreeManipulation implements MiddlewareInterface
 {
-
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         /**

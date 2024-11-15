@@ -6,7 +6,6 @@ use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Result;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
@@ -15,15 +14,12 @@ use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Backend\View\BackendViewFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
-use TYPO3\CMS\Core\Http\HtmlResponse;
-use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
@@ -292,8 +288,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // add requested language to module settings
         $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
-        if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists((int)$requestedLanguage,
-                $this->getLanguages())) {
+        if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists(
+            (int)$requestedLanguage,
+            $this->getLanguages()
+        )) {
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
@@ -512,8 +510,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->queryBuilder->select('t1.*')
             ->from($this->getTableName(), 't1')
             ->where(
-                $this->queryBuilder->expr()->in('t1.pid',
-                    $this->queryBuilder->quoteArrayBasedValueListToIntegerList($this->getRequestedPids()))
+                $this->queryBuilder->expr()->in(
+                    't1.pid',
+                    $this->queryBuilder->quoteArrayBasedValueListToIntegerList($this->getRequestedPids())
+                )
             )
             ->andWhere(...$this->additionalConstraints)
             ->addGroupBy('t1.uid');
