@@ -891,7 +891,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
             $pageMenu->setIdentifier('pageSelector');
             $pageMenu->setLabel('');
-            foreach ($accessiblePages as $page) {
+            foreach ($accessiblePages as $pageUid) {
+                $page = BackendUtility::getRecord('pages', $pageUid);
                 $menuItem = $pageMenu
                     ->makeMenuItem()
                     ->setTitle($page['title'])
