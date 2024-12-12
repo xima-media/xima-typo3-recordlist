@@ -111,6 +111,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
 
+        $this->initializeView();
+
         // module data: save search values
         $this->updateModuleDataFromRequest();
 
@@ -119,7 +121,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->loadWorkspaceScripts();
 
         // build view
-        $this->initializeView();
         $this->view->assign('settings', $this->getModuleData()['settings'] ?? []);
         $this->view->assign('moduleName', $this->getModuleName());
         $this->view->assign('storagePids', implode(',', $this->getAccessiblePids()));
