@@ -251,7 +251,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getCurrentPid(): int
     {
-        return (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
+        $id = !empty($this->request->getQueryParams()['id']) ? (int)$this->request->getQueryParams()['id'] : 0;
+        if ($id > 0) {
+            return $id;
+        }
+        return (int)($this->request->getParsedBody()['id'] ?? 0);
     }
 
     protected function getCurrentUrl(): string
