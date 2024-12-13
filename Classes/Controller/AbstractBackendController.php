@@ -250,7 +250,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getCurrentPid(): int
     {
-        return (int)($this->request->getQueryParams()['id'] ?? $this->request->getParsedBody()['id'] ?? 0);
+        $id = !empty($this->request->getQueryParams()['id']) ? (int)$this->request->getQueryParams()['id'] : 0;
+        if ($id > 0) {
+            return $id;
+        }
+        return (int)($this->request->getParsedBody()['id'] ?? 0);
     }
 
     protected function getCurrentUrl(): string
@@ -298,7 +302,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // demand: offline records (1/2)
         $onlyOfflineRecords = false;
         if (isset($body['is_offline']) && $body['is_offline'] === '1') {
-            $this->view->assign('is_offline', 1);
             $onlyOfflineRecords = true;
         }
         $this->addToModuleDataSettings(['onlyOfflineRecords' => $onlyOfflineRecords]);
@@ -306,7 +309,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // demand: readyToPublish (1/2)
         $onlyReadyToPublish = false;
         if (isset($body['is_ready_to_publish']) && $body['is_ready_to_publish'] === '1') {
-            $this->view->assign('is_ready_to_publish', 1);
             $onlyReadyToPublish = true;
         }
         $this->addToModuleDataSettings(['onlyReadyToPublish' => $onlyReadyToPublish]);
