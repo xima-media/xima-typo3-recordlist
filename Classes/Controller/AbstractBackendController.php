@@ -32,6 +32,7 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\CsvUtility;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
@@ -559,6 +560,29 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     );
                     $record['possible_translations'] ??= [];
                     $record['possible_translations'][$languageUid] = $targetUrl;
+
+                    if (ExtensionManagementUtility::isLoaded('wv_deepltranslate') && \WebVision\WvDeepltranslate\Utility\DeeplBackendUtility::isDeeplApiKeySet()) {
+                        $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
+                            'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
+                                'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
+                                'returnUrl' => $redirectUrl,
+                            ]),
+                            'cmd' => [
+                                $this->getTableName() => [
+                                    $record['uid'] => [
+                                        'localize' => $languageUid,
+                                    ],
+                                ],
+                                'localization' => [
+                                    'custom' => [
+                                        'mode' => 'deepl',
+                                    ],
+                                ],
+                            ],
+                        ]);
+                        $record['possible_translations_deepl'] ??= [];
+                        $record['possible_translations_deepl'][$languageUid] = $deeplUrl;
+                    }
                 }
             }
 
@@ -763,6 +787,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ],
             'groupActions' => [
                 'Translate',
+                'TranslateDeepl',
                 'Edit',
                 'Changelog',
                 'Revert',
