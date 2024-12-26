@@ -32,6 +32,7 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\CsvUtility;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
@@ -122,10 +123,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-delete.js')
         );
 
+        $this->setLanguages();
+
         // module data: save search values
         $this->updateModuleDataFromRequest();
-
-        $this->setLanguages();
 
         $this->loadWorkspaceScripts();
 
@@ -147,8 +148,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addLanguageConstraint();
         $this->addAdditionalConstraints();
         $this->addOrderConstraint();
-        $this->addTranslationsToQuery();
         $this->addBasicQueryConstraints();
+        $this->addTranslationsToQuery();
         $this->modifyQueryBuilder();
         $this->fetchRecords();
 
@@ -463,7 +464,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->queryBuilder->createNamedParameter('%' . $searchInput . '%')
                 );
             }
-            $this->additionalConstraints[] = $this->queryBuilder->expr()->orX(...$searchConstraints);
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
             $this->view->assign('search_field', $searchInput);
         }
     }
@@ -499,6 +500,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['label'];
         $orderField = $body['order_field'] ?? $defaultOrderField;
         $orderDirection = $body['order_direction'] ?? 'ASC';
+        $this->queryBuilder->addOrderBy('t1.' . $orderField, $orderDirection);
         $this->view->assign('order_field', $orderField);
         $this->view->assign('order_direction', $orderDirection);
     }
@@ -520,7 +522,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addBasicQueryConstraints(): void
     {
-        $this->queryBuilder->select('t1.*')
+        $this->queryBuilder = $this->queryBuilder->select('t1.*')
             ->from($this->getTableName(), 't1')
             ->where(
                 $this->queryBuilder->expr()->in(
@@ -561,7 +563,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $availableLanguages,
                     GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
                 );
-                foreach ($possibleTranslations ?? [] as $languageUid) {
+                foreach ($possibleTranslations as $languageUid) {
                     $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName());
                     $targetUrl = BackendUtility::getLinkToDataHandlerAction(
                         '&cmd[' . $this->getTableName() . '][' . $record['uid'] . '][localize]=' . $languageUid,
@@ -569,6 +571,29 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     );
                     $record['possible_translations'] ??= [];
                     $record['possible_translations'][$languageUid] = $targetUrl;
+
+                    if (ExtensionManagementUtility::isLoaded('wv_deepltranslate') && \WebVision\WvDeepltranslate\Utility\DeeplBackendUtility::isDeeplApiKeySet()) {
+                        $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
+                            'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
+                                'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
+                                'returnUrl' => $redirectUrl,
+                            ]),
+                            'cmd' => [
+                                $this->getTableName() => [
+                                    $record['uid'] => [
+                                        'localize' => $languageUid,
+                                    ],
+                                ],
+                                'localization' => [
+                                    'custom' => [
+                                        'mode' => 'deepl',
+                                    ],
+                                ],
+                            ],
+                        ]);
+                        $record['possible_translations_deepl'] ??= [];
+                        $record['possible_translations_deepl'][$languageUid] = $deeplUrl;
+                    }
                 }
             }
 
@@ -773,6 +798,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ],
             'groupActions' => [
                 'Translate',
+                'TranslateDeepl',
                 'Edit',
                 'Changelog',
                 'Revert',
