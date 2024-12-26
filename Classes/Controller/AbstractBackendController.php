@@ -111,10 +111,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Recordlist');
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
 
+        $this->setLanguages();
+
         // module data: save search values
         $this->updateModuleDataFromRequest();
-
-        $this->setLanguages();
 
         $this->loadWorkspaceScripts();
 
@@ -136,8 +136,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addLanguageConstraint();
         $this->addAdditionalConstraints();
         $this->addOrderConstraint();
-        $this->addTranslationsToQuery();
         $this->addBasicQueryConstraints();
+        $this->addTranslationsToQuery();
         $this->modifyQueryBuilder();
         $this->fetchRecords();
 
@@ -452,7 +452,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->queryBuilder->createNamedParameter('%' . $searchInput . '%')
                 );
             }
-            $this->additionalConstraints[] = $this->queryBuilder->expr()->orX(...$searchConstraints);
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
             $this->view->assign('search_field', $searchInput);
         }
     }
@@ -488,6 +488,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['label'];
         $orderField = $body['order_field'] ?? $defaultOrderField;
         $orderDirection = $body['order_direction'] ?? 'ASC';
+        $this->queryBuilder->addOrderBy('t1.' . $orderField, $orderDirection);
         $this->view->assign('order_field', $orderField);
         $this->view->assign('order_direction', $orderDirection);
     }
@@ -509,7 +510,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addBasicQueryConstraints(): void
     {
-        $this->queryBuilder->select('t1.*')
+        $this->queryBuilder = $this->queryBuilder->select('t1.*')
             ->from($this->getTableName(), 't1')
             ->where(
                 $this->queryBuilder->expr()->in(
@@ -550,7 +551,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $availableLanguages,
                     GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
                 );
-                foreach ($possibleTranslations ?? [] as $languageUid) {
+                foreach ($possibleTranslations as $languageUid) {
                     $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName());
                     $targetUrl = BackendUtility::getLinkToDataHandlerAction(
                         '&cmd[' . $this->getTableName() . '][' . $record['uid'] . '][localize]=' . $languageUid,
