@@ -118,6 +118,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-pagination.js')
         );
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-delete.js')
+        );
 
         // module data: save search values
         $this->updateModuleDataFromRequest();
