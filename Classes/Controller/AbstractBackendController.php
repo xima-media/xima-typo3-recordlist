@@ -128,6 +128,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-new-record.js')
         );
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-duplicate.js')
+        );
 
         $this->setLanguages();
 
@@ -612,20 +615,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
             }
 
-            // Add duplicate link
-            $record['duplicateLinkUrl'] = (string)$this->backendUriBuilder->buildUriFromRoute(
-                'tce_db',
-                [
-                    'cmd' => [
-                        $this->getTableName() => [
-                            $record['uid'] => [
-                                'copy' => -$record['uid'],
-                            ],
-                        ],
-                    ],
-                    'redirect' => $this->request->getAttribute('normalizedParams')->getRequestUri(),
-                ]
-            );
+            $record['duplicable'] = false;
+            if ($record['sys_language_uid'] === 0) {
+                $record['duplicable'] = true;
+            }
 
             $record['editable'] = true;
             $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
