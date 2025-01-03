@@ -127,6 +127,14 @@
 				<source />
 				<target>Sind Sie sicher, dass Sie diese Datei löschen möchten?</target>
 			</trans-unit>
+			<trans-unit id="modal.delete.record.title">
+				<source />
+				<target>Eintrag löschen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.message">
+				<source />
+				<target>Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?</target>
+			</trans-unit>
 			<trans-unit id="modal.delete.button.cancel">
 				<source />
 				<target>Nein, abbrechen</target>
@@ -142,6 +150,14 @@
 			<trans-unit id="notification.delete.success.message">
 				<source />
 				<target>Die Datei wurde erfolgreich gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.title">
+				<source />
+				<target>Eintrag gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.message">
+				<source />
+				<target>Der Eintrag wurde erfolgreich gelöscht</target>
 			</trans-unit>
 		</body>
 	</file>

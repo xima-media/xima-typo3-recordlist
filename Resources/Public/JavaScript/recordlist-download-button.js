@@ -1,4 +1,3 @@
-import AjaxRequest from '@typo3/core/ajax/ajax-request.js'
 import Modal from '@typo3/backend/modal.js';
 import {SeverityEnum} from '@typo3/backend/enum/severity.js'
 
@@ -16,8 +15,6 @@ export default class RecordlistDownloadButton {
         }
 
         this.initEventListener()
-
-        console.log(document.querySelectorAll('form'))
     }
 
     cacheDom() {

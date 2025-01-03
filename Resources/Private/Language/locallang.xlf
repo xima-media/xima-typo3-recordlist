@@ -96,6 +96,12 @@
 			<trans-unit id="modal.delete.message">
 				<source>Are you sure you want to delete this file?</source>
 			</trans-unit>
+			<trans-unit id="modal.delete.record.title">
+				<source>Delete record</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.message">
+				<source>Are you sure you want to delete this record?</source>
+			</trans-unit>
 			<trans-unit id="modal.delete.button.cancel">
 				<source>No, cancel</source>
 			</trans-unit>
@@ -107,6 +113,12 @@
 			</trans-unit>
 			<trans-unit id="notification.delete.success.message">
 				<source>The file has been deleted successfully</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.title">
+				<source>Record deleted</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.message">
+				<source>The record has been deleted successfully</source>
 			</trans-unit>
             <trans-unit id="header.button.download">
 				<source>Download</source>
