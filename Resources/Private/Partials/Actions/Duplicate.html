@@ -1,0 +1,9 @@
+<f:if condition="{item.duplicateLinkUrl}">
+    <a
+            class="btn btn-default duplicate"
+            data-bs-toggle="tooltip"
+            href="{item.duplicateLinkUrl}"
+            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.duplicate')}">
+        <core:icon identifier="actions-duplicate" size="small" />
+    </a>
+</f:if>

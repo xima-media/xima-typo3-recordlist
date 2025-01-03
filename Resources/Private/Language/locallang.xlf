@@ -78,6 +78,9 @@
 			<trans-unit id="table.button.translate_deepl">
 				<source>Translate record with DeepL</source>
 			</trans-unit>
+			<trans-unit id="table.button.duplicate">
+				<source>Duplicate record</source>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source>View filtered</source>
 			</trans-unit>

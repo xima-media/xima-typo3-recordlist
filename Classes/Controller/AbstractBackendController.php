@@ -586,6 +586,21 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
             }
 
+            // Add duplicate link
+            $record['duplicateLinkUrl'] = (string)$this->backendUriBuilder->buildUriFromRoute(
+                'tce_db',
+                [
+                    'cmd' => [
+                        $this->getTableName() => [
+                            $record['uid'] => [
+                                'copy' => -$record['uid'],
+                            ],
+                        ],
+                    ],
+                    'redirect' => $this->request->getAttribute('normalizedParams')->getRequestUri(),
+                ]
+            );
+
             $record['editable'] = true;
             $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
 
@@ -789,6 +804,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'Translate',
                 'TranslateDeepl',
                 'Edit',
+                'Duplicate',
                 'Changelog',
                 'Revert',
                 'View',
