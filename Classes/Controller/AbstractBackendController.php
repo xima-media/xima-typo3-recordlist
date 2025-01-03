@@ -571,9 +571,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 );
                 foreach ($possibleTranslations as $languageUid) {
                     $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName());
-                    $targetUrl = BackendUtility::getLinkToDataHandlerAction(
-                        '&cmd[' . $this->getTableName() . '][' . $record['uid'] . '][localize]=' . $languageUid,
-                        $redirectUrl
+                    $targetUrl = (string)$this->backendUriBuilder->buildUriFromRoute(
+                        'tce_db',
+                        [
+                            'cmd' => [
+                                $this->getTableName() => [
+                                    $record['uid'] => [
+                                        'localize' => $languageUid,
+                                    ],
+                                ],
+                            ],
+                            'redirect' => $redirectUrl,
+                        ]
                     );
                     $record['possible_translations'] ??= [];
                     $record['possible_translations'][$languageUid] = $targetUrl;
