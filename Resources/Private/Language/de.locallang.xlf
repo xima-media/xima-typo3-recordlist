@@ -103,6 +103,10 @@
 				<source />
 				<target>Übersetzung mit DeepL erstellen</target>
 			</trans-unit>
+			<trans-unit id="table.button.duplicate">
+				<source />
+				<target>Duplizieren</target>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source />
 				<target>Ansicht gefiltert</target>

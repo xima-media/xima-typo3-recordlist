@@ -128,6 +128,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-new-record.js')
         );
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-duplicate.js')
+        );
 
         $this->setLanguages();
 
@@ -571,9 +574,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 );
                 foreach ($possibleTranslations as $languageUid) {
                     $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName());
-                    $targetUrl = BackendUtility::getLinkToDataHandlerAction(
-                        '&cmd[' . $this->getTableName() . '][' . $record['uid'] . '][localize]=' . $languageUid,
-                        $redirectUrl
+                    $targetUrl = (string)$this->backendUriBuilder->buildUriFromRoute(
+                        'tce_db',
+                        [
+                            'cmd' => [
+                                $this->getTableName() => [
+                                    $record['uid'] => [
+                                        'localize' => $languageUid,
+                                    ],
+                                ],
+                            ],
+                            'redirect' => $redirectUrl,
+                        ]
                     );
                     $record['possible_translations'] ??= [];
                     $record['possible_translations'][$languageUid] = $targetUrl;
@@ -806,6 +818,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'Translate',
                 'TranslateDeepl',
                 'Edit',
+                'Duplicate',
                 'Changelog',
                 'Revert',
                 'View',
