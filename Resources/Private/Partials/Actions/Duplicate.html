@@ -1,8 +1,10 @@
 <html
     data-namespace-typo3-fluid="true"
     xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
-    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers">
-    <f:if condition="{item.duplicable}">
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+    <f:if condition="{item.sys_language_uid} == 0">
         <be:link.editRecord
             class="btn btn-default duplicate"
             data="{bs-toggle: 'tooltip'}"
@@ -12,4 +14,5 @@
             <core:icon identifier="actions-duplicate" size="small" />
         </be:link.editRecord>
     </f:if>
+
 </html>

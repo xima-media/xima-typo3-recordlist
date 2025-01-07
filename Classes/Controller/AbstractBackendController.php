@@ -615,11 +615,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
             }
 
-            $record['duplicable'] = false;
-            if ($record['sys_language_uid'] === 0) {
-                $record['duplicable'] = true;
-            }
-
             $record['editable'] = true;
             $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
 
