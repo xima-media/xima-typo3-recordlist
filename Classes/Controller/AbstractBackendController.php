@@ -375,7 +375,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         if ($this::WORKSPACE_ID) {
             $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
-            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Workspace');
+            $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+                JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-workspace-ready-to-publish.js')
+            );
             $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
             $this->pageRenderer->addInlineSetting(
                 'FormEngine',
