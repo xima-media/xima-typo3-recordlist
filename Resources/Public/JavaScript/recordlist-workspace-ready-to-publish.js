@@ -1,5 +1,10 @@
 import AjaxRequest from "@typo3/core/ajax/ajax-request.js";
-import NProgress from 'nprogress';
+import NProgress from "nprogress";
+import Modal from "@typo3/backend/modal.js";
+import { SeverityEnum } from "@typo3/backend/enum/severity.js";
+import $ from "jquery";
+import Utility from "@typo3/backend/utility.js";
+import Notification from "@typo3/backend/notification.js";
 
 export default class RecordlistWorkspaceReadyToPublish {
   constructor() {
@@ -36,7 +41,7 @@ export default class RecordlistWorkspaceReadyToPublish {
       type: "rpc"
     };
 
-    NProgress.configure({ parent: `tr[data-uid="${tr.getAttribute('data-uid')}"]`, showSpinner: true });
+    NProgress.configure({ parent: `tr[data-uid="${tr.getAttribute("data-uid")}"]`, showSpinner: true });
     NProgress.start();
     new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
       .post(payload, {
@@ -44,10 +49,133 @@ export default class RecordlistWorkspaceReadyToPublish {
           "Content-Type": "application/json; charset=utf-8"
         }
       })
-      .then(response => response.resolve())
-      .then(response => {
-        console.log(response);
-      })
+      .then(async response => {
+        const modal = this.renderSendToStageWindow(await response.resolve());
+        modal.addEventListener("button.clicked", (modalEvent) => {
+          const target = modalEvent.target;
+          if (target.name === "ok") {
+            const serializedForm = Utility.convertFormToObject(modal.querySelector("form"));
+            serializedForm.affects = {
+              elements: [affectedRecord],
+              nextStage: "-10"
+            };
+
+            const payload = {
+              action: "Actions",
+              data: [serializedForm, TYPO3.settings.Workspaces.token],
+              method: "sendToSpecificStageExecute",
+              tid: 2,
+              type: "rpc"
+            };
+
+            new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+              .post(payload, {
+                headers: {
+                  "Content-Type": "application/json; charset=utf-8"
+                }
+              })
+              .then(async () => {
+                Notification.success("Anfrage erfolgreich", "Die Anfrage zur Freigabe wurde erfolgreich übermittelt");
+                modal.hideModal();
+                top?.TYPO3.Backend.ContentContainer.refresh();
+              });
+
+          }
+        });
+      });
+  }
+
+  renderSendToStageWindow(response) {
+    const result = response[0].result;
+    const $form = $("<form />");
+
+    if (typeof result.sendMailTo !== "undefined" && result.sendMailTo.length > 0) {
+      $form.append(
+        $("<label />", { class: "form-label" }).text(TYPO3.lang["window.sendToNextStageWindow.itemsWillBeSentTo"])
+      );
+      $form.append(
+        $("<div />", { class: "form-group hidden" }).append(
+          $("<button type=\"button\" class=\"btn btn-default btn-xs t3js-workspace-recipients-selectall\" />")
+            .text(TYPO3.lang["window.sendToNextStageWindow.selectAll"]),
+          "&nbsp;",
+          $("<button type=\"button\" class=\"btn btn-default btn-xs t3js-workspace-recipients-deselectall\" />")
+            .text(TYPO3.lang["window.sendToNextStageWindow.deselectAll"])
+        )
+      );
+
+      for (const recipient of result.sendMailTo) {
+        $form.append(
+          $("<div />", { class: "form-check hidden" }).append(
+            $("<input />", {
+              type: "checkbox",
+              name: "recipients",
+              class: "form-check-input t3js-workspace-recipient",
+              id: recipient.name,
+              value: recipient.value
+            }).prop("checked", recipient.checked).prop("disabled", recipient.disabled),
+            $("<label />", {
+              class: "form-check-label",
+              for: recipient.name
+            }).text(recipient.label)
+          )
+        );
+      }
+    }
+
+    if (typeof result.additional !== "undefined") {
+      $form.append(
+        $("<div />", { class: "form-group hidden" }).append(
+          $("<label />", {
+            class: "form-label",
+            "for": "additional"
+          }).text(TYPO3.lang["window.sendToNextStageWindow.additionalRecipients"]),
+          $("<textarea />", {
+            class: "form-control",
+            name: "additional",
+            id: "additional"
+          }).text(result.additional.value),
+          $("<div />", { class: "form-text" }).text(TYPO3.lang["window.sendToNextStageWindow.additionalRecipients.hint"])
+        )
+      );
+    }
+
+    $form.append(
+      $("<div />", { class: "form-group" }).append(
+        $("<label />", {
+          class: "form-label",
+          "for": "comments"
+        }).text(TYPO3.lang["window.sendToNextStageWindow.comments"]),
+        $("<textarea />", {
+          class: "form-control",
+          name: "comments",
+          id: "comments"
+        }).text(result.comments.value)
+      )
+    );
+
+    const modal = Modal.show(
+      TYPO3.lang.actionSendToStage,
+      $form,
+      SeverityEnum.info,
+      [
+        {
+          text: TYPO3.lang.cancel,
+          active: true,
+          btnClass: "btn-default",
+          name: "cancel",
+          trigger: () => {
+            modal.hideModal();
+          }
+        },
+        {
+          text: TYPO3.lang.ok,
+          btnClass: "btn-primary",
+          name: "ok"
+        }
+      ]
+    );
+
+    return modal;
   }
 }
 
