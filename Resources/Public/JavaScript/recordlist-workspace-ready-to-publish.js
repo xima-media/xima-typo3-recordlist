@@ -90,18 +90,6 @@ export default class RecordlistWorkspaceReadyToPublish {
     const $form = $("<form />");
 
     if (typeof result.sendMailTo !== "undefined" && result.sendMailTo.length > 0) {
-      $form.append(
-        $("<label />", { class: "form-label" }).text(TYPO3.lang["window.sendToNextStageWindow.itemsWillBeSentTo"])
-      );
-      $form.append(
-        $("<div />", { class: "form-group hidden" }).append(
-          $("<button type=\"button\" class=\"btn btn-default btn-xs t3js-workspace-recipients-selectall\" />")
-            .text(TYPO3.lang["window.sendToNextStageWindow.selectAll"]),
-          "&nbsp;",
-          $("<button type=\"button\" class=\"btn btn-default btn-xs t3js-workspace-recipients-deselectall\" />")
-            .text(TYPO3.lang["window.sendToNextStageWindow.deselectAll"])
-        )
-      );
 
       for (const recipient of result.sendMailTo) {
         $form.append(
