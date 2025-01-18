@@ -16,9 +16,56 @@ export default class RecordlistWorkspaceReadyToPublish {
       btn.addEventListener("click", this.onReadyToPublishClick.bind(this));
     });
 
+    document.querySelectorAll("[data-workspace-action=\"remove\"]").forEach(btn => {
+      btn.addEventListener("click", this.confirmDeleteRecordFromWorkspace.bind(this));
+    });
+
     document.querySelectorAll("[data-workspace-action=\"publish\"]").forEach(btn => {
       btn.addEventListener("click", this.confirmPublishRecordFromWorkspace.bind(this));
     });
+  }
+
+  confirmDeleteRecordFromWorkspace(e) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    const tr = btn.closest("tr");
+    const modal = Modal.confirm(TYPO3.lang["window.discard.title"], TYPO3.lang["window.discard.message"], SeverityEnum.warning, [
+      {
+        text: TYPO3.lang.cancel,
+        active: true,
+        btnClass: "btn-default",
+        name: "cancel",
+        trigger: () => {
+          modal.hideModal();
+        }
+      },
+      {
+        text: TYPO3.lang.ok,
+        btnClass: "btn-warning",
+        name: "ok",
+        trigger: () => {
+          const payload = {
+            action: "Actions",
+            data: [tr.getAttribute("data-table"), tr.getAttribute("data-uid")],
+            method: "deleteSingleRecord",
+            tid: 2,
+            type: "rpc"
+          };
+
+          modal.hideModal();
+
+          new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+            .post(payload, {
+              headers: {
+                "Content-Type": "application/json; charset=utf-8"
+              }
+            })
+            .then(async () => {
+              top?.TYPO3.Backend.ContentContainer.refresh();
+            });
+        }
+      }
+    ]);
   }
 
   confirmPublishRecordFromWorkspace(e) {
