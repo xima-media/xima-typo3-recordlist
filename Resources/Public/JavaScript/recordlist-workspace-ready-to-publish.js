@@ -15,6 +15,94 @@ export default class RecordlistWorkspaceReadyToPublish {
     document.querySelectorAll("[data-workspace-action=\"readyToPublish\"]").forEach(btn => {
       btn.addEventListener("click", this.onReadyToPublishClick.bind(this));
     });
+
+    document.querySelectorAll("[data-workspace-action=\"publish\"]").forEach(btn => {
+      btn.addEventListener("click", this.confirmPublishRecordFromWorkspace.bind(this));
+    });
+  }
+
+  confirmPublishRecordFromWorkspace(e) {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    const tr = btn.closest("tr");
+
+    if (!tr) {
+      return;
+    }
+
+    const self = this;
+    const uid = parseInt(tr.getAttribute("data-uid") ?? "");
+    const table = tr.getAttribute("data-table") ?? "";
+    let t3verOid = parseInt(tr.getAttribute("data-t3ver_oid") ?? "");
+    if (!t3verOid) {
+      t3verOid = uid;
+    }
+
+    const recordsToPublish = [
+      {
+        liveId: t3verOid,
+        table: table,
+        versionId: uid
+      }
+    ];
+
+    const sysFileReferencesToPublish = tr.getAttribute("data-sys-file-references") ?? "";
+    if (sysFileReferencesToPublish) {
+      const sysFileReferences = JSON.parse(sysFileReferencesToPublish);
+      Array.prototype.push.apply(recordsToPublish, sysFileReferences);
+    }
+
+    const modal = Modal.advanced({
+      title: "Datensatz veröffentlichen",
+      size: Modal.sizes.small,
+      severity: SeverityEnum.info,
+      content: "Möchten Sie den Datensatz wirklich veröffentlichen?",
+      buttons: [
+        {
+          text: "Nein, abbrechen",
+          icon: "actions-close",
+          btnClass: "btn-default",
+          trigger: function() {
+            modal.hideModal();
+          }
+        },
+        {
+          text: "Ja, veröffentlichen",
+          icon: "actions-check",
+          btnClass: "btn-success",
+          trigger: function() {
+            self.publishRecords(recordsToPublish);
+            modal.hideModal();
+          }
+        }
+      ]
+    });
+  }
+
+  publishRecords(records) {
+    const payload = {
+      action: "Actions",
+      data: [
+        {
+          action: "publish",
+          selection: records
+        },
+        null
+      ],
+      method: "executeSelectionAction",
+      tid: 3,
+      type: "rpc"
+    };
+
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+      .post(payload, {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8"
+        }
+      })
+      .then(() => {
+        top?.TYPO3.Backend.ContentContainer.refresh();
+      });
   }
 
   onReadyToPublishClick(e) {
