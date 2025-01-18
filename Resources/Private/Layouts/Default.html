@@ -1,6 +1,6 @@
 {namespace be=TYPO3\CMS\Backend\ViewHelpers}
 
-<f:be.pageRenderer includeRequireJsModules="{0: 'TYPO3/CMS/Backend/Tooltip'}" />
+<f:be.pageRenderer includeRequireJsModules="{0: 'TYPO3/CMS/Backend/Tooltip'}" includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
 
 <f:render section="Headline" optional="true">
 	<h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then: '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')} {fullRecordCount} ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
