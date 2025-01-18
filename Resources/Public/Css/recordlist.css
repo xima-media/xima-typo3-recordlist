@@ -17,3 +17,12 @@
 .text-inline-edit.changed button {
     visibility: visible;
 }
+
+.recordlist #nprogress {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 3px;
+	padding: 0;
+	overflow: hidden;
+}
