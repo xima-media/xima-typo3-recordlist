@@ -12,7 +12,7 @@ use TYPO3\CMS\Core\Versioning\VersionState;
 
 class RecordHistory extends \TYPO3\CMS\Backend\History\RecordHistory
 {
-    public function findEventsForRecord(string $table, int $uid, int $limit = 0, int $minimumUid = null): array
+    public function findEventsForRecord(string $table, int $uid, int $limit = 0, ?int $minimumUid = null): array
     {
         $tablesForFullHistoryConf = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get(
             'xima_typo3_recordlist',
