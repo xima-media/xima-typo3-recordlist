@@ -2,6 +2,7 @@
 
 namespace Xima\XimaTypo3Recordlist\Controller;
 
+use AllowDynamicProperties;
 use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Result;
 use Psr\Container\ContainerInterface;
@@ -31,16 +32,14 @@ use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
-use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\CsvUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
-use TYPO3\CMS\Fluid\View\StandaloneView;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 
+#[AllowDynamicProperties]
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
     public const WORKSPACE_ID = 0;
@@ -81,6 +80,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected bool $workspaceEnabled = false;
 
     protected ?\TYPO3\CMS\Workspaces\Service\WorkspaceService $workspaceService = null;
+
+    protected ModuleTemplate $moduleTemplate;
 
     public function __construct(
         protected IconFactory           $iconFactory,
@@ -149,16 +150,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->loadWorkspaceScripts();
 
         // build view
-        $this->initializeView();
-        $this->view->assign('settings', $this->getModuleData()['settings'] ?? []);
-        $this->view->assign('moduleName', $this->getModuleName());
-        $this->view->assign('storagePids', implode(',', $this->getAccessiblePids()));
-        $this->view->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
-        $this->view->assign('currentPid', $this->getCurrentPid());
-        $this->view->assign('workspaceId', self::WORKSPACE_ID);
-        $this->view->assign('languages', $this->getLanguages());
-        $this->view->assign('fullRecordCount', $this->getFullRecordCount());
-        $this->view->assign('table', $this->getTableName());
+        $this->modulTemplate = $this->moduleTemplateFactory->create($request);
+        $this->modulTemplate->assign('settings', $this->getModuleData()['settings'] ?? []);
+        $this->modulTemplate->assign('moduleName', $this->getModuleName());
+        $this->modulTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
+        $this->modulTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
+        $this->modulTemplate->assign('currentPid', $this->getCurrentPid());
+        $this->modulTemplate->assign('workspaceId', self::WORKSPACE_ID);
+        $this->modulTemplate->assign('languages', $this->getLanguages());
+        $this->modulTemplate->assign('fullRecordCount', $this->getFullRecordCount());
+        $this->modulTemplate->assign('table', $this->getTableName());
 
         // build and execute query
         $this->createQueryBuilder();
@@ -173,7 +174,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // modify records (can unset records)
         $this->modifyAllRecords();
-        $this->view->assign('recordCount', count($this->records));
+        $this->modulTemplate->assign('recordCount', count($this->records));
 
         if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
             return $this->downloadRecords();
@@ -185,10 +186,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->createColumnConfiguration();
 
         // build and render module template
-        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->configureModuleTemplateDocHeader($moduleTemplate);
-        $moduleTemplate->setContent($this->view->render());
-        return $this->htmlResponse($moduleTemplate->renderContent());
+        $this->configureModuleTemplateDocHeader($this->modulTemplate);
+        return $this->modulTemplate->renderResponse($this::TEMPLATE_NAME);
     }
 
     protected function setSite(): void
@@ -410,19 +409,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function initializeView(): void
-    {
-        $settings = $this->configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
-        $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
-        $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
-
-        $this->view = GeneralUtility::makeInstance(StandaloneView::class);
-        $this->view->setLayoutRootPaths($typoScript['view']['layoutRootPaths']);
-        $this->view->setTemplateRootPaths($typoScript['view']['templateRootPaths']);
-        $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
-        $this->view->setTemplate($this::TEMPLATE_NAME);
-        $this->view->setRequest($this->request);
-    }
 
     protected function isWorkspaceAdmin(): bool
     {
@@ -483,7 +469,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 );
             }
             $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
-            $this->view->assign('search_field', $searchInput);
+            $this->modulTemplate->assign('search_field', $searchInput);
         }
     }
 
@@ -519,8 +505,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $orderField = $body['order_field'] ?? $defaultOrderField;
         $orderDirection = $body['order_direction'] ?? 'ASC';
         $this->queryBuilder->addOrderBy('t1.' . $orderField, $orderDirection);
-        $this->view->assign('order_field', $orderField);
-        $this->view->assign('order_direction', $orderDirection);
+        $this->modulTemplate->assign('order_field', $orderField);
+        $this->modulTemplate->assign('order_direction', $orderDirection);
     }
 
     protected function addTranslationsToQuery(): void
@@ -766,11 +752,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
         $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
 
-        $this->view->assign('records', $this->records);
-        $this->view->assign('paginator', $paginator);
-        $this->view->assign('current_page', $currentPage);
-        $this->view->assign('next_page', $nextPage);
-        $this->view->assign('prev_page', $prevPage);
+        $this->modulTemplate->assign('records', $this->records);
+        $this->modulTemplate->assign('paginator', $paginator);
+        $this->modulTemplate->assign('current_page', $currentPage);
+        $this->modulTemplate->assign('next_page', $nextPage);
+        $this->modulTemplate->assign('prev_page', $prevPage);
     }
 
     /**
@@ -791,7 +777,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
         unset($column);
         $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
-        $this->view->assign('tableConfiguration', $tableConfiguration);
+        $this->modulTemplate->assign('tableConfiguration', $tableConfiguration);
     }
 
     /**
@@ -890,7 +876,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $downloadArguments = $this->request->getQueryParams();
 
-        $this->view->assignMultiple([
+        $this->modulTemplate->assignMultiple([
             'table' => $this->getTableName(),
             'downloadArguments' => $downloadArguments,
             'formats' => array_keys(self::DOWNLOAD_FORMATS),
