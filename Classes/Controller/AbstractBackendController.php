@@ -78,6 +78,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $records = [];
 
+    protected bool $workspaceEnabled = false;
+
     protected ?\TYPO3\CMS\Workspaces\Service\WorkspaceService $workspaceService = null;
 
     public function __construct(
@@ -91,6 +93,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         if (class_exists(\TYPO3\CMS\Workspaces\Service\WorkspaceService::class)) {
             $this->workspaceService = GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Service\WorkspaceService::class);
+            $this->workspaceEnabled = true;
         }
 
     }
@@ -423,7 +426,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function isWorkspaceAdmin(): bool
     {
-        return $this->getBackendAuthentication()->workspacePublishAccess($this::WORKSPACE_ID);
+        return $this->workspaceEnabled && $this->getBackendAuthentication()->workspacePublishAccess($this::WORKSPACE_ID);
     }
 
     /**
