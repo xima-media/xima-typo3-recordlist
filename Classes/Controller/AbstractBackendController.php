@@ -42,11 +42,11 @@ use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 #[AllowDynamicProperties]
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
-    public const WORKSPACE_ID = 0;
+    public const int WORKSPACE_ID = 0;
 
-    public const TEMPLATE_NAME = 'Default';
+    public const string TEMPLATE_NAME = 'Default';
 
-    protected const DOWNLOAD_FORMATS = [
+    protected const array DOWNLOAD_FORMATS = [
         'csv' => [
             'options' => [
                 'delimiter' => [
@@ -385,8 +385,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function loadWorkspaceScripts(): void
     {
         if ($this::WORKSPACE_ID) {
-            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Workspaces/Backend');
-            $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/XimaTypo3Recordlist/Workspace');
+            $this->pageRenderer->loadJavaScriptModule('TYPO3/CMS/Workspaces/Backend');
+            $this->pageRenderer->loadJavaScriptModule('TYPO3/CMS/XimaTypo3Recordlist/Workspace');
             $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
             $this->pageRenderer->addInlineSetting(
                 'FormEngine',
