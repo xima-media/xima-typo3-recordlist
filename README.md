@@ -32,10 +32,7 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 
 class UserController extends AbstractBackendController
 {
-   public function getTableName(): string
-   {
-       return 'fe_users';
-   }
+   public const TABLE_NAME = 'fe_users';
 
    public function getRecordPid(): int
    {
