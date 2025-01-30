@@ -10,6 +10,10 @@ Workspaces integration: More simple workflow for requesting and approving change
 composer require xima/xima-typo3-recordlist
 ```
 
+### Site Set
+
+Add the `XIMA TYPO3 Recordlist (xima/xima-typo3-recordlist)` to include the necessary `page.tsconfig`.
+
 ## Usage
 
 Start by creating a new backend controller in your TYPO3 extension.
@@ -43,45 +47,41 @@ class UserController extends AbstractBackendController
 ### 2. Register Backend module
 
 Add a new backend module via
-the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/11.5/en-us/ExtensionArchitecture/HowTo/BackendModule/BackendModulesWithoutExtbase/BackendModuleApiWithoutExtbase.html).
+the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ExtensionArchitecture/HowTo/BackendModule/CreateModule.html#backend-modules-template-without-extbase).
 You're free to adjust the settings as you like, the only import setting is the `routeTarget`: Make sure you always use
 the `::mainAction`.
 
 ```php
-ExtensionManagementUtility::addModule(
-    'web',
-    'users',
-    '',
-    '',
-    [
-        'routeTarget' => UserController::class . '::mainAction',
-        'access' => 'user,group',
-        'name' => 'web_events',
+return [
+    'your_module' => [
+        'parent' => 'web',
+        'access' => 'user',
         'iconIdentifier' => 'your-module-icon',
+        'workspaces' => '*',
         'labels' => 'LLL:EXT:your_ext/Resources/Private/Language/locallang_mod.xlf',
+        'extensionName' => 'your_ext',
+        'controllerActions' => [
+            ModuleController::class => [
+                'main',
+            ],
+        ],
         'inheritNavigationComponentFromMainModule' => false,
-    ]
-);
+
+    ],
+];
+```
+
+### 3. Register templates
+
+Define the template paths for the backend module in your `page.tsconfig`:
+
+```php
+templates.vendor/your-ext.10 = xima/xima-typo3-recordlist:Resources/Private/
 ```
 
 That's it.
 
 ## Customization
-
-### Template
-
-To use a custom template, override the `TEMPLATE_NAME` constant in your controller and configure the template paths via
-TypoScript constants:
-
-```typo3_typoscript
-module.tx_ximatypo3recordlist {
-    view {
-        partialRootPaths = EXT:your_ext/Resources/Private/Backend/Partials
-        templateRootPath = EXT:your_ext/Resources/Private/Backend/Templates
-        layoutRootPath = EXT:your_ext/Resources/Private/Backend/Layouts
-    }
-}
-```
 
 ### Data
 
