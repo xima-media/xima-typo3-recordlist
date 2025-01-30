@@ -16,12 +16,12 @@
 		"typo3-cms-extension"
 	],
 	"require": {
-		"php": "^8.0",
-		"typo3/cms-core": ">=11.0.0"
+		"php": "^8.2",
+		"typo3/cms-core": "^13.4.0"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-master",
-		"typo3/cms-base-distribution": "^11.4",
+		"typo3/cms-base-distribution": "^13.4",
 		"phpstan/phpstan": "^1.6",
 		"bk2k/bootstrap-package": "dev-master",
 		"clue/phar-composer": "^1.0",
