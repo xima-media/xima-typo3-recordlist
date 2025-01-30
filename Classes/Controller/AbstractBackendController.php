@@ -7,8 +7,11 @@ use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Result;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
+use TYPO3\CMS\Backend\Module\ModuleInterface;
+use TYPO3\CMS\Backend\Module\ModuleProvider;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
@@ -40,6 +43,7 @@ use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 
 #[AllowDynamicProperties]
+#[AsController]
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
     public const int WORKSPACE_ID = 0;
@@ -83,6 +87,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected ModuleTemplate $moduleTemplate;
 
+    protected ModuleInterface $currentModule;
+
     public function __construct(
         protected IconFactory           $iconFactory,
         protected PageRenderer          $pageRenderer,
@@ -106,6 +112,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public function processRequest(RequestInterface $request): ResponseInterface
     {
         $this->request = $request;
+        $this->currentModule = $request->getAttribute('module');
 
         // Get site
         $this->setSite();
@@ -295,6 +302,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         /** @var ExtbaseModule $module */
         $module = $this->request->getAttribute('route')?->getOption('module');
+        $this->currentModule = $module;
         return $module->getIdentifier();
     }
 
@@ -834,6 +842,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // download button
         $this->addDownloadButtonToModuleTemplate($moduleTemplate);
 
+        // share button
+        $this->addShareButtonToModuleTemplate($moduleTemplate);
+
         // search button
         $this->addSearchButtonToNewModuleTemplate($moduleTemplate);
 
@@ -893,6 +904,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ButtonBar::BUTTON_POSITION_RIGHT,
             3
         );
+    }
+
+    private function addShareButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
+        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton($moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeShortcutButton()
+            ->setRouteIdentifier($this->currentModule->getIdentifier())
+            ->setDisplayName(sprintf(
+                '%s [%d]',
+                $this->getLanguageService()->sL($this->currentModule->getTitle()),
+                $this->getCurrentPid()
+            ))
+            ->setArguments(['id' => $this->getCurrentPid()]),
+            ButtonBar::BUTTON_POSITION_RIGHT);
     }
 
     private function addSearchButtonToNewModuleTemplate(ModuleTemplate $moduleTemplate): void
