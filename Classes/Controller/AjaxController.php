@@ -16,7 +16,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class AjaxController
 {
-    protected const DOWNLOAD_FORMATS = [
+    protected const array DOWNLOAD_FORMATS = [
         'csv' => [
             'options' => [
                 'delimiter' => [
@@ -105,7 +105,7 @@ class AjaxController
             $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
             $qb->delete($table)
                 ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid, \PDO::PARAM_INT)))
-                ->execute();
+                ->executeStatement();
             return $this->responseFactory->createResponse();
         }
 
