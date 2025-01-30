@@ -38,7 +38,6 @@ use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
-use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
@@ -78,15 +77,21 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $records = [];
 
+    protected ?\TYPO3\CMS\Workspaces\Service\WorkspaceService $workspaceService = null;
+
     public function __construct(
-        protected IconFactory $iconFactory,
-        protected PageRenderer $pageRenderer,
-        protected UriBuilder $backendUriBuilder,
-        protected FlashMessageService $flashMessageService,
-        protected ContainerInterface $container,
+        protected IconFactory           $iconFactory,
+        protected PageRenderer          $pageRenderer,
+        protected UriBuilder            $backendUriBuilder,
+        protected FlashMessageService   $flashMessageService,
+        protected ContainerInterface    $container,
         protected ModuleTemplateFactory $moduleTemplateFactory,
-        protected WorkspaceService $workspaceService
-    ) {
+    )
+    {
+        if (class_exists(\TYPO3\CMS\Workspaces\Service\WorkspaceService::class)) {
+            $this->workspaceService = GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Service\WorkspaceService::class);
+        }
+
     }
 
     /**
@@ -314,9 +319,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // add requested language to module settings
         $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
         if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists(
-            (int)$requestedLanguage,
-            $this->getLanguages()
-        )) {
+                (int)$requestedLanguage,
+                $this->getLanguages()
+            )) {
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
