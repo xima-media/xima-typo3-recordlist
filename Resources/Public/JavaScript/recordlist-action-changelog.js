@@ -134,31 +134,6 @@ export default class RecordlistActionChangelog {
         )
       );
 
-      if (item.label_PrevStage !== false && $tr.data("stage") !== $tr.data("prevStage")) {
-        modalButtons.push({
-          text: item.label_PrevStage.title,
-          active: true,
-          btnClass: "btn-default",
-          name: "prevstage",
-          trigger: (e, modal) => {
-            modal.hideModal();
-            this.sendToStage($tr, "prev");
-          }
-        });
-      }
-
-      if (item.label_NextStage !== false) {
-        modalButtons.push({
-          text: item.label_NextStage.title,
-          active: true,
-          btnClass: "btn-default",
-          name: "nextstage",
-          trigger: (e, modal) => {
-            modal.hideModal();
-            this.sendToStage($tr, "next");
-          }
-        });
-      }
       modalButtons.push({
         text: TYPO3.lang.close,
         active: true,
@@ -169,7 +144,7 @@ export default class RecordlistActionChangelog {
 
       Modal.advanced({
         type: Modal.types.default,
-        title: TYPO3.lang["window.recordInformation"].replace("{0}", $tr.find(".t3js-title-live").text().trim()),
+        title: TYPO3.lang["window.recordInformation"].replace('"{0}"', '').slice(0, -4),
         content: $content,
         severity: SeverityEnum.info,
         buttons: modalButtons,
