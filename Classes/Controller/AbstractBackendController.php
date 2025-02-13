@@ -919,6 +919,24 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ButtonBar::BUTTON_POSITION_RIGHT);
     }
 
+    private function addLinkToFolderButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
+        $pageName = BackendUtility::getRecord('pages', $this->getCurrentPid())['title'];
+        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref($this->backendUriBuilder->buildUriFromRoute(
+                    'web_list',
+                    ['id' => $this->getCurrentPid()]
+                ))
+                ->setTitle($pageName)
+                ->setShowLabelText(true)
+                ->setClasses('recordlist-folder-button')
+                ->setIcon($this->iconFactory->getIcon('actions-folder', ICON::SIZE_SMALL)),
+            ButtonBar::BUTTON_POSITION_RIGHT,
+            2
+        );
+    }
+
     private function addSearchButtonToNewModuleTemplate(ModuleTemplate $moduleTemplate): void
     {
         $isSearchButtonActive = (string)$this->getModuleDataSetting('isSearchButtonActive');
