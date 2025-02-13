@@ -7,7 +7,7 @@
 			<a href="#"
 			   data-order-field="{colConfig.columnName}"
 			   data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">
-				{colConfig.label}
+				<f:translate key="{colConfig.label}">{colConfig.label}</f:translate>
 			</a>
 		</f:else>
 	</f:if>
