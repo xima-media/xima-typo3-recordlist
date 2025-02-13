@@ -89,6 +89,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected ModuleInterface $currentModule;
 
+    protected bool $translationsToQuery = true;
+
     public function __construct(
         protected IconFactory           $iconFactory,
         protected PageRenderer          $pageRenderer,
@@ -175,7 +177,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addAdditionalConstraints();
         $this->addOrderConstraint();
         $this->addBasicQueryConstraints();
-        $this->addTranslationsToQuery();
+        $this->translationsToQuery ?? $this->addTranslationsToQuery();
         $this->modifyQueryBuilder();
         $this->fetchRecords();
 
@@ -523,6 +525,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // get translated records
         $transOrigPointerField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['transOrigPointerField'] ?? '';
         if ($transOrigPointerField) {
+            /*
+             * This is very performance expensive, especially for large datasets.
+             */
             $this->queryBuilder->leftJoin(
                 't1',
                 $this->getTableName(),
