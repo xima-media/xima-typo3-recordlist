@@ -859,6 +859,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // page selection menu
         $this->addPidSelectionToModuleTemplate($moduleTemplate);
+
+        // folder button
+        $this->addLinkToFolderButtonToModuleTemplate($moduleTemplate);
     }
 
     protected function addNewButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
@@ -909,6 +912,37 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setIcon($this->iconFactory->getIcon('actions-download', ICON::SIZE_SMALL)),
             ButtonBar::BUTTON_POSITION_RIGHT,
             3
+        );
+    }
+
+    private function addShareButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
+        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton($moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeShortcutButton()
+            ->setRouteIdentifier($this->currentModule->getIdentifier())
+            ->setDisplayName(sprintf(
+                '%s [%d]',
+                $this->getLanguageService()->sL($this->currentModule->getTitle()),
+                $this->getCurrentPid()
+            ))
+            ->setArguments(['id' => $this->getCurrentPid()]),
+            ButtonBar::BUTTON_POSITION_RIGHT);
+    }
+
+    private function addLinkToFolderButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    {
+        $pageName = BackendUtility::getRecord('pages', $this->getCurrentPid())['title'];
+        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref($this->backendUriBuilder->buildUriFromRoute(
+                    'web_list',
+                    ['id' => $this->getCurrentPid()]
+                ))
+                ->setTitle($pageName)
+                ->setShowLabelText(true)
+                ->setClasses('recordlist-folder-button')
+                ->setIcon($this->iconFactory->getIcon('actions-folder', ICON::SIZE_SMALL)),
+            ButtonBar::BUTTON_POSITION_RIGHT,
+            2
         );
     }
 
