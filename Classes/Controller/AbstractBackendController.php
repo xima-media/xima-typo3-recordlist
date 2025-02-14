@@ -191,8 +191,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // init pager -> modifies all records!
         $this->createPaginator();
-
         $this->createColumnConfiguration();
+
+        // add additional content to record list
+        $additionalContent = $this->prependAdditionalContentToRecordList();
+        if ($additionalContent !== '') {
+            $this->pageRenderer->addBodyContent($additionalContent);
+        }
 
         // build and render module template
         $this->configureModuleTemplateDocHeader($this->modulTemplate);
@@ -990,5 +995,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
+    }
+
+    public function prependAdditionalContentToRecordList(): string
+    {
+        return '';
     }
 }
