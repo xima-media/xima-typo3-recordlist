@@ -951,19 +951,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
-    private function addShareButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
-    {
-        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton($moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeShortcutButton()
-            ->setRouteIdentifier($this->currentModule->getIdentifier())
-            ->setDisplayName(sprintf(
-                '%s [%d]',
-                $this->getLanguageService()->sL($this->currentModule->getTitle()),
-                $this->getCurrentPid()
-            ))
-            ->setArguments(['id' => $this->getCurrentPid()]),
-            ButtonBar::BUTTON_POSITION_RIGHT);
-    }
-
     private function addSearchButtonToNewModuleTemplate(ModuleTemplate $moduleTemplate): void
     {
         $isSearchButtonActive = (string)$this->getModuleDataSetting('isSearchButtonActive');
