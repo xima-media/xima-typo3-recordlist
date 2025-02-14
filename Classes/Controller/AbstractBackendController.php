@@ -853,6 +853,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // page selection menu
         $this->addPidSelectionToModuleTemplate($moduleTemplate);
+
+        // folder button
+        $this->addLinkToFolderButtonToModuleTemplate($moduleTemplate);
     }
 
     protected function addNewButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
