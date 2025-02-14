@@ -27,6 +27,10 @@
 				<source />
 				<target>Suchen</target>
 			</trans-unit>
+			<trans-unit id="filter.label.search">
+				<source />
+				<target>Suche</target>
+			</trans-unit>
 			<trans-unit id="table.filter.label">
 				<source />
 				<target>Einträge filtern</target>
@@ -95,6 +99,14 @@
 				<source />
 				<target>Übersetzung erstellen</target>
 			</trans-unit>
+			<trans-unit id="table.button.translate_deepl">
+				<source />
+				<target>Übersetzung mit DeepL erstellen</target>
+			</trans-unit>
+			<trans-unit id="table.button.duplicate">
+				<source />
+				<target>Duplizieren</target>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source />
 				<target>Ansicht gefiltert</target>
@@ -102,6 +114,54 @@
 			<trans-unit id="search.filtered.text">
 				<source />
 				<target>Über die 🔍 Suche können die Veranstaltungen gefiltert werden</target>
+			</trans-unit>
+			<trans-unit id="table.button.save">
+				<source />
+				<target>Speichern</target>
+			</trans-unit>
+			<trans-unit id="table.button.cancel">
+				<source />
+				<target>Abbrechen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.title">
+				<source />
+				<target>Datei löschen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.message">
+				<source />
+				<target>Sind Sie sicher, dass Sie diese Datei löschen möchten?</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.title">
+				<source />
+				<target>Eintrag löschen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.message">
+				<source />
+				<target>Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.cancel">
+				<source />
+				<target>Nein, abbrechen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.confirm">
+				<source />
+				<target>Ja, löschen</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.title">
+				<source />
+				<target>Datei gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.message">
+				<source />
+				<target>Die Datei wurde erfolgreich gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.title">
+				<source />
+				<target>Eintrag gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.message">
+				<source />
+				<target>Der Eintrag wurde erfolgreich gelöscht</target>
 			</trans-unit>
 		</body>
 	</file>

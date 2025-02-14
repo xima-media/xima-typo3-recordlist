@@ -1,0 +1,12 @@
+<f:if condition="{item.{colConfig.columnName}}">
+    <f:then>
+        <span class="text-success">
+            <core:icon identifier="actions-check" />
+        </span>
+    </f:then>
+    <f:else>
+        <span class="text-danger">
+            <core:icon identifier="actions-close" />
+        </span>
+    </f:else>
+</f:if>
