@@ -71,6 +71,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ],
     ];
 
+    protected array $additionalHeaderFolderLinks = [];
+
     protected Site $site;
 
     protected array $additionalConstraints = [];
@@ -865,8 +867,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // page selection menu
         $this->addPidSelectionToModuleTemplate($moduleTemplate);
 
-        // folder button
-        $this->addLinkToFolderButtonToModuleTemplate($moduleTemplate);
+        // folder buttons
+        $this->addAdditionalHeaderFolderLinksToModuleTemplate($moduleTemplate);
     }
 
     protected function addNewButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
@@ -933,22 +935,39 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ButtonBar::BUTTON_POSITION_RIGHT);
     }
 
-    private function addLinkToFolderButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    private function addAdditionalHeaderFolderLinksToModuleTemplate(ModuleTemplate $moduleTemplate): void
     {
-        $pageName = BackendUtility::getRecord('pages', $this->getCurrentPid())['title'];
-        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                ->setHref($this->backendUriBuilder->buildUriFromRoute(
-                    'web_list',
-                    ['id' => $this->getCurrentPid()]
-                ))
-                ->setTitle($pageName)
-                ->setShowLabelText(true)
-                ->setClasses('recordlist-folder-button')
-                ->setIcon($this->iconFactory->getIcon('actions-folder', ICON::SIZE_SMALL)),
-            ButtonBar::BUTTON_POSITION_RIGHT,
-            2
-        );
+        foreach ($this->additionalHeaderFolderLinks as $additionalHeaderFolderLink) {
+            if (!array_key_exists('table', $additionalHeaderFolderLink)) {
+                continue;
+            }
+
+            if (!array_key_exists('pid', $additionalHeaderFolderLink)) {
+                $additionalHeaderFolderLink['pid'] = $this->getCurrentPid();
+            }
+
+            if (!array_key_exists('title', $additionalHeaderFolderLink)) {
+                $additionalHeaderFolderLink['title'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$additionalHeaderFolderLink['table']]['ctrl']['title']);
+            }
+
+            if (!array_key_exists('icon', $additionalHeaderFolderLink)) {
+                $additionalHeaderFolderLink['icon'] = isset($GLOBALS['TCA'][$additionalHeaderFolderLink['table']]['ctrl']['typeicon_classes']['default']) ? $GLOBALS['TCA'][$additionalHeaderFolderLink['table']]['ctrl']['typeicon_classes']['default'] : 'actions-folder-open';
+            }
+
+            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+                $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                    ->setHref($this->backendUriBuilder->buildUriFromRoute(
+                        'web_list',
+                        ['id' => $additionalHeaderFolderLink['pid'], 'table' => $additionalHeaderFolderLink['table']]
+                    ))
+                    ->setTitle($additionalHeaderFolderLink['title'])
+                    ->setShowLabelText(true)
+                    ->setClasses('recordlist-folder-button')
+                    ->setIcon($this->iconFactory->getIcon($additionalHeaderFolderLink['icon'], ICON::SIZE_SMALL)),
+                ButtonBar::BUTTON_POSITION_RIGHT,
+                2
+            );
+        }
     }
 
     private function addSearchButtonToNewModuleTemplate(ModuleTemplate $moduleTemplate): void
