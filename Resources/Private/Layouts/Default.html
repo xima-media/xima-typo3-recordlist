@@ -67,7 +67,7 @@
 						data-pid="{item.pid}"
 						data-t3ver_oid="{item.t3ver_oid}"
 						data-t3ver_wsid="1"
-						data-l18n_parent="{item.l18n_parent}"
+						data-sys_language_uid="{item.sys_language_uid}"
 						data-stage="{item.t3ver_stage}"
 						data-table="{table}"
 						data-sys-file-references="{f:if(condition: item.referencesToPublish, then: '{item.referencesToPublish->f:format.json()}')}"
@@ -132,9 +132,3 @@
 		</main>
 	</f:if>
 </f:form>
-
-<style>
-	.table > tbody > tr:not([data-l18n_parent="0"]) td[data-language-indent="1"] > *:first-child {
-		margin-left: 18px;
-	}
-</style>

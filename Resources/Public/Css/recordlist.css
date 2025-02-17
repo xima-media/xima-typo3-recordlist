@@ -26,3 +26,7 @@
 	padding: 0;
 	overflow: hidden;
 }
+
+.table > tbody > tr:not([data-sys_language_uid="0"]) td[data-language-indent="1"] > *:first-child {
+    margin-left: 16px;
+}

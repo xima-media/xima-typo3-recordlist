@@ -78,6 +78,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $records = [];
 
+    protected EditableArrayPaginator $paginator;
+
     public function __construct(
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
@@ -158,7 +160,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addAdditionalConstraints();
         $this->addOrderConstraint();
         $this->addBasicQueryConstraints();
-        $this->addTranslationsToQuery();
         $this->modifyQueryBuilder();
         $this->fetchRecords();
 
@@ -171,7 +172,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         // init pager -> modifies all records!
-        $this->createPaginator();
+        $this->initPaginator();
+        $this->modifyPaginatedRecords();
+        $this->setPaginatorItems();
 
         $this->createColumnConfiguration();
 
@@ -314,9 +317,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // add requested language to module settings
         $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
         if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists(
-            (int)$requestedLanguage,
-            $this->getLanguages()
-        )) {
+                (int)$requestedLanguage,
+                $this->getLanguages()
+            )) {
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
@@ -515,21 +518,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->view->assign('order_direction', $orderDirection);
     }
 
-    protected function addTranslationsToQuery(): void
-    {
-        // get translated records
-        $transOrigPointerField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['transOrigPointerField'] ?? '';
-        if ($transOrigPointerField) {
-            $this->queryBuilder->leftJoin(
-                't1',
-                $this->getTableName(),
-                't2',
-                $this->queryBuilder->expr()->eq('t2.' . $transOrigPointerField, 't1.uid')
-            );
-            $this->queryBuilder->addSelectLiteral('GROUP_CONCAT(DISTINCT t2.sys_language_uid) as translated_languages');
-        }
-    }
-
     protected function addBasicQueryConstraints(): void
     {
         $this->queryBuilder = $this->queryBuilder->select('t1.*')
@@ -565,55 +553,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         foreach ($this->records as &$record) {
             if (!is_int($record['uid'])) {
                 continue;
-            }
-
-            if (array_key_exists('translated_languages', $record) && $record['sys_language_uid'] === 0) {
-                $availableLanguages = array_diff(array_column($this->getLanguages(), 'uid'), [$record['sys_language_uid'], 'all']);
-                $possibleTranslations = array_diff(
-                    $availableLanguages,
-                    GeneralUtility::intExplode(',', $record['translated_languages'] ?? '', true)
-                );
-                foreach ($possibleTranslations as $languageUid) {
-                    $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName());
-                    $targetUrl = (string)$this->backendUriBuilder->buildUriFromRoute(
-                        'tce_db',
-                        [
-                            'cmd' => [
-                                $this->getTableName() => [
-                                    $record['uid'] => [
-                                        'localize' => $languageUid,
-                                    ],
-                                ],
-                            ],
-                            'redirect' => $redirectUrl,
-                        ]
-                    );
-                    $record['possible_translations'] ??= [];
-                    $record['possible_translations'][$languageUid] = $targetUrl;
-
-                    if (ExtensionManagementUtility::isLoaded('wv_deepltranslate') && \WebVision\WvDeepltranslate\Utility\DeeplBackendUtility::isDeeplApiKeySet()) {
-                        $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
-                            'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
-                                'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
-                                'returnUrl' => $redirectUrl,
-                            ]),
-                            'cmd' => [
-                                $this->getTableName() => [
-                                    $record['uid'] => [
-                                        'localize' => $languageUid,
-                                    ],
-                                ],
-                                'localization' => [
-                                    'custom' => [
-                                        'mode' => 'deepl',
-                                    ],
-                                ],
-                            ],
-                        ]);
-                        $record['possible_translations_deepl'] ??= [];
-                        $record['possible_translations_deepl'][$languageUid] = $deeplUrl;
-                    }
-                }
             }
 
             $record['editable'] = true;
@@ -738,28 +677,23 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $response;
     }
 
-    protected function createPaginator(): void
+    protected function initPaginator(): void
     {
-        $body = $this->request->getParsedBody();
+        $body = (array)$this->request->getParsedBody();
         $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
 
-        $paginator = new EditableArrayPaginator($this->records, $currentPage, 100);
+        $this->paginator = new EditableArrayPaginator($this->records, $currentPage, 100);
 
         $items = [];
-        foreach ($paginator->getPaginatedItems() as &$item) {
+        foreach ($this->paginator->getPaginatedItems() as &$item) {
             $this->modifyRecord($item);
             $items[] = $item;
         }
         unset($item);
 
         $this->records = $items;
-        $paginator->setPaginatedItems($items);
-
-        $nextPage = $paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
+        $nextPage = $this->paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
         $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
-
-        $this->view->assign('records', $this->records);
-        $this->view->assign('paginator', $paginator);
         $this->view->assign('current_page', $currentPage);
         $this->view->assign('next_page', $nextPage);
         $this->view->assign('prev_page', $prevPage);
@@ -770,6 +704,98 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     public function modifyRecord(array &$record): void
     {
+    }
+
+    protected function modifyPaginatedRecords(): void
+    {
+        $this->addTranslationButtons();
+    }
+
+    protected function addTranslationButtons(): void
+    {
+        $transOrigPointerField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['transOrigPointerField'] ?? '';
+        if (!$transOrigPointerField) {
+            return;
+        }
+
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($this->getTableName());
+        $queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
+        $translations = $queryBuilder->addSelect($transOrigPointerField)
+            ->addSelectLiteral('GROUP_CONCAT(sys_language_uid) as translated_languages')
+            ->from($this->getTableName())
+            ->where(
+                $queryBuilder->expr()->in(
+                    $transOrigPointerField,
+                    $queryBuilder->quoteArrayBasedValueListToIntegerList(array_column($this->records, 'uid'))
+                )
+            )
+            ->andWhere($queryBuilder->expr()->neq('sys_language_uid', 0))
+            ->groupBy($transOrigPointerField)
+            ->executeQuery()
+            ->fetchAllKeyValue();
+
+        $availableLanguages = array_diff(array_column($this->getLanguages(), 'uid'), [0, 'all']);
+
+        foreach ($this->records as &$record) {
+            if ($record['sys_language_uid'] !== 0) {
+                continue;
+            }
+
+            $existingTranslations = GeneralUtility::intExplode(',', $translations[$record['uid']] ?? '', true);
+            $possibleTranslations = array_diff(
+                $availableLanguages,
+                $existingTranslations
+            );
+
+            foreach ($possibleTranslations as $languageUid) {
+                $redirectUrl = (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName());
+                $targetUrl = (string)$this->backendUriBuilder->buildUriFromRoute(
+                    'tce_db',
+                    [
+                        'cmd' => [
+                            $this->getTableName() => [
+                                $record['uid'] => [
+                                    'localize' => $languageUid,
+                                ],
+                            ],
+                        ],
+                        'redirect' => $redirectUrl,
+                    ]
+                );
+                $record['possible_translations'] ??= [];
+                $record['possible_translations'][$languageUid] = $targetUrl;
+
+                if (ExtensionManagementUtility::isLoaded('wv_deepltranslate') && \WebVision\WvDeepltranslate\Utility\DeeplBackendUtility::isDeeplApiKeySet()) {
+                    $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
+                        'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
+                            'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
+                            'returnUrl' => $redirectUrl,
+                        ]),
+                        'cmd' => [
+                            $this->getTableName() => [
+                                $record['uid'] => [
+                                    'localize' => $languageUid,
+                                ],
+                            ],
+                            'localization' => [
+                                'custom' => [
+                                    'mode' => 'deepl',
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $record['possible_translations_deepl'] ??= [];
+                    $record['possible_translations_deepl'][$languageUid] = $deeplUrl;
+                }
+            }
+        }
+    }
+
+    protected function setPaginatorItems(): void
+    {
+        $this->paginator->setPaginatedItems($this->records);
+        $this->view->assign('records', $this->records);
+        $this->view->assign('paginator', $this->paginator);
     }
 
     protected function createColumnConfiguration(): void
