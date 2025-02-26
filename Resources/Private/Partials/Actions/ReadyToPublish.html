@@ -1,19 +1,18 @@
 <f:if condition="{item.t3ver_oid} || {item.t3ver_state} === 1">
-	<f:if condition="!{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
-		<div class="btn-group">
-			<a href="#" data-workspace-action="readyToPublish" class="btn btn-success">
-				<core:icon identifier="actions-share" size="small" />
-				{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.requestReview')}
-			</a>
-		</div>
-	</f:if>
-	<f:if condition="{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
-		<div class="btn-group">
-			<a href="#" data-workspace-action="readyToPublish" class="btn btn-warning">
-				<core:icon identifier="actions-share" size="small" />
-				{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toReview')}
-			</a>
-		</div>
-	</f:if>
+    <f:if condition="!{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
+        <div class="btn-group">
+            <a href="#" data-workspace-action="readyToPublish" class="btn btn-success">
+                <core:icon identifier="actions-share" size="small" />
+                {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.requestReview')}
+            </a>
+        </div>
+    </f:if>
+    <f:if condition="{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
+        <div class="btn-group">
+            <a href="#" data-workspace-action="readyToPublish" class="btn btn-warning">
+                <core:icon identifier="actions-share" size="small" />
+                {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toReview')}
+            </a>
+        </div>
+    </f:if>
 </f:if>
-

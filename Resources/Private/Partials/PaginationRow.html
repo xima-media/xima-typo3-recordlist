@@ -1,93 +1,90 @@
 <f:if condition="{paginator.numberOfPages} > 1">
-	<tr>
-		<td colspan="{tableConfiguration.columnCount}">
-			<nav class="mb-2 mt-2" aria-labelledby="recordlist-pagination">
+    <tr>
+        <td colspan="{tableConfiguration.columnCount}">
+            <nav class="mb-2 mt-2" aria-labelledby="recordlist-pagination">
 
-				<span id="recordlist-pagination" class="page-item ps-2 pe-2 pagination-label">
-					Datensätze 1 - 100
-					<span class="visually-hidden">, Seite {current_page} von {paginator.numberOfPages}</span>
-				</span>
+                <span id="recordlist-pagination" class="page-item ps-2 pe-2 pagination-label">
+                    Datensätze 1 - 100
+                    <span class="visually-hidden">, Seite {current_page} von {paginator.numberOfPages}</span>
+                </span>
 
-				<ul class="pagination">
-					<li class="page-item ps-2" aria-hidden="true">
-						<f:if condition="{current_page} !== 1">
-							<f:then>
-								<a href="#" data-nextpage="1" aria-label="Erste">
-									<core:icon identifier="actions-view-paging-first" size="small" />
-								</a>
-							</f:then>
-							<f:else>
-								<core:icon identifier="actions-view-paging-first" size="small" />
-							</f:else>
-						</f:if>
-					</li>
-					<li class="page-item ps-2" aria-hidden="true">
-						<f:if condition="{prev_page}">
-							<f:then>
-								<a href="#"
-								   data-currentpage="{current_page}"
-								   data-nextpage="{prev_page}"
-								   aria-label="Nächste">
-									<core:icon identifier="actions-view-paging-previous" size="small" />
-								</a>
-							</f:then>
-							<f:else>
-								<core:icon identifier="actions-view-paging-previous" size="small" />
-							</f:else>
-						</f:if>
-					</li>
+                <ul class="pagination">
+                    <li class="page-item ps-2" aria-hidden="true">
+                        <f:if condition="{current_page} !== 1">
+                            <f:then>
+                                <a href="#" data-nextpage="1" aria-label="Erste">
+                                    <core:icon identifier="actions-view-paging-first" size="small" />
+                                </a>
+                            </f:then>
+                            <f:else>
+                                <core:icon identifier="actions-view-paging-first" size="small" />
+                            </f:else>
+                        </f:if>
+                    </li>
+                    <li class="page-item ps-2" aria-hidden="true">
+                        <f:if condition="{prev_page}">
+                            <f:then>
+                                <a
+                                    href="#" data-currentpage="{current_page}" data-nextpage="{prev_page}" aria-label="Nächste">
+                                    <core:icon identifier="actions-view-paging-previous" size="small" />
+                                </a>
+                            </f:then>
+                            <f:else>
+                                <core:icon identifier="actions-view-paging-previous" size="small" />
+                            </f:else>
+                        </f:if>
+                    </li>
 
-					<li class="page-item ps-2">
-						<label>Seite
-							<f:form.textfield type="number"
-											  additionalAttributes="{autocomplete:'off'}"
-											  data="{current_page: current_page}"
-											  name="current_page"
-											  value="{current_page}"
-											  size="3"
-											  class="t3js-recordlist-paging form-control form-control-xs paginator-input" />
-						</label>
-						<span aria-hidden="true">
-							von {paginator.numberOfPages}
-						</span>
-					</li>
+                    <li class="page-item ps-2">
+                        <label>Seite
+                            <f:form.textfield
+                                type="number"
+                                additionalAttributes="{autocomplete:'off'}"
+                                data="{current_page: current_page}"
+                                name="current_page"
+                                value="{current_page}"
+                                size="3"
+                                class="t3js-recordlist-paging form-control form-control-xs paginator-input" />
+                        </label>
+                        <span aria-hidden="true">
+                            von {paginator.numberOfPages}
+                        </span>
+                    </li>
 
-					<li class="page-item ps-2">
-						<f:if condition="{next_page}">
-							<f:then>
-								<a href="#"
-								   data-currentpage="{current_page}"
-								   data-nextpage="{next_page}"
-								   aria-label="Nächste">
-									<core:icon identifier="actions-view-paging-next" size="small" />
-								</a>
-							</f:then>
-							<f:else>
-								<core:icon identifier="actions-view-paging-next" size="small" />
-							</f:else>
-						</f:if>
-					</li>
-					<li class="page-item ps-2">
-						<f:if condition="{current_page} !== {paginator.numberOfPages}">
-							<f:then>
-								<a href="#" data-nextpage="{paginator.numberOfPages}" aria-label="Letzte">
-									<core:icon identifier="actions-view-paging-last" size="small" />
-								</a>
-							</f:then>
-							<f:else>
-								<core:icon identifier="actions-view-paging-last" size="small" />
-							</f:else>
-						</f:if>
+                    <li class="page-item ps-2">
+                        <f:if condition="{next_page}">
+                            <f:then>
+                                <a
+                                    href="#" data-currentpage="{current_page}" data-nextpage="{next_page}" aria-label="Nächste">
+                                    <core:icon identifier="actions-view-paging-next" size="small" />
+                                </a>
+                            </f:then>
+                            <f:else>
+                                <core:icon identifier="actions-view-paging-next" size="small" />
+                            </f:else>
+                        </f:if>
+                    </li>
+                    <li class="page-item ps-2">
+                        <f:if condition="{current_page} !== {paginator.numberOfPages}">
+                            <f:then>
+                                <a href="#" data-nextpage="{paginator.numberOfPages}" aria-label="Letzte">
+                                    <core:icon identifier="actions-view-paging-last" size="small" />
+                                </a>
+                            </f:then>
+                            <f:else>
+                                <core:icon identifier="actions-view-paging-last" size="small" />
+                            </f:else>
+                        </f:if>
 
-					</li>
+                    </li>
 
-					<li class="page-item ps-2">
-						<a href="#" aria-label="Neu laden" data-nextpage="{current_page}">
-							<core:icon identifier="actions-refresh" size="small" />
-						</a>
-					</li>
-				</ul>
-			</nav>
-		</td>
-	</tr>
+                    <li class="page-item ps-2">
+                        <a href="#" aria-label="Neu laden" data-nextpage="{current_page}">
+                            <core:icon identifier="actions-refresh" size="small" />
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </td>
+    </tr>
 </f:if>

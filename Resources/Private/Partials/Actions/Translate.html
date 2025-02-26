@@ -1,9 +1,13 @@
 <f:for each="{item.possible_translations}" key="translationUid" as="link">
-	<f:for each="{languages}" as="language">
-		<f:if condition="{language.uid} > 0 && {language.uid} == {translationUid}">
-			<a href="{link}" class="btn btn-default translate" title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.translate')}" data-bs-toggle="tooltip">
-				<core:icon identifier="{language.flagIcon}" size="small" />
-			</a>
-		</f:if>
-	</f:for>
+    <f:for each="{languages}" as="language">
+        <f:if condition="{language.uid} > 0 && {language.uid} == {translationUid}">
+            <a
+                href="{link}"
+                class="btn btn-default translate"
+                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.translate')}"
+                data-bs-toggle="tooltip">
+                <core:icon identifier="{language.flagIcon}" size="small" />
+            </a>
+        </f:if>
+    </f:for>
 </f:for>

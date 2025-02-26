@@ -123,7 +123,7 @@
 			<trans-unit id="notification.delete.record.success.message">
 				<source>The record has been deleted successfully</source>
 			</trans-unit>
-            <trans-unit id="header.button.download">
+			<trans-unit id="header.button.download">
 				<source>Download</source>
 			</trans-unit>
 		</body>

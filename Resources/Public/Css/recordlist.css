@@ -19,12 +19,12 @@
 }
 
 .recordlist #nprogress {
-	position: absolute;
-	left: 0;
-	top: 0;
-	height: 3px;
-	padding: 0;
-	overflow: hidden;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 3px;
+    padding: 0;
+    overflow: hidden;
 }
 
 .table > tbody > tr:not([data-sys_language_uid="0"]) td[data-language-indent="1"] > *:first-child {

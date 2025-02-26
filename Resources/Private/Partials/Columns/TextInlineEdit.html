@@ -6,14 +6,23 @@
     <f:then>
         <div class="text-inline-edit" data-column="{colConfig.columnName}">
             <label class="screen-reader" for="{colConfig.columnName}-{item.uid}">{colConfig.label} edit</label>
-            <input autocomplete="off"
-                   id="{colConfig.columnName}-{item.uid}"
-                   value="{item.{colConfig.columnName}}"
-                   data-original-value="{item.{colConfig.columnName}}">
-            <button data-action="save" type="button" title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.save')}" class="btn btn-sm btn-success">
+            <input
+                autocomplete="off"
+                id="{colConfig.columnName}-{item.uid}"
+                value="{item.{colConfig.columnName}}"
+                data-original-value="{item.{colConfig.columnName}}">
+            <button
+                data-action="save"
+                type="button"
+                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.save')}"
+                class="btn btn-sm btn-success">
                 <core:icon identifier="actions-check" />
             </button>
-            <button data-action="close" type="button" title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.cancel')}" class="btn btn-sm btn-danger">
+            <button
+                data-action="close"
+                type="button"
+                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.cancel')}"
+                class="btn btn-sm btn-danger">
                 <core:icon identifier="actions-close" />
             </button>
         </div>

@@ -1,4 +1,9 @@
 <div class="form-check form-switch">
-	<label class="form-check-label" for="{fieldName}"> {label}</label>
-	<f:form.checkbox class="form-check-input" id="{fieldName}" name="{fieldName}" value="1" checked="{f:if(condition:fieldValue, then:'checked')}" />
+    <label class="form-check-label" for="{fieldName}"> {label}</label>
+    <f:form.checkbox
+        class="form-check-input"
+        id="{fieldName}"
+        name="{fieldName}"
+        value="1"
+        checked="{f:if(condition:fieldValue, then:'checked')}" />
 </div>

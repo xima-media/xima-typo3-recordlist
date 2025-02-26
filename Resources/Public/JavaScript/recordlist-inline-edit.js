@@ -32,7 +32,7 @@ class RecordlistInlineEdit {
             e.preventDefault();
             const input = e.currentTarget;
             this.postSave(input).then(() => {
-               input.blur();
+              input.blur();
             });
         }
 

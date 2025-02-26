@@ -4,14 +4,13 @@
     <core:iconForRecord table="{table}" row="{item}" />
 </f:if>
 <f:if condition="{item.editable}">
-	<f:then>
-		<be:link.editRecord uid="{item.uid}"
-							table="{table}"
-							returnUrl="{f:be.uri(route: moduleName)}">
-			<span class="workspace-state-{item.state}">{item.{colConfig.columnName}}</span>
-		</be:link.editRecord>
-	</f:then>
-	<f:else>
-		<span class="workspace-state-{item.state}">{item.{colConfig.columnName}}</span>
-	</f:else>
+    <f:then>
+        <be:link.editRecord
+            uid="{item.uid}" table="{table}" returnUrl="{f:be.uri(route: moduleName)}">
+            <span class="workspace-state-{item.state}">{item.{colConfig.columnName}}</span>
+        </be:link.editRecord>
+    </f:then>
+    <f:else>
+        <span class="workspace-state-{item.state}">{item.{colConfig.columnName}}</span>
+    </f:else>
 </f:if>
