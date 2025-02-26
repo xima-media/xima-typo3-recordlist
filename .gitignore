@@ -1,0 +1,8 @@
+config/
+public/_assets/
+public/fileadmin/
+public/index.php
+public/typo3/
+public/typo3temp/
+var/
+vendor/

@@ -1,56 +1,97 @@
 {
 	"name": "xima/xima-typo3-recordlist",
-	"type": "typo3-cms-extension",
-	"description": "Advanced record list with simple workspace integration",
-	"homepage": "https://www.xima.de",
+	"description": "This package provides an abstract class for creating TYPO3 backend modules that display a feature-rich and easy-to-customize list view of records. It also includes built-in simplified TYPO3 workspace integration.",
 	"license": "GPL-2.0-or-later",
-	"authors": [
-		{
-			"name": "Maik Schneider",
-			"role": "Developer",
-			"email": "maik.schneider@xima.de"
-		}
-	],
+	"type": "library",
 	"keywords": [
 		"typo3",
 		"typo3-cms-extension"
 	],
+	"authors": [
+		{
+			"name": "Maik Schneider",
+			"email": "maik.schneider@xima.de",
+			"role": "Developer"
+		}
+	],
+	"homepage": "https://www.xima.de",
 	"require": {
-		"php": "^8.0",
+		"php": "^8.2",
 		"typo3/cms-core": "^12.4.0"
 	},
 	"require-dev": {
-		"roave/security-advisories": "dev-master",
-		"typo3/cms-base-distribution": "^11.4",
-		"phpstan/phpstan": "^1.6",
-		"bk2k/bootstrap-package": "dev-master",
+		"armin/editorconfig-cli": "^2.1",
+		"bk2k/bootstrap-package": "^15.0",
 		"clue/phar-composer": "^1.0",
+		"ergebnis/composer-normalize": "^2.45",
 		"friendsofphp/php-cs-fixer": "^3.12",
-		"saschaegerer/phpstan-typo3": "^1.8",
-		"phpstan/extension-installer": "^1.3"
+		"helmich/typo3-typoscript-lint": "^3.3",
+		"phpstan/extension-installer": "^1.3",
+		"roave/security-advisories": "dev-latest",
+		"saschaegerer/phpstan-typo3": "^1.10",
+		"symfony/translation": "^7.2"
+	},
+	"suggest": {
+		"typo3/cms-workspaces": "For workspace integration"
 	},
 	"autoload": {
 		"psr-4": {
 			"Xima\\XimaTypo3Recordlist\\": "Classes"
 		}
 	},
+	"config": {
+		"allow-plugins": {
+			"ergebnis/composer-normalize": true,
+			"phpstan/extension-installer": true,
+			"typo3/class-alias-loader": true,
+			"typo3/cms-composer-installers": true
+		},
+		"lock": false,
+		"vendor-dir": "vendor"
+	},
 	"extra": {
 		"typo3/cms": {
 			"cms-package-dir": "{$vendor-dir}/typo3/cms",
-			"web-dir": "public",
-			"extension-key": "xima_typo3_recordlist"
-		}
-	},
-	"config": {
-		"vendor-dir": "vendor",
-		"allow-plugins": {
-			"typo3/cms-composer-installers": true,
-			"typo3/class-alias-loader": true,
-			"phpstan/extension-installer": true
+			"extension-key": "xima_typo3_recordlist",
+			"web-dir": "public"
 		}
 	},
 	"scripts": {
-		"php:fixer": "./vendor/bin/php-cs-fixer --config=php-cs-fixer.php fix",
-		"php:stan": "./vendor/bin/phpstan --generate-baseline=phpstan-baseline.neon --allow-empty-baseline"
+		"ci:composer:normalize": "@composer normalize --no-check-lock --dry-run",
+		"ci:editorconfig:lint": "ec --strict --git-only -n",
+		"ci:php:fixer": "php-cs-fixer --config=php-cs-fixer.php fix --dry-run --format=checkstyle > php-cs-fixer.xml || true",
+		"ci:php:lint": "find *.php . -name '*.php' ! -path './vendor/*'  ! -path './var/*' ! -path '*node_modules/*' -print0 | xargs -0 -n 1 -P 4 php -l",
+		"ci:php:stan": "phpstan --no-progress --error-format=checkstyle > phpstan.xml || true",
+		"ci:sca": [
+			"@ci:composer:normalize",
+			"@ci:editorconfig:lint",
+			"@ci:php:lint",
+			"@ci:php:fixer",
+			"@ci:php:stan",
+			"@ci:typoscript:lint",
+			"@ci:xml:lint",
+			"@ci:yaml:lint"
+		],
+		"ci:typoscript:lint": "typoscript-lint --fail-on-warnings",
+		"ci:xml:lint": "find ./ -name '*.xlf' ! -path './vendor/*' ! -path './var/*' | xargs -r xmllint --schema vendor/symfony/translation/Resources/schemas/xliff-core-1.2-transitional.xsd --noout",
+		"ci:yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint",
+		"composer:normalize": "@composer normalize --no-check-lock",
+		"editorconfig:lint": "ec --strict --fix --git-only -n",
+		"php:fixer": "php-cs-fixer --config=php-cs-fixer.php fix",
+		"php:lint": "find *.php . -name '*.php' ! -path './vendor/*'  ! -path './var/*' ! -path '*node_modules/*' -print0 | xargs -0 -n 1 -P 4 php -l",
+		"php:stan": "phpstan --generate-baseline=phpstan-baseline.neon --allow-empty-baseline",
+		"sca": [
+			"@composer:normalize",
+			"@editorconfig:lint",
+			"@php:lint",
+			"@php:fixer",
+			"@php:stan",
+			"@typoscript:lint",
+			"@xml:lint",
+			"@yaml:lint"
+		],
+		"typoscript:lint": "typoscript-lint",
+		"xml:lint": "find ./ -name '*.xlf' ! -path './vendor/*' ! -path './var/*' | xargs -r xmllint --schema vendor/symfony/translation/Resources/schemas/xliff-core-1.2-transitional.xsd --noout",
+		"yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint"
 	}
 }

@@ -1,0 +1,56 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to static method isDeeplApiKeySet\\(\\) on an unknown class WebVision\\\\WvDeepltranslate\\\\Utility\\\\DeeplBackendUtility\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Parameter \\$workspaceService of method Xima\\\\XimaTypo3Recordlist\\\\Controller\\\\AbstractBackendController\\:\\:__construct\\(\\) has invalid type TYPO3\\\\CMS\\\\Workspaces\\\\Service\\\\WorkspaceService\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Property Xima\\\\XimaTypo3Recordlist\\\\Controller\\\\AbstractBackendController\\:\\:\\$workspaceService has unknown class TYPO3\\\\CMS\\\\Workspaces\\\\Service\\\\WorkspaceService as its type\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between 'all'\\|numeric\\-string and int will always evaluate to false\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^There is no request attribute \"route\" configured so we can't figure out the exact type to return when calling Psr\\\\Http\\\\Message\\\\ServerRequestInterface\\:\\:getAttribute$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Variable \\$requestedLanguage in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
+			count: 1
+			path: Classes/Controller/AjaxController.php
+
+		-
+			message: "#^Using nullsafe method call on non\\-nullable type TYPO3\\\\CMS\\\\Core\\\\Resource\\\\ResourceStorage\\. Use \\-\\> instead\\.$#"
+			count: 2
+			path: Classes/Controller/AjaxController.php
+
+		-
+			message: "#^Variable \\$file might not be defined\\.$#"
+			count: 1
+			path: Classes/Controller/AjaxController.php
+
+		-
+			message: "#^Variable \\$storage might not be defined\\.$#"
+			count: 1
+			path: Classes/Controller/AjaxController.php
