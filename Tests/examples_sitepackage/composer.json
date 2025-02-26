@@ -1,0 +1,18 @@
+{
+	"name": "xima/xima-typo3-recordlist-examples",
+	"type": "typo3-cms-extension",
+	"description": "Example sitepackage for XIMA TYPO3 Recordlist",
+	"require": {
+		"xima/xima-typo3-recordlist": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"Xima\\XimaTypo3RecordlistExamples\\": "Classes"
+		}
+	},
+	"extra": {
+		"typo3/cms": {
+			"extension-key": "xima_typo3_recordlist_examples"
+		}
+	}
+}

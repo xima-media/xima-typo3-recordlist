@@ -41,7 +41,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 {
     public const WORKSPACE_ID = 0;
 
-    public const TEMPLATE_NAME = 'Default';
+    protected const TEMPLATE_NAME = 'Default';
 
     protected ModuleTemplate $moduleTemplate;
 

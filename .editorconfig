@@ -58,40 +58,8 @@ trim_trailing_whitespace = unset
 indent_style = unset
 indent_size = unset
 
-[/patches/**]
-charset = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-indent_style = unset
-indent_size = unset
-
-[package-lock.json]
-charset = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-indent_style = unset
-indent_size = unset
-
 [*.php]
 indent_style = unset
-
-[/packages/ke_search_premium/**]
-charset = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-indent_style = unset
-indent_size = unset
-
-[packages/xima_sitepackage/Resources/Private/EasterEggs/lobster.txt]
-charset = unset
-end_of_line = unset
-insert_final_newline = unset
-trim_trailing_whitespace = unset
-indent_style = unset
-indent_size = unset
 
 [.ddev/**]
 charset = unset

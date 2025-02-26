@@ -1,134 +1,179 @@
-{namespace be=TYPO3\CMS\Backend\ViewHelpers}
+<html
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    data-namespace-typo3-fluid="true">
 
-<f:be.pageRenderer includeRequireJsModules="{0: 'TYPO3/CMS/Backend/Tooltip'}" includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
+<f:be.pageRenderer
+    includeRequireJsModules="{0: 'TYPO3/CMS/Backend/Tooltip'}"
+    includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
 
-<f:render section="Headline" optional="true">
-	<h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then: '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')} {fullRecordCount} ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
-</f:render>
+<f:render section="Before" arguments="{_all}" optional="true" />
 
-<f:if condition="{fullRecordCount} && {recordCount} == 0">
-	<f:be.infobox title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.headline')}" state="-1">{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.text')}</f:be.infobox>
-</f:if>
+<div class="module {moduleClass}" data-module-id="{moduleId}" data-module-name="{moduleName}">
 
-<div id="workspace-settings-form">
-	<input type="hidden" name="depth" value="9" /> <input type="hidden" name="languages" value="all" /> <input type="hidden" name="stage" value="-99" />
-</div>
+    <f:render partial="DocHeader" arguments="{docHeader:docHeader}" />
 
-<f:form>
+    <div class="module-body t3js-module-body">
+        <f:flashMessages queueIdentifier="{flashMessageQueueIdentifier}" />
 
-    <div class="hidden" id="downloadSettingsForm">
-        <f:render partial="DownloadSettings" arguments="{_all}" />
-    </div>
+        <f:render section="Content" arguments="{_all}" optional="true">
+            <f:render section="Headline" optional="true">
+                <h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then:
+                    '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')}
+                    {fullRecordCount}
+                    ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
+            </f:render>
 
-	<div class="row">
-		<div class="col-12">
-			<div id="searchInputs" class="card p-3 mb-5 {f:if(condition:settings.isSearchButtonActive, else:'hidden')}">
+            <f:if condition="{fullRecordCount} && {recordCount} == 0">
+                <f:be.infobox
+                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.headline')}"
+                    state="-1">
+                    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.text')}
+                </f:be.infobox>
+            </f:if>
 
-				<f:form.hidden name="order_field" value="{order_field}" />
-				<f:form.hidden name="order_direction" value="{order_direction}" />
+            <div id="workspace-settings-form">
+                <input type="hidden" name="depth" value="9" />
+                <input type="hidden" name="languages" value="all" />
+                <input type="hidden" name="stage" value="-99" />
+            </div>
 
-				<f:render section="SearchInputs" optional="true">
-                    <div class="row mb-3">
-                        <div class="col-12 col-xl-6">
-                            <f:render partial="Filter/SearchField" arguments="{_all}" />
+            <f:form>
+
+                <div class="hidden" id="downloadSettingsForm">
+                    <f:render partial="DownloadSettings" arguments="{_all}" />
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:settings.isSearchButtonActive, else:'hidden')}">
+
+                            <f:form.hidden name="order_field" value="{order_field}" />
+                            <f:form.hidden name="order_direction" value="{order_direction}" />
+
+                            <f:render section="SearchInputs" optional="true">
+                                <div class="row mb-3">
+                                    <div class="col-12 col-xl-6">
+                                        <f:render partial="Filter/SearchField" arguments="{_all}" />
+                                    </div>
+                                </div>
+                            </f:render>
+
+                            <div class="row mb-6">
+                                <div class="col col-auto">
+                                    <f:form.submit
+                                        class="btn btn-default"
+                                        name="reset"
+                                        value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
+                                    <input
+                                        type="submit"
+                                        class="btn btn-primary"
+                                        value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.search')}" />
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                </f:render>
+                </div>
 
-				<div class="row mb-6">
-					<div class="col col-auto">
-						<f:form.submit class="btn btn-default" name="reset" value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
-						<input type="submit" class="btn btn-primary" value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.search')}" />
-					</div>
-				</div>
+                <f:if condition="{records->f:count()}">
+                    <main
+                        class="recordlist"
+                        data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}"
+                        id="workspace-content-wrapper">
 
-			</div>
-		</div>
-	</div>
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <f:for each="{tableConfiguration.columns}" as="colConfig">
+                                    <f:render partial="Th" arguments="{_all}" />
+                                </f:for>
+                                <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
+                                    <th>
+                                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.actions')}
+                                    </th>
+                                </f:if>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <f:render partial="PaginationRow" arguments="{_all}" />
+                            <f:for each="{records}" as="item">
+                                <tr
+                                    data-uid="{item.uid}"
+                                    data-pid="{item.pid}"
+                                    data-t3ver_oid="{item.t3ver_oid}"
+                                    data-t3ver_wsid="1"
+                                    data-sys_language_uid="{item.sys_language_uid}"
+                                    data-stage="{item.t3ver_stage}"
+                                    data-table="{table}"
+                                    data-sys-file-references="{f:if(condition: item.referencesToPublish, then: '{item.referencesToPublish->f:format.json()}')}"
+                                    data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
 
-	<f:if condition="{records->f:count()}">
-		<main class="recordlist" data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}" id="workspace-content-wrapper">
+                                    <f:for each="{tableConfiguration.columns}" as="colConfig">
+                                        <td data-language-indent="{colConfig.languageIndent}">
+                                            <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
+                                        </td>
+                                    </f:for>
 
-			<table class="table table-striped table-hover mb-0">
-				<thead>
-				<tr>
-					<f:for each="{tableConfiguration.columns}" as="colConfig">
-						<f:render partial="Th" arguments="{_all}" />
-					</f:for>
-					<f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
-						<th>{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.actions')}</th>
-					</f:if>
-				</tr>
-				</thead>
-				<tbody>
-				<f:render partial="PaginationRow" arguments="{_all}" />
-				<f:for each="{records}" as="item">
-					<tr data-uid="{item.uid}"
-						data-pid="{item.pid}"
-						data-t3ver_oid="{item.t3ver_oid}"
-						data-t3ver_wsid="1"
-						data-sys_language_uid="{item.sys_language_uid}"
-						data-stage="{item.t3ver_stage}"
-						data-table="{table}"
-						data-sys-file-references="{f:if(condition: item.referencesToPublish, then: '{item.referencesToPublish->f:format.json()}')}"
-						data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
+                                    <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
+                                        <td>
+                                            <f:if condition="{tableConfiguration.groupActions}">
+                                                <div class="btn-group">
+                                                    <f:for each="{tableConfiguration.groupActions}" as="actionName">
+                                                        <f:render partial="Actions/{actionName}" arguments="{_all}" />
+                                                    </f:for>
+                                                </div>
+                                            </f:if>
+                                            <f:if condition="{tableConfiguration.actions}">
+                                                <f:for each="{tableConfiguration.actions}" as="actionName">
+                                                    <f:render partial="Actions/{actionName}" arguments="{_all}" />
+                                                </f:for>
+                                            </f:if>
+                                        </td>
+                                    </f:if>
+                                </tr>
+                            </f:for>
+                            <f:render partial="PaginationRow" arguments="{_all}" />
+                            </tbody>
+                        </table>
 
-						<f:for each="{tableConfiguration.columns}" as="colConfig">
-							<td data-language-indent="{colConfig.languageIndent}">
-								<f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
-							</td>
-						</f:for>
+                        <f:if condition="{workspaceId}">
+                            <h3>
+                                <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.label" />
+                            </h3>
 
-						<f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
-							<td>
-								<f:if condition="{tableConfiguration.groupActions}">
-									<div class="btn-group">
-										<f:for each="{tableConfiguration.groupActions}" as="actionName">
-											<f:render partial="Actions/{actionName}" arguments="{_all}" />
-										</f:for>
-									</div>
-								</f:if>
-								<f:if condition="{tableConfiguration.actions}">
-									<f:for each="{tableConfiguration.actions}" as="actionName">
-										<f:render partial="Actions/{actionName}" arguments="{_all}" />
-									</f:for>
-								</f:if>
-							</td>
-						</f:if>
-					</tr>
-				</f:for>
-				<f:render partial="PaginationRow" arguments="{_all}" />
-				</tbody>
-			</table>
+                            <ul class="workspace-legend mb-5">
+                                <li>
+                                    <span class="workspace-state-unchanged">
+                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.unchanged" />
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="workspace-state-modified">
+                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.edited" />
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="workspace-state-new">
+                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.new" />
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="workspace-state-deleted">
+                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.deleted" />
+                                    </span>
+                                </li>
+                            </ul>
+                        </f:if>
+                    </main>
+                </f:if>
+            </f:form>
+        </f:render>
 
-            <f:if condition="{workspaceId}">
-                <h3>
-                    <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.label" />
-                </h3>
+    </div>
 
-                <ul class="workspace-legend mb-5">
-                    <li>
-                        <span class="workspace-state-unchanged">
-                            <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.unchanged" />
-                        </span>
-                    </li>
-                    <li>
-                        <span class="workspace-state-modified">
-                            <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.edited" />
-                        </span>
-                    </li>
-                    <li>
-                        <span class="workspace-state-new">
-                            <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.new" />
-                        </span>
-                    </li>
-                    <li>
-                        <span class="workspace-state-deleted">
-                            <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.deleted" />
-                        </span>
-                    </li>
-                </ul>
-            </f:if>
-		</main>
-	</f:if>
-</f:form>
+</div>
+
+<f:render section="After" arguments="{_all}" optional="true" />
+
+</html>
