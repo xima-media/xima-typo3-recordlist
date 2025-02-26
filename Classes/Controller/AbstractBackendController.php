@@ -30,14 +30,11 @@ use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
-use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\CsvUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
-use TYPO3\CMS\Fluid\View\StandaloneView;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
@@ -45,6 +42,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public const WORKSPACE_ID = 0;
 
     public const TEMPLATE_NAME = 'Default';
+
+    protected ModuleTemplate $moduleTemplate;
 
     protected const DOWNLOAD_FORMATS = [
         'csv' => [
@@ -140,16 +139,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->loadWorkspaceScripts();
 
         // build view
-        $this->initializeView();
-        $this->view->assign('settings', $this->getModuleData()['settings'] ?? []);
-        $this->view->assign('moduleName', $this->getModuleName());
-        $this->view->assign('storagePids', implode(',', $this->getAccessiblePids()));
-        $this->view->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
-        $this->view->assign('currentPid', $this->getCurrentPid());
-        $this->view->assign('workspaceId', self::WORKSPACE_ID);
-        $this->view->assign('languages', $this->getLanguages());
-        $this->view->assign('fullRecordCount', $this->getFullRecordCount());
-        $this->view->assign('table', $this->getTableName());
+        $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+        $this->moduleTemplate->assign('settings', $this->getModuleData()['settings'] ?? []);
+        $this->moduleTemplate->assign('moduleName', $this->getModuleName());
+        $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
+        $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
+        $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
+        $this->moduleTemplate->assign('workspaceId', self::WORKSPACE_ID);
+        $this->moduleTemplate->assign('languages', $this->getLanguages());
+        $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
+        $this->moduleTemplate->assign('table', $this->getTableName());
 
         // build and execute query
         $this->createQueryBuilder();
@@ -163,7 +162,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // modify records (can unset records)
         $this->modifyAllRecords();
-        $this->view->assign('recordCount', count($this->records));
+        $this->moduleTemplate->assign('recordCount', count($this->records));
 
         if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
             return $this->downloadRecords();
@@ -176,11 +175,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $this->createColumnConfiguration();
 
-        // build and render module template
-        $moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->configureModuleTemplateDocHeader($moduleTemplate);
-        $moduleTemplate->setContent($this->view->render());
-        return $this->htmlResponse($moduleTemplate->renderContent());
+        $this->configureModuleTemplateDocHeader();
+        return $this->moduleTemplate->renderResponse($this::TEMPLATE_NAME);
     }
 
     protected function setSite(): void
@@ -237,7 +233,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $qb->expr()->eq('pid', $qb->createNamedParameter($pageUid, \PDO::PARAM_INT))
                 )
             )
-            ->execute();
+            ->executeQuery();
 
         if (!$result instanceof Result) {
             return [];
@@ -403,20 +399,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function initializeView(): void
-    {
-        $settings = $this->configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FULL_TYPOSCRIPT);
-        $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
-        $typoScript = $typoScriptService->convertTypoScriptArrayToPlainArray($settings['module.']['tx_ximatypo3recordlist.'] ?? []);
-
-        $this->view = GeneralUtility::makeInstance(StandaloneView::class);
-        $this->view->setLayoutRootPaths($typoScript['view']['layoutRootPaths']);
-        $this->view->setTemplateRootPaths($typoScript['view']['templateRootPaths']);
-        $this->view->setPartialRootPaths($typoScript['view']['partialRootPaths']);
-        $this->view->setTemplate($this::TEMPLATE_NAME);
-        $this->view->setRequest($this->request);
-    }
-
     protected function isWorkspaceAdmin(): bool
     {
         return $this->getBackendAuthentication()->workspacePublishAccess($this::WORKSPACE_ID);
@@ -471,7 +453,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 );
             }
             $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
-            $this->view->assign('search_field', $searchInput);
+            $this->moduleTemplate->assign('search_field', $searchInput);
         }
     }
 
@@ -507,8 +489,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $orderField = $body['order_field'] ?? $defaultOrderField;
         $orderDirection = $body['order_direction'] ?? 'ASC';
         $this->queryBuilder->addOrderBy('t1.' . $orderField, $orderDirection);
-        $this->view->assign('order_field', $orderField);
-        $this->view->assign('order_direction', $orderDirection);
+        $this->moduleTemplate->assign('order_field', $orderField);
+        $this->moduleTemplate->assign('order_direction', $orderDirection);
     }
 
     protected function addBasicQueryConstraints(): void
@@ -687,9 +669,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->records = $items;
         $nextPage = $this->paginator->getNumberOfPages() > $currentPage ? $currentPage + 1 : 0;
         $prevPage = $currentPage > 1 ? $currentPage - 1 : 0;
-        $this->view->assign('current_page', $currentPage);
-        $this->view->assign('next_page', $nextPage);
-        $this->view->assign('prev_page', $prevPage);
+        $this->moduleTemplate->assign('current_page', $currentPage);
+        $this->moduleTemplate->assign('next_page', $nextPage);
+        $this->moduleTemplate->assign('prev_page', $prevPage);
     }
 
     /**
@@ -787,8 +769,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function setPaginatorItems(): void
     {
         $this->paginator->setPaginatedItems($this->records);
-        $this->view->assign('records', $this->records);
-        $this->view->assign('paginator', $this->paginator);
+        $this->moduleTemplate->assign('records', $this->records);
+        $this->moduleTemplate->assign('paginator', $this->paginator);
     }
 
     protected function createColumnConfiguration(): void
@@ -802,7 +784,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
         unset($column);
         $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
-        $this->view->assign('tableConfiguration', $tableConfiguration);
+        $this->moduleTemplate->assign('tableConfiguration', $tableConfiguration);
     }
 
     /**
@@ -851,33 +833,33 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ];
     }
 
-    private function configureModuleTemplateDocHeader(ModuleTemplate $moduleTemplate): void
+    private function configureModuleTemplateDocHeader(): void
     {
         // new buttons
-        $this->addNewButtonToModuleTemplate($moduleTemplate);
+        $this->addNewButtonToModuleTemplate();
 
         // download button
-        $this->addDownloadButtonToModuleTemplate($moduleTemplate);
+        $this->addDownloadButtonToModuleTemplate();
 
         // search button
-        $this->addSearchButtonToNewModuleTemplate($moduleTemplate);
+        $this->addSearchButtonToNewModuleTemplate();
 
         // language menu
-        $this->addLanguageSelectionToModuleTemplate($moduleTemplate);
+        $this->addLanguageSelectionToModuleTemplate();
 
         // page selection menu
-        $this->addPidSelectionToModuleTemplate($moduleTemplate);
+        $this->addPidSelectionToModuleTemplate();
     }
 
-    protected function addNewButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    protected function addNewButtonToModuleTemplate(): void
     {
         $accessiblePages = $this->getAccessibleChildPages();
         $activeLanguage = $this->getActiveLanguage();
         $tableName = $this->getTableName();
         foreach ($accessiblePages as $key => $page) {
             $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
-            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-                $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+                $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                     ->setHref($this->backendUriBuilder->buildUriFromRoute(
                         'record_edit',
                         ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals]
@@ -890,7 +872,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function addDownloadButtonToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    protected function addDownloadButtonToModuleTemplate(): void
     {
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-download-button.js')
@@ -901,15 +883,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $downloadArguments = $this->request->getQueryParams();
 
-        $this->view->assignMultiple([
+        $this->moduleTemplate->assignMultiple([
             'table' => $this->getTableName(),
             'downloadArguments' => $downloadArguments,
             'formats' => array_keys(self::DOWNLOAD_FORMATS),
             'formatOptions' => self::DOWNLOAD_FORMATS,
         ]);
 
-        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref($url)
                 ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.download'))
                 ->setShowLabelText(true)
@@ -920,12 +902,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
-    private function addSearchButtonToNewModuleTemplate(ModuleTemplate $moduleTemplate): void
+    private function addSearchButtonToNewModuleTemplate(): void
     {
         $isSearchButtonActive = (string)$this->getModuleDataSetting('isSearchButtonActive');
         $searchClass = $isSearchButtonActive ? 'active' : '';
-        $moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-            $moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')
                 ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
                 ->setShowLabelText(false)
@@ -936,13 +918,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
-    protected function addLanguageSelectionToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    protected function addLanguageSelectionToModuleTemplate(): void
     {
         $languageField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
         if (!$languageField) {
             return;
         }
-        $languageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+        $languageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
         $languageMenu->setIdentifier('languageSelector');
         $languageMenu->setLabel('');
         $languages = $this->getLanguages();
@@ -959,14 +941,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $languageMenu->addMenuItem($menuItem);
         }
-        $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
+        $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
     }
 
-    protected function addPidSelectionToModuleTemplate(ModuleTemplate $moduleTemplate): void
+    protected function addPidSelectionToModuleTemplate(): void
     {
         $accessiblePages = $this->getAccessiblePids();
         if (count($accessiblePages) > 1) {
-            $pageMenu = $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+            $pageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
             $pageMenu->setIdentifier('pageSelector');
             $pageMenu->setLabel('');
             foreach ($accessiblePages as $pageUid) {
@@ -983,7 +965,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
                 $pageMenu->addMenuItem($menuItem);
             }
-            $moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
+            $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
     }
 }

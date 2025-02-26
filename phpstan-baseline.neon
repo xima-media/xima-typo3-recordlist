@@ -44,8 +44,3 @@ parameters:
 			message: "#^Variable \\$storage might not be defined\\.$#"
 			count: 1
 			path: Classes/Controller/AjaxController.php
-
-		-
-			message: "#^Class Xima\\\\XimaSitepackage\\\\Controller\\\\BackendCoworkerController not found\\.$#"
-			count: 1
-			path: Configuration/Backend/Modules.php
