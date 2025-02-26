@@ -443,11 +443,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $count ? $count[0] : 0;
     }
 
-    public function getTableName(): string
-    {
-        return $this::TABLE_NAME;
-    }
-
     protected function getRequestedPids(): array
     {
         return $this->getCurrentPid() === $this->getAccessiblePids()[0] ? $this->getAccessiblePids() : [$this->getCurrentPid()];
