@@ -38,7 +38,6 @@ use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Fluid\View\StandaloneView;
-use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
@@ -86,8 +85,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         protected UriBuilder $backendUriBuilder,
         protected FlashMessageService $flashMessageService,
         protected ContainerInterface $container,
-        protected ModuleTemplateFactory $moduleTemplateFactory,
-        protected WorkspaceService $workspaceService
+        protected ModuleTemplateFactory $moduleTemplateFactory
     ) {
     }
 

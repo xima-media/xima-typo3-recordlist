@@ -11,16 +11,6 @@ parameters:
 			path: Classes/Controller/AbstractBackendController.php
 
 		-
-			message: "#^Parameter \\$workspaceService of method Xima\\\\XimaTypo3Recordlist\\\\Controller\\\\AbstractBackendController\\:\\:__construct\\(\\) has invalid type TYPO3\\\\CMS\\\\Workspaces\\\\Service\\\\WorkspaceService\\.$#"
-			count: 1
-			path: Classes/Controller/AbstractBackendController.php
-
-		-
-			message: "#^Property Xima\\\\XimaTypo3Recordlist\\\\Controller\\\\AbstractBackendController\\:\\:\\$workspaceService has unknown class TYPO3\\\\CMS\\\\Workspaces\\\\Service\\\\WorkspaceService as its type\\.$#"
-			count: 1
-			path: Classes/Controller/AbstractBackendController.php
-
-		-
 			message: "#^Strict comparison using \\=\\=\\= between 'all'\\|numeric\\-string and int will always evaluate to false\\.$#"
 			count: 1
 			path: Classes/Controller/AbstractBackendController.php
@@ -54,3 +44,8 @@ parameters:
 			message: "#^Variable \\$storage might not be defined\\.$#"
 			count: 1
 			path: Classes/Controller/AjaxController.php
+
+		-
+			message: "#^Class Xima\\\\XimaSitepackage\\\\Controller\\\\BackendCoworkerController not found\\.$#"
+			count: 1
+			path: Configuration/Backend/Modules.php
