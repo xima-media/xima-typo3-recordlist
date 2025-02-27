@@ -4,17 +4,15 @@ namespace Xima\XimaTypo3Recordlist\Controller\Example;
 
 use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 
-class PagesController extends AbstractBackendController
+class FeUsersController extends AbstractBackendController
 {
-    protected const TEMPLATE_NAME = 'Example/Pages';
-
     public function getRecordPid(): int
     {
-        return 1;
+        return 19;
     }
 
     public function getTableName(): string
     {
-        return 'pages';
+        return 'fe_users';
     }
 }

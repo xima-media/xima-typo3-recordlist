@@ -1,4 +1,4 @@
-config/
+config/system/settings.php
 public/_assets/
 public/fileadmin/
 public/index.php

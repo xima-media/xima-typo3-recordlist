@@ -12,5 +12,6 @@
 /Classes/Controller/Example export-ignore
 /Configuration/Backend/Modules.php
 /Configuration/page.tsconfig
+/Configuration/TCA
 /Resources/Private/Language/Example
 /Resources/Private/Templates/Example

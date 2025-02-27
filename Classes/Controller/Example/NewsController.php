@@ -10,7 +10,7 @@ class NewsController extends AbstractBackendController
 
     public function getRecordPid(): int
     {
-        return 1;
+        return 15;
     }
 
     public function getTableName(): string

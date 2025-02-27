@@ -1,5 +1,6 @@
 <?php
 
+use Xima\XimaTypo3Recordlist\Controller\Example\FeUsersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\NewsController;
 use Xima\XimaTypo3Recordlist\Controller\Example\PagesController;
 
@@ -29,6 +30,21 @@ return [
         'extensionName' => 'XimaTypo3RecordlistExamples',
         'controllerActions' => [
             NewsController::class => [
+                'processRequest',
+            ],
+        ],
+        'inheritNavigationComponentFromMainModule' => false,
+    ],
+    'example_feusers' => [
+        'parent' => 'web',
+        'position' => ['after' => 'list'],
+        'access' => 'user',
+        'iconIdentifier' => 'module-cshmanual',
+        'workspaces' => '*',
+        'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_feusers_module.xlf',
+        'extensionName' => 'XimaTypo3RecordlistExamples',
+        'controllerActions' => [
+            FeUsersController::class => [
                 'processRequest',
             ],
         ],
