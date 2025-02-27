@@ -481,13 +481,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addOrderConstraint(): void
     {
-        $body = $this->request->getParsedBody();
         $tableName = $this->getTableName();
         $defaultOrderField = $GLOBALS['TCA'][$tableName]['ctrl']['default_sortby'] ?? '';
+        $defaultOrderFields = GeneralUtility::trimExplode(',', $defaultOrderField, true);
+        $defaultOrderField = GeneralUtility::trimExplode(' ', ($defaultOrderFields[0] ?? ''), true)[0] ?? '';
         $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? '';
         $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['label'];
+        $defaultOrderDirection = GeneralUtility::trimExplode(' ', ($defaultOrderFields[0] ?? ''), true)[1] ?? 'ASC';
+        $body = $this->request->getParsedBody();
         $orderField = $body['order_field'] ?? $defaultOrderField;
-        $orderDirection = $body['order_direction'] ?? 'ASC';
+        $orderDirection = $body['order_direction'] ?? $defaultOrderDirection;
         $this->queryBuilder->addOrderBy('t1.' . $orderField, $orderDirection);
         $this->moduleTemplate->assign('order_field', $orderField);
         $this->moduleTemplate->assign('order_direction', $orderDirection);
