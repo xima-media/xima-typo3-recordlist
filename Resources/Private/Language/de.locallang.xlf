@@ -107,6 +107,14 @@
 				<source />
 				<target>Duplizieren</target>
 			</trans-unit>
+			<trans-unit id="table.button.hide">
+				<source />
+				<target>Datensatz verbergen</target>
+			</trans-unit>
+			<trans-unit id="table.button.unhide">
+				<source />
+				<target>Datensatz einblenden</target>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source />
 				<target>Ansicht gefiltert</target>

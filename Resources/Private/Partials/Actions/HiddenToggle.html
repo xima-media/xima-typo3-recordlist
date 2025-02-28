@@ -1,0 +1,22 @@
+{namespace be=TYPO3\CMS\Backend\ViewHelpers}
+
+<f:if condition="{item.editable} && {hiddenField}">
+    <a
+        href="#"
+        class="btn btn-default {f:if(condition: '{item.{hiddenField}}', then: 'hidden')}"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.hide')}"
+        data-hidden-toggle="hide"
+        data-hidden-field="{hiddenField}"
+        data-bs-toggle="tooltip">
+        <core:icon identifier="actions-toggle-on" size="small" />
+    </a>
+    <a
+        href="#"
+        class="btn btn-default {f:if(condition: '{item.{hiddenField}}', else: 'hidden')}"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.unhide')}"
+        data-hidden-toggle="unhide"
+        data-hidden-field="{hiddenField}"
+        data-bs-toggle="tooltip">
+        <core:icon identifier="actions-toggle-off" size="small" />
+    </a>
+</f:if>

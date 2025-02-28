@@ -687,6 +687,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function modifyPaginatedRecords(): void
     {
         $this->addTranslationButtons();
+        $this->addHiddenToggleButton();
     }
 
     protected function addTranslationButtons(): void
@@ -823,6 +824,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'Translate',
                 'TranslateDeepl',
                 'Edit',
+                'HiddenToggle',
                 'Duplicate',
                 'Changelog',
                 'Revert',
@@ -981,5 +983,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
+    }
+
+    private function addHiddenToggleButton(): void
+    {
+        $hiddenField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['enablecolumns']['disabled'] ?? '';
+        if (!$hiddenField) {
+            return;
+        }
+
+        $this->moduleTemplate->assign('hiddenField', $hiddenField);
+
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-hidden-toggle.js')
+        );
     }
 }
