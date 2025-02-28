@@ -798,21 +798,21 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $tableName = $this->getTableName();
         $defaultColumns = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
 
-        return [
+        $config = [
             'columns' => [
-                0 => [
+                [
                     'columnName' => $defaultColumns,
                     'partial' => 'Text',
                     'languageIndent' => true,
                     'icon' => true,
                 ],
-                1 => [
+                [
                     'columnName' => 'workspace-status',
                     'partial' => 'Workspace',
                     'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
                     'notSortable' => true,
                 ],
-                2 => [
+                [
                     'columnName' => 'Language',
                     'partial' => 'Language',
                     'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.language',
@@ -834,6 +834,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'ReadyToPublish',
             ],
         ];
+
+        $langugeField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
+        if (!$langugeField) {
+            unset($config['columns'][2]);
+        }
+
+        if (!$this::WORKSPACE_ID) {
+            unset($config['columns'][1]);
+        }
+
+        return $config;
     }
 
     private function configureModuleTemplateDocHeader(): void
