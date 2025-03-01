@@ -5,12 +5,11 @@
 <f:if condition="{item.editable}">
     <f:then>
         <div class="text-inline-edit" data-column="{colConfig.columnName}">
-            <label class="screen-reader" for="{colConfig.columnName}-{item.uid}">{colConfig.label} edit</label>
-            <input
-                autocomplete="off"
-                id="{colConfig.columnName}-{item.uid}"
-                value="{item.{colConfig.columnName}}"
-                data-original-value="{item.{colConfig.columnName}}">
+            <span
+                class="inline-edit"
+                contenteditable="true"
+                id="{colConfig.columnName}-{item.uid}" data-original-value="{item.{colConfig.columnName}}">{item.{colConfig.columnName}}
+            </span>
             <button
                 data-action="save"
                 type="button"

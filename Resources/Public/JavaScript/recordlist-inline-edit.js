@@ -11,10 +11,10 @@ class RecordlistInlineEdit {
     }
 
     bindEvents() {
-        document.querySelectorAll('.text-inline-edit input').forEach(input => {
-            input.addEventListener('keyup', this.onInputKeydown.bind(this));
-            input.addEventListener('keydown', this.onInputKeyup.bind(this));
-            input.addEventListener('blur', this.onInputBlur.bind(this));
+        document.querySelectorAll('.text-inline-edit span').forEach(span => {
+            span.addEventListener('input', this.onInputKeydown.bind(this))
+            span.addEventListener('keydown', this.onInputKeyup.bind(this))
+            span.addEventListener('blur', this.onInputBlur.bind(this))
         })
 
         document.querySelectorAll('.text-inline-edit button[data-action="close"]').forEach(button => {
@@ -30,24 +30,25 @@ class RecordlistInlineEdit {
         // Enter
         if (e.keyCode === 13) {
             e.preventDefault();
-            const input = e.currentTarget;
-            this.postSave(input).then(() => {
-              input.blur();
+            const span = e.currentTarget;
+            this.postSave(span).then(() => {
+              span.blur();
             });
         }
 
         // Escape
         if (e.keyCode === 27) {
             e.preventDefault();
-            const input = e.currentTarget;
-            input.value = input.dataset.originalValue;
-            input.closest('.text-inline-edit').classList.remove('changed');
+            const span = e.currentTarget;
+            span.innerText = span.dataset.originalValue;
+            span.closest('.text-inline-edit').classList.remove('changed');
+            span.blur();
         }
     }
 
     onInputKeydown(e) {
         const originalValue = e.currentTarget.dataset.originalValue;
-        const newValue = e.currentTarget.value;
+        const newValue = e.currentTarget.innerText;
         if (newValue !== originalValue) {
             e.currentTarget.parentElement.classList.add('changed');
         } else {
@@ -57,28 +58,27 @@ class RecordlistInlineEdit {
 
     onAbortClick(e) {
         e.preventDefault();
-        const input = e.currentTarget.closest('.text-inline-edit').querySelector('input');
-        input.value = input.dataset.originalValue;
+        const span = e.currentTarget.closest('.text-inline-edit').querySelector('span.inline-edit');
+        span.innerText = span.dataset.originalValue;
         e.currentTarget.closest('.text-inline-edit').classList.remove('changed');
     }
 
     onInputBlur(e) {
-        const input = e.currentTarget
+        const span = e.currentTarget
         setTimeout(() => {
             if (this.saveClick) {
                 return;
             }
             e.preventDefault();
-            input.value = input.dataset.originalValue;
-            input.closest('.text-inline-edit').classList.remove('changed');
-        }, 100);
-
+            span.innerText = span.dataset.originalValue;
+            span.closest('.text-inline-edit').classList.remove('changed');
+        }, 200);
     }
 
-    async postSave(input) {
-        const div = input.closest('.text-inline-edit');
+    async postSave(span) {
+        const div = span.closest('.text-inline-edit');
         const button = div.querySelector('button[data-action="save"]');
-        const tr = input.closest('tr');
+        const tr = span.closest('tr');
 
         Icons.getIcon('spinner-circle', Icons.sizes.small, null, 'disabled').then(icon => {
             button.disabled = true;
@@ -88,7 +88,7 @@ class RecordlistInlineEdit {
         const table = tr.dataset.table;
         const uid = tr.dataset.uid;
         const column = div.dataset.column;
-        const newValue = input.value;
+        const newValue = span.innerText;
 
         const payload = new FormData();
         payload.append('table', table);
@@ -97,7 +97,7 @@ class RecordlistInlineEdit {
         payload.append('newValue', newValue);
 
         return new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_inline_edit).post('', {body: payload}).then(() => {
-            input.dataset.originalValue = newValue;
+            span.dataset.originalValue = newValue;
             div.classList.remove('changed');
         }).finally(() => {
             button.disabled = false;
@@ -117,9 +117,9 @@ class RecordlistInlineEdit {
 
         const button = e.currentTarget
         const div = button.closest('.text-inline-edit');
-        const input = div.querySelector('input');
+        const span = div.querySelector('span');
 
-        this.postSave(input);
+        this.postSave(span);
     }
 }
 
