@@ -11,6 +11,7 @@ use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
+use TYPO3\CMS\Backend\Template\Components\Buttons\GenericButton;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -311,9 +312,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // add requested language to module settings
         $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
         if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists(
-            (int)$requestedLanguage,
-            $this->getLanguages()
-        )) {
+                (int)$requestedLanguage,
+                $this->getLanguages()
+            )) {
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
@@ -826,9 +827,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $tableConfiguration = $this->getTableConfiguration();
         foreach ($tableConfiguration['columns'] as &$column) {
             if (!isset($column['label'])) {
-                $tcaLabel = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['label'] ?? '';
-                $column['label'] = $this->getLanguageService()->sL($tcaLabel);
+                $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['label'] ?? '';
             }
+            $column['label'] = $this->getLanguageService()->sL($column['label']);
         }
         unset($column);
         $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
@@ -841,29 +842,29 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public function getTableConfiguration(): array
     {
         $tableName = $this->getTableName();
-        $defaultColumns = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
+        $defaultColumn = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
+
+        $columns = [];
+        $columnsToIgnore = ['sys_language_uid', 'l10n_parent'];
+        foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
+            if (in_array($columnName, $columnsToIgnore, true)) {
+                continue;
+            }
+
+            $isDefaultColumn = $columnName === $defaultColumn;
+
+            $columns[] = [
+                'columnName' => $columnName,
+                'label' => $config['label'] ?? '',
+                'partial' => 'Text',
+                'languageIndent' => $isDefaultColumn,
+                'icon' => $isDefaultColumn,
+                'active' => $isDefaultColumn,
+            ];
+        }
 
         $config = [
-            'columns' => [
-                [
-                    'columnName' => $defaultColumns,
-                    'partial' => 'Text',
-                    'languageIndent' => true,
-                    'icon' => true,
-                ],
-                [
-                    'columnName' => 'workspace-status',
-                    'partial' => 'Workspace',
-                    'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
-                    'notSortable' => true,
-                ],
-                [
-                    'columnName' => 'Language',
-                    'partial' => 'Language',
-                    'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.language',
-                    'notSortable' => true,
-                ],
-            ],
+            'columns' => $columns,
             'groupActions' => [
                 'Translate',
                 'TranslateDeepl',
@@ -897,6 +898,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         // new buttons
         $this->addNewButtonToModuleTemplate();
+
+        // show columns button
+        $this->addShowColumnsButtonToModuleTemplate();
 
         // download button
         $this->addDownloadButtonToModuleTemplate();
@@ -932,6 +936,24 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
+    private function addShowColumnsButtonToModuleTemplate()
+    {
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-show-columns.js')
+        );
+
+        $button = GeneralUtility::makeInstance(GenericButton::class)
+            ->setTag('a')
+            ->setHref('#')
+            ->setShowLabelText(true)
+            ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
+            ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
+            ->setIcon($this->iconFactory->getIcon('actions-options'))
+            ->setClasses('showColumnsButton');
+
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton($button, ButtonBar::BUTTON_POSITION_RIGHT, 1);
+    }
+
     protected function addDownloadButtonToModuleTemplate(): void
     {
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
@@ -944,7 +966,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $downloadArguments = $this->request->getQueryParams();
 
         $this->moduleTemplate->assignMultiple([
-            'table' => $this->getTableName(),
             'downloadArguments' => $downloadArguments,
             'formats' => array_keys(self::DOWNLOAD_FORMATS),
             'formatOptions' => self::DOWNLOAD_FORMATS,

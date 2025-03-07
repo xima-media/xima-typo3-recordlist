@@ -132,6 +132,9 @@
 			<trans-unit id="header.button.download">
 				<source>Download</source>
 			</trans-unit>
+			<trans-unit id="header.button.showColumns">
+				<source>Show columns</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

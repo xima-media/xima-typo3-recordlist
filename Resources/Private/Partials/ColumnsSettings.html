@@ -1,0 +1,60 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+
+<form>
+
+    <div class="sticky-form-actions border-bottom">
+        <div class="row row-cols-auto justify-content-between">
+            <div class="col flex-grow-1">
+                <div class="input-group">
+                    <span class="input-group-addon" id="columns-filter-label">Filter by:</span>
+                    <input type="search" name="columns-filter" class="form-control" value="" aria-labelledby="columns-filter-label" placeholder="Enter search term">
+                </div>
+            </div>
+            <div class="col">
+                <div class="row row-cols-auto justify-content-end g-2 t3js-column-selector-actions">
+                    <div class="col">
+                        <button type="button" class="btn btn-default" data-action="select-all">
+                            <core:icon identifier="actions-check-square" /> Check all
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-default" data-action="select-none">
+                            <core:icon identifier="actions-square" /> Uncheck all
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button type="button" class="btn btn-default" data-action="select-toggle">
+                            <core:icon identifier="actions-document-select" /> Toggle selection
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <f:for each="{tableConfiguration.columns}" as="column">
+            <div class="col-6 t3js-column-selector-container" data-column-name="{column.label}{column.columnName}">
+                <div class="mt-2 form-check form-check-type-icon-toggle disabled">
+                    <input type="checkbox" id="select-column-{column.columnName}" name="selectedColumns[]" class="form-check-input t3js-column-selector" value="title" {f:if(condition: column.active, then: 'checked')}>
+                    <label class="form-check-label" for="select-column-{column.columnName}">
+                        <span class="form-check-label-icon">
+                            <span class="form-check-label-icon-checked">
+                                <core:icon identifier="actions-check" />
+                            </span>
+                            <span class="form-check-label-icon-unchecked">
+                                <core:icon identifier="miscellaneous-placeholder" />
+                            </span>
+                        </span>
+                        <span>{column.label}</span>
+                        <span class="text-body-secondary font-monospace">[{column.columnName}]</span>
+                    </label>
+                </div>
+            </div>
+        </f:for>
+
+    </div>
+</form>
+
+</html>

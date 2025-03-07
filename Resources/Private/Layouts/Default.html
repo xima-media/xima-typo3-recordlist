@@ -44,6 +44,10 @@
                     <f:render partial="DownloadSettings" arguments="{_all}" />
                 </div>
 
+                <div class="hidden" id="columnsSettingsForm">
+                    <f:render partial="ColumnsSettings" arguments="{_all}" />
+                </div>
+
                 <div class="row">
                     <div class="col-12">
                         <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:settings.isSearchButtonActive, else:'hidden')}">
@@ -86,7 +90,9 @@
                             <thead>
                             <tr>
                                 <f:for each="{tableConfiguration.columns}" as="colConfig">
-                                    <f:render partial="Th" arguments="{_all}" />
+                                    <f:if condition="{colConfig.active}">
+                                        <f:render partial="Th" arguments="{_all}" />
+                                    </f:if>
                                 </f:for>
                                 <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
                                     <th>
@@ -110,9 +116,11 @@
                                     data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
 
                                     <f:for each="{tableConfiguration.columns}" as="colConfig">
-                                        <td data-language-indent="{colConfig.languageIndent}">
-                                            <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
-                                        </td>
+                                        <f:if condition="{colConfig.active}">
+                                            <td data-language-indent="{colConfig.languageIndent}">
+                                                <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
+                                            </td>
+                                        </f:if>
                                     </f:for>
 
                                     <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
