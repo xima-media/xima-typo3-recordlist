@@ -43,8 +43,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected const TEMPLATE_NAME = 'Default';
 
-    protected ModuleTemplate $moduleTemplate;
-
     protected const DOWNLOAD_FORMATS = [
         'csv' => [
             'options' => [
@@ -65,6 +63,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ],
         ],
     ];
+
+    protected ModuleTemplate $moduleTemplate;
 
     protected Site $site;
 
@@ -481,19 +481,49 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addOrderConstraint(): void
     {
+        $orderInstructions = [];
+
+        // best case: multiple orderings via default_sortby
         $tableName = $this->getTableName();
-        $defaultOrderField = $GLOBALS['TCA'][$tableName]['ctrl']['default_sortby'] ?? '';
-        $defaultOrderFields = GeneralUtility::trimExplode(',', $defaultOrderField, true);
-        $defaultOrderField = GeneralUtility::trimExplode(' ', ($defaultOrderFields[0] ?? ''), true)[0] ?? '';
-        $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? '';
-        $defaultOrderField = $defaultOrderField ?: $GLOBALS['TCA'][$tableName]['ctrl']['label'];
-        $defaultOrderDirection = GeneralUtility::trimExplode(' ', ($defaultOrderFields[0] ?? ''), true)[1] ?? 'ASC';
+        $defaultSortby = $GLOBALS['TCA'][$tableName]['ctrl']['default_sortby'] ?? '';
+        $defaultOrderings = GeneralUtility::trimExplode(',', $defaultSortby, true);
+        foreach ($defaultOrderings as $odering) {
+            $instruction = GeneralUtility::trimExplode(' ', $odering, true);
+            $orderInstructions[] = [
+                'field' => $instruction[0],
+                'direction' => $instruction[1] ?? 'ASC',
+            ];
+        }
+
+        // fallback via sortby or label
+        if (empty($orderInstructions)) {
+            $fallback = $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? $GLOBALS['TCA'][$tableName]['ctrl']['label'];
+            $orderInstructions[] = [
+                'field' => $fallback,
+                'direction' => 'ASC',
+            ];
+        }
+
+        // override tca ordering from module settings (or body request)
         $body = $this->request->getParsedBody();
-        $orderField = $body['order_field'] ?? $defaultOrderField;
-        $orderDirection = $body['order_direction'] ?? $defaultOrderDirection;
-        $this->queryBuilder->addOrderBy('t1.' . $orderField, $orderDirection);
-        $this->moduleTemplate->assign('order_field', $orderField);
-        $this->moduleTemplate->assign('order_direction', $orderDirection);
+        if (!empty($body['order_field']) && !empty($body['order_direction'])) {
+            $orderInstructions = [
+                0 => [
+                    'field' => $body['order_field'],
+                    'direction' => $body['order_direction'],
+                ],
+            ];
+        }
+
+        foreach ($orderInstructions as $key => $instruction) {
+            if ($key === 0) {
+                $this->queryBuilder->orderBy($instruction['field'], $instruction['direction']);
+                continue;
+            }
+            $this->queryBuilder->addOrderBy($instruction['field'], $instruction['direction']);
+        }
+        $this->moduleTemplate->assign('order_field', $orderInstructions[0]['field']);
+        $this->moduleTemplate->assign('order_direction', $orderInstructions[0]['direction']);
     }
 
     protected function addBasicQueryConstraints(): void
@@ -770,6 +800,20 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
+    private function addHiddenToggleButton(): void
+    {
+        $hiddenField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['enablecolumns']['disabled'] ?? '';
+        if (!$hiddenField) {
+            return;
+        }
+
+        $this->moduleTemplate->assign('hiddenField', $hiddenField);
+
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-hidden-toggle.js')
+        );
+    }
+
     protected function setPaginatorItems(): void
     {
         $this->paginator->setPaginatedItems($this->records);
@@ -983,19 +1027,5 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
-    }
-
-    private function addHiddenToggleButton(): void
-    {
-        $hiddenField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['enablecolumns']['disabled'] ?? '';
-        if (!$hiddenField) {
-            return;
-        }
-
-        $this->moduleTemplate->assign('hiddenField', $hiddenField);
-
-        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-hidden-toggle.js')
-        );
     }
 }
