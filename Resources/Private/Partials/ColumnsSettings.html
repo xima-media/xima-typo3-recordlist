@@ -37,7 +37,7 @@
         <f:for each="{tableConfiguration.columns}" as="column">
             <div class="col-6 t3js-column-selector-container" data-column-name="{column.label}{column.columnName}">
                 <div class="mt-2 form-check form-check-type-icon-toggle disabled">
-                    <input type="checkbox" id="select-column-{column.columnName}" name="selectedColumns[]" class="form-check-input t3js-column-selector" value="title" {f:if(condition: column.active, then: 'checked')}>
+                    <input type="checkbox" id="select-column-{column.columnName}" name="selectedColumns[]" class="form-check-input t3js-column-selector" value="{column.columnName}" {f:if(condition: column.active, then: 'checked')}>
                     <label class="form-check-label" for="select-column-{column.columnName}">
                         <span class="form-check-label-icon">
                             <span class="form-check-label-icon-checked">

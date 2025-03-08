@@ -825,11 +825,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function createColumnConfiguration(): void
     {
         $tableConfiguration = $this->getTableConfiguration();
+        $activeColumns = GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? '');
         foreach ($tableConfiguration['columns'] as &$column) {
             if (!isset($column['label'])) {
                 $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['label'] ?? '';
             }
             $column['label'] = $this->getLanguageService()->sL($column['label']);
+
+            if (in_array($column['columnName'], $activeColumns, true)) {
+                $column['active'] = true;
+            }
         }
         unset($column);
         $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
@@ -843,15 +848,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $tableName = $this->getTableName();
         $defaultColumn = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
+        $languageColumn = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
 
         $columns = [];
-        $columnsToIgnore = ['sys_language_uid', 'l10n_parent'];
         foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
-            if (in_array($columnName, $columnsToIgnore, true)) {
-                continue;
-            }
-
             $isDefaultColumn = $columnName === $defaultColumn;
+
+            $partial = 'Text';
+            if ($columnName === $languageColumn) {
+                $partial = 'Language';
+            }
 
             $columns[] = [
                 'columnName' => $columnName,
@@ -860,6 +866,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'languageIndent' => $isDefaultColumn,
                 'icon' => $isDefaultColumn,
                 'active' => $isDefaultColumn,
+            ];
+        }
+
+        if ($this::WORKSPACE_ID) {
+            $columns[] = [
+                'columnName' => 'workspace-status',
+                'partial' => 'Workspace',
+                'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
+                'notSortable' => true,
             ];
         }
 
@@ -881,15 +896,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'ReadyToPublish',
             ],
         ];
-
-        $langugeField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
-        if (!$langugeField) {
-            unset($config['columns'][2]);
-        }
-
-        if (!$this::WORKSPACE_ID) {
-            unset($config['columns'][1]);
-        }
 
         return $config;
     }
@@ -936,7 +942,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    private function addShowColumnsButtonToModuleTemplate()
+    private function addShowColumnsButtonToModuleTemplate(): void
     {
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-show-columns.js')
