@@ -175,6 +175,34 @@
 				<source />
 				<target>Spalten anpassen</target>
 			</trans-unit>
+			<trans-unit id="showColumns.filter">
+				<source />
+				<target>Filtern nach</target>
+			</trans-unit>
+			<trans-unit id="showColumns.placeholder">
+				<source />
+				<target>Suchbegriff eingeben</target>
+			</trans-unit>
+			<trans-unit id="showColumns.checkAll">
+				<source />
+				<target>Alle auswählen</target>
+			</trans-unit>
+			<trans-unit id="showColumns.checkNone">
+				<source />
+				<target>Keine auswählen</target>
+			</trans-unit>
+			<trans-unit id="showColumns.toggle">
+				<source />
+				<target>Auswahl umkehren</target>
+			</trans-unit>
+			<trans-unit id="showColumns.abort">
+				<source />
+				<target>Abbruch</target>
+			</trans-unit>
+			<trans-unit id="showColumns.refresh">
+				<source />
+				<target>Aktualisieren</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

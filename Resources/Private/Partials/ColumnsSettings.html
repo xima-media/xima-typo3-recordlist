@@ -4,14 +4,14 @@
     <div class="row row-cols-auto justify-content-between">
         <div class="col flex-grow-1">
             <div class="input-group">
-                <span class="input-group-addon" id="columns-filter-label">Filter by:</span>
+                <span class="input-group-addon" id="columns-filter-label">{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:</span>
                 <input
                     type="search"
                     name="columns-filter"
                     class="form-control"
                     value=""
                     aria-labelledby="columns-filter-label"
-                    placeholder="Enter search term">
+                    placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.placeholder')}">
             </div>
         </div>
         <div class="col">
@@ -19,19 +19,19 @@
                 <div class="col">
                     <button type="button" class="btn btn-default" data-action="select-all">
                         <core:icon identifier="actions-check-square" />
-                        Check all
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkAll')}
                     </button>
                 </div>
                 <div class="col">
                     <button type="button" class="btn btn-default" data-action="select-none">
                         <core:icon identifier="actions-square" />
-                        Uncheck all
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkNone')}
                     </button>
                 </div>
                 <div class="col">
                     <button type="button" class="btn btn-default" data-action="select-toggle">
                         <core:icon identifier="actions-document-select" />
-                        Toggle selection
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.toggle')}
                     </button>
                 </div>
             </div>
@@ -45,11 +45,11 @@
         <div class="col-6 t3js-column-selector-container" data-column-name="{column.label}{column.columnName}">
             <div class="mt-2 form-check form-check-type-icon-toggle disabled">
                 <input type="checkbox"
-                       id="select-column-{column.columnName}"
-                       name="selectedColumns[]"
-                       class="form-check-input t3js-column-selector"
-                       value="{column.columnName}"
-                       {f:if(condition: column.active, then: 'checked')}>
+                    id="select-column-{column.columnName}"
+                    name="selectedColumns[]"
+                    class="form-check-input t3js-column-selector"
+                    value="{column.columnName}"
+                    {f:if(condition: column.active, then: 'checked')}>
                 <label class="form-check-label" for="select-column-{column.columnName}">
                     <span class="form-check-label-icon">
                         <span class="form-check-label-icon-checked">

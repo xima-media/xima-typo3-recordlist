@@ -21,20 +21,20 @@ export default class RecordlistDocShowColumns {
 
     this.modal = Modal.advanced({
       content: '',
-      title: 'Show columns',
+      title: TYPO3.lang['header.button.showColumns'],
       severity: SeverityEnum.notice,
       size: Modal.sizes.medium,
       type: Modal.types.default,
       buttons: [
         {
-          text: 'Close',
+          text: TYPO3.lang['showColumns.abort'],
           active: true,
           btnClass: 'btn-default',
           name: 'cancel',
           trigger: () => Modal.dismiss()
         },
         {
-          text: 'Save',
+          text: TYPO3.lang['showColumns.refresh'],
           btnClass: 'btn-primary',
           name: 'save',
           trigger: this.onModalSave.bind(this)

@@ -135,6 +135,27 @@
 			<trans-unit id="header.button.showColumns">
 				<source>Show columns</source>
 			</trans-unit>
+			<trans-unit id="showColumns.filter">
+				<source>Filter by</source>
+			</trans-unit>
+			<trans-unit id="showColumns.placeholder">
+				<source>Enter search term</source>
+			</trans-unit>
+			<trans-unit id="showColumns.checkAll">
+				<source>Check all</source>
+			</trans-unit>
+			<trans-unit id="showColumns.checkNone">
+				<source>Uncheck all</source>
+			</trans-unit>
+			<trans-unit id="showColumns.toggle">
+				<source>Toggle selection</source>
+			</trans-unit>
+			<trans-unit id="showColumns.abort">
+				<source>Abort</source>
+			</trans-unit>
+			<trans-unit id="showColumns.refresh">
+				<source>Refresh</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
