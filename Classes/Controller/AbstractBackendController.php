@@ -852,31 +852,52 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $columns = [];
         foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
-            $isDefaultColumn = $columnName === $defaultColumn;
+            // default column
+            if ($columnName === $defaultColumn) {
+                $columns['_' . $columnName] = [
+                    'columnName' => $columnName,
+                    'label' => $config['label'] ?? '',
+                    'partial' => 'Text',
+                    'languageIndent' => true,
+                    'icon' => true,
+                    'active' => true,
+                ];
+                continue;
+            }
 
             $partial = 'Text';
             if ($columnName === $languageColumn) {
                 $partial = 'Language';
             }
 
-            $columns[] = [
+            if ($config['config']['type'] === 'datetime') {
+                $partial = 'DateTime';
+            }
+
+            if ($config['config']['type'] === 'check') {
+                $partial = 'Boolean';
+            }
+
+            $columns[$columnName] = [
                 'columnName' => $columnName,
                 'label' => $config['label'] ?? '',
-                'partial' => 'Text',
-                'languageIndent' => $isDefaultColumn,
-                'icon' => $isDefaultColumn,
-                'active' => $isDefaultColumn,
+                'partial' => $partial,
+                'languageIndent' => false,
+                'icon' => false,
+                'active' => false,
             ];
         }
 
         if ($this::WORKSPACE_ID) {
-            $columns[] = [
+            $columns['z_workspace'] = [
                 'columnName' => 'workspace-status',
                 'partial' => 'Workspace',
                 'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
                 'notSortable' => true,
             ];
         }
+
+        ksort($columns);
 
         $config = [
             'columns' => $columns,
