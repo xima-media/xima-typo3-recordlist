@@ -1,19 +1,35 @@
 <f:be.pageRenderer includeJavaScriptModules="{0: '@typo3/backend/form-engine/element/datetime-element.js'}" />
 
-<label for="{fieldName}" class="form-label">{label}</label>
+<f:if condition="{colConfig}">
+    <f:variable name="fieldName" value="filter[{colConfig.columnName}][value]"></f:variable>
+    <f:variable name="fieldValue" value="{colConfig.filter.value}"></f:variable>
+    <f:variable name="label" value="{colConfig.label}"></f:variable>
+</f:if>
 
-<typo3-formengine-element-datetime class="formengine-field-item t3js-formengine-field-item d-flex w-100" recordfieldid="{fieldName}">
-    <div class="input-group">
-        <f:form.textfield
-            value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'c\', date: fieldValue)}')}"
-            id="{fieldName}"
-            type="date"
-            name="{fieldName}"
-            additionalAttributes="{'autocomplete': 'off'}"
-            class="form-control form-control-clearable t3js-clearable input"
-            data="{date-type: 'date', data-formengine-datepicker-real-input-name: '{fieldName}'}" />
-        <label class="mb-0 btn btn-default" for="{fieldName}">
-            <core:icon identifier="actions-calendar" />
-        </label>
+<div class="row">
+    <div class="col">
+        <label for="{fieldName}" class="form-label">{label}</label>
+
+        <typo3-formengine-element-datetime
+            class="formengine-field-item t3js-formengine-field-item d-flex w-100" recordfieldid="{fieldName}">
+            <div class="input-group">
+                <f:form.textfield
+                    value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'c\', date: fieldValue)}')}"
+                    id="{fieldName}"
+                    type="date"
+                    name="{fieldName}"
+                    additionalAttributes="{'autocomplete': 'off'}"
+                    class="form-control form-control-clearable t3js-clearable input"
+                    data="{date-type: 'date', data-formengine-datepicker-real-input-name: '{fieldName}'}" />
+                <label class="mb-0 btn btn-default" for="{fieldName}">
+                    <core:icon identifier="actions-calendar" />
+                </label>
+            </div>
+        </typo3-formengine-element-datetime>
     </div>
-</typo3-formengine-element-datetime>
+    <f:if condition="{colConfig}">
+        <div class="col col-2">
+                <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'less', 1: 'gt', 2: 'eq', 3: 'neq'}}" />
+        </div>
+    </f:if>
+</div>

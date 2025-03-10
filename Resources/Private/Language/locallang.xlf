@@ -156,6 +156,27 @@
 			<trans-unit id="showColumns.refresh">
 				<source>Refresh</source>
 			</trans-unit>
+			<trans-unit id="filter.expr.label">
+				<source>Type</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.eq">
+				<source>Equals</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.neq">
+				<source>Is not</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.like">
+				<source>Contains</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.notLike">
+				<source>Does not contain</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.gt">
+				<source>Greater than</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.lt">
+				<source>Less than</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

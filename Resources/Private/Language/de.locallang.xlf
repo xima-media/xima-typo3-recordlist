@@ -203,6 +203,34 @@
 				<source />
 				<target>Aktualisieren</target>
 			</trans-unit>
+			<trans-unit id="filter.expr.label">
+				<source>Type</source>
+				<target>Art</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.eq">
+				<source>Equals</source>
+				<target>Ist genau</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.neq">
+				<source>Is not</source>
+				<target>Ist nicht</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.like">
+				<source>Contains</source>
+				<target>Enthält</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.notLike">
+				<source>Does not contain</source>
+				<target>Enthält nicht</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.gt">
+				<source>Greater than</source>
+				<target>Mehr als</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.lt">
+				<source>Less than</source>
+				<target>Weniger als</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

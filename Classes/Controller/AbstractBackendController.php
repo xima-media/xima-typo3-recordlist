@@ -456,6 +456,40 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
             $this->moduleTemplate->assign('search_field', $searchInput);
         }
+
+        if (!empty($body['filter'])) {
+            foreach ($body['filter'] as $field => $data) {
+                if (!isset($data['value']) || $data['value'] === '') {
+                    continue;
+                }
+                match ($data['expr'] ?? '') {
+                    'neq' => $this->additionalConstraints[] = $this->queryBuilder->expr()->neq(
+                        't1.' . $field,
+                        $this->queryBuilder->createNamedParameter($data['value'])
+                    ),
+                    'lt' => $this->additionalConstraints[] = $this->queryBuilder->expr()->lt(
+                        't1.' . $field,
+                        $this->queryBuilder->createNamedParameter($data['value'])
+                    ),
+                    'gt' => $this->additionalConstraints[] = $this->queryBuilder->expr()->gt(
+                        't1.' . $field,
+                        $this->queryBuilder->createNamedParameter($data['value'])
+                    ),
+                    'like' => $this->additionalConstraints[] = $this->queryBuilder->expr()->like(
+                        't1.' . $field,
+                        $this->queryBuilder->createNamedParameter('%' . $data['value'] . '%')
+                    ),
+                    'notLike' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notLike(
+                        't1.' . $field,
+                        $this->queryBuilder->createNamedParameter('%' . $data['value'] . '%')
+                    ),
+                    default => $this->additionalConstraints[] = $this->queryBuilder->expr()->eq(
+                        't1.' . $field,
+                        $this->queryBuilder->createNamedParameter($data['value'])
+                    ),
+                };
+            }
+        }
     }
 
     protected function addLanguageConstraint(): void
@@ -826,6 +860,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $tableConfiguration = $this->getTableConfiguration();
         $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
+        $body = $this->request->getParsedBody();
 
         // append label column (default) if not in active columns
         if (!in_array($defaultColumn = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'] ?? '', $activeColumns, true)) {
@@ -833,11 +868,23 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         foreach ($tableConfiguration['columns'] as $columnName => &$column) {
+            // translate label
             if (!isset($column['label'])) {
                 $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName]['label'] ?? '';
             }
             $column['label'] = $this->getLanguageService()->sL($column['label']);
 
+            // set filter value
+            if (isset($body['filter'][$columnName]['value']) && $body['filter'][$columnName]['value'] !== '') {
+                $column['filter']['value'] = $body['filter'][$columnName]['value'];
+            }
+
+            // set filter expr
+            if (!empty($body['filter'][$columnName]['expr'] ?? '')) {
+                $column['filter']['expr'] = $body['filter'][$columnName]['expr'];
+            }
+
+            // set active state
             if (in_array($columnName, $activeColumns, true)) {
                 $column['active'] = true;
             }
@@ -880,16 +927,56 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             $partial = 'Text';
+            $filter = [
+                'partial' => 'Text',
+            ];
+
             if ($columnName === $languageColumn) {
                 $partial = 'Language';
+                $items = array_map(
+                    static fn ($language) => ['label' => $language['title'], 'value' => $language['uid']],
+                    $this->getLanguages()
+                );
+                $filter = [
+                    'partial' => 'Select',
+                    'items' => $items,
+                ];
             }
 
             if ($config['config']['type'] === 'datetime') {
                 $partial = 'DateTime';
+                $filter = [
+                    'partial' => 'DateTime',
+                ];
             }
 
             if ($config['config']['type'] === 'check') {
                 $partial = 'Boolean';
+                $filter = [
+                    'partial' => 'Checkbox',
+                ];
+            }
+
+            if ($config['config']['type'] === 'select') {
+                $partial = 'Select';
+                $items = [];
+                foreach ($config['config']['items'] ?? [] as $item) {
+                    $items[$item['value']] = [
+                        'label' => $this->getLanguageService()->sL($item['label']),
+                        'value' => $item['value'],
+                    ];
+                }
+                $filter = [
+                    'partial' => 'Select',
+                    'items' => $items,
+                ];
+            }
+
+            if ($config['config']['type'] === 'category') {
+                //$partial = 'Category';
+                $filter = [
+                    'partial' => 'Category',
+                ];
             }
 
             $columns[$columnName] = [
@@ -899,6 +986,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'languageIndent' => false,
                 'icon' => false,
                 'active' => false,
+                'filter' => $filter,
             ];
         }
 
