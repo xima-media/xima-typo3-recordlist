@@ -4,7 +4,9 @@
     <div class="row row-cols-auto justify-content-between">
         <div class="col flex-grow-1">
             <div class="input-group">
-                <span class="input-group-addon" id="columns-filter-label">{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:</span>
+                <span class="input-group-addon" id="columns-filter-label">
+                    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:
+                </span>
                 <input
                     type="search"
                     name="columns-filter"
@@ -39,17 +41,23 @@
     </div>
 </div>
 
-<div class="row">
+<ul class="row" id="sortable-list">
 
     <f:for each="{tableConfiguration.columns}" as="column">
-        <div class="col-6 t3js-column-selector-container" data-column-name="{column.label}{column.columnName}">
-            <div class="mt-2 form-check form-check-type-icon-toggle disabled">
+        <li class="col-6 t3js-column-selector-container d-flex gap-3 pt-2" data-column-name="{column.label}{column.columnName}">
+            <div class="form-check-icon">
+                <span class="drag mt-1"></span>
+            </div>
+            <div class="form-check form-check-type-icon-toggle disabled">
                 <input type="checkbox"
                     id="select-column-{column.columnName}"
                     name="selectedColumns[]"
                     class="form-check-input t3js-column-selector"
                     value="{column.columnName}"
-                    {f:if(condition: column.active, then: 'checked')}>
+                    {f:if(condition:
+                    column.active,
+                    then:
+                'checked')}>
                 <label class="form-check-label" for="select-column-{column.columnName}">
                     <span class="form-check-label-icon">
                         <span class="form-check-label-icon-checked">
@@ -63,9 +71,48 @@
                     <span class="text-body-secondary font-monospace">[{column.columnName}]</span>
                 </label>
             </div>
-        </div>
+        </li>
     </f:for>
 
-</div>
+</ul>
+
+<style>
+    /** Strange fix */
+    input[name="columns-filter"] {
+        width: 1px !important;
+    }
+
+    #sortable-list {
+        margin: 0;
+        padding: 0;
+    }
+
+    #sortable-list li {
+        cursor: move;
+    }
+
+    span.drag {
+        display: inline-block;
+        width: 8px;
+        height: 16px;
+        cursor: move;
+    }
+
+    span.drag,
+    span.drag::before {
+        background-image: radial-gradient(black 40%, transparent 40%);
+        background-size: 4px 4px;
+        background-position: 0 100%;
+        background-repeat: repeat;
+    }
+
+    span.drag::before {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+</style>
 
 </html>

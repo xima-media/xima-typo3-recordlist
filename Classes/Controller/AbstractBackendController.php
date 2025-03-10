@@ -825,19 +825,33 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function createColumnConfiguration(): void
     {
         $tableConfiguration = $this->getTableConfiguration();
-        $activeColumns = GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? '');
-        foreach ($tableConfiguration['columns'] as &$column) {
+        $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
+
+        // append label column (default) if not in active columns
+        if (!in_array($defaultColumn = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'] ?? '', $activeColumns, true)) {
+            $activeColumns = [$defaultColumn, ...$activeColumns];
+        }
+
+        foreach ($tableConfiguration['columns'] as $columnName => &$column) {
             if (!isset($column['label'])) {
-                $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['label'] ?? '';
+                $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName]['label'] ?? '';
             }
             $column['label'] = $this->getLanguageService()->sL($column['label']);
 
-            if (in_array($column['columnName'], $activeColumns, true)) {
+            if (in_array($columnName, $activeColumns, true)) {
                 $column['active'] = true;
             }
         }
         unset($column);
-        $tableConfiguration['columnCount'] = count($tableConfiguration['columns']) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
+
+        $sortedColumns = [];
+        foreach ($activeColumns as $activeColumn) {
+            $sortedColumns[] = $tableConfiguration['columns'][$activeColumn];
+        }
+        $sortedColumns = array_merge($sortedColumns, array_diff_key($tableConfiguration['columns'], array_flip($activeColumns)));
+
+        $tableConfiguration['columns'] = $sortedColumns;
+        $tableConfiguration['columnCount'] = count($activeColumns) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
         $this->moduleTemplate->assign('tableConfiguration', $tableConfiguration);
     }
 
@@ -852,9 +866,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $columns = [];
         foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
-            // default column
+            // label column (default)
             if ($columnName === $defaultColumn) {
-                $columns['_' . $columnName] = [
+                $columns[$columnName] = [
                     'columnName' => $columnName,
                     'label' => $config['label'] ?? '',
                     'partial' => 'Text',

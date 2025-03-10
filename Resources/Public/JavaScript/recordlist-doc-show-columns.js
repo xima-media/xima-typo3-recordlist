@@ -1,6 +1,7 @@
 import Modal from '@typo3/backend/modal.js';
 import {SeverityEnum} from '@typo3/backend/enum/severity.js'
 import UserSettings from "./user-settings.js";
+import Sortable from '@xima/recordlist/contrib/sortable.esm.js';
 
 export default class RecordlistDocShowColumns {
 
@@ -47,14 +48,18 @@ export default class RecordlistDocShowColumns {
   modalOpenCallback() {
     const columnsSettingFields = document.querySelector('#columnsSettingsForm')
     this.modal.querySelector('.modal-body').innerHTML = columnsSettingFields.innerHTML
-    const columnsDivs = this.modal.querySelectorAll('[data-column-name]')
+
+    const columnsItems = this.modal.querySelectorAll('[data-column-name]')
+    const sortableList = this.modal.querySelector('.modal-body').querySelector('#sortable-list')
+
+    Sortable.create(sortableList, {});
 
     this.modal.querySelector('.modal-body').querySelector('input[name="columns-filter"]').addEventListener('input', (e) => {
-      columnsDivs.forEach(div => {
-        if (div.getAttribute('data-column-name').includes(e.currentTarget.value)) {
-          div.style.display = 'block'
+      columnsItems.forEach(li => {
+        if (li.getAttribute('data-column-name').includes(e.currentTarget.value)) {
+          li.classList.remove('d-none')
         } else {
-          div.style.display = 'none'
+          li.classList.add('d-none')
         }
       })
     })
@@ -62,7 +67,7 @@ export default class RecordlistDocShowColumns {
     this.modal.querySelector('.modal-body').querySelectorAll('button[data-action="select-all"]').forEach(button => {
       button.addEventListener('click', (e) => {
         e.preventDefault()
-        columnsDivs.forEach(div => {
+        columnsItems.forEach(div => {
           div.querySelector('input[type="checkbox"]').checked = true
         })
       })
@@ -71,8 +76,8 @@ export default class RecordlistDocShowColumns {
     this.modal.querySelector('.modal-body').querySelectorAll('button[data-action="select-none"]').forEach(button => {
       button.addEventListener('click', (e) => {
         e.preventDefault()
-        columnsDivs.forEach(div => {
-          div.querySelector('input[type="checkbox"]').checked = false
+        columnsItems.forEach(li => {
+          li.querySelector('input[type="checkbox"]').checked = false
         })
       })
     })
@@ -80,8 +85,8 @@ export default class RecordlistDocShowColumns {
     this.modal.querySelector('.modal-body').querySelectorAll('button[data-action="select-toggle"]').forEach(button => {
       button.addEventListener('click', (e) => {
         e.preventDefault()
-        columnsDivs.forEach(div => {
-          div.querySelector('input[type="checkbox"]').checked = !div.querySelector('input[type="checkbox"]').checked
+        columnsItems.forEach(li => {
+          li.querySelector('input[type="checkbox"]').checked = !li.querySelector('input[type="checkbox"]').checked
         })
       })
     })
