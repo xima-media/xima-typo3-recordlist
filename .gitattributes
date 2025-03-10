@@ -1,17 +1,17 @@
-*                            text=auto
-/.ddev                       export-ignore
-/.github                     export-ignore
-/Tests                       export-ignore
-/.editorconfig               export-ignore
-/.gitattributes              export-ignore
-/.gitignore                  export-ignore
-/php-cs-fixer.php            export-ignore
-/phpstan.neon                export-ignore
-/phpstan-baseline.neon       export-ignore
-/renovate.json               export-ignore
-/Classes/Controller/Example export-ignore
-/Configuration/Backend/Modules.php
-/Configuration/page.tsconfig
-/Configuration/TCA
-/Resources/Private/Language/Example
-/Resources/Private/Templates/Example
+*                                      text=auto
+/.ddev                                 export-ignore
+/.github                               export-ignore
+/Tests                                 export-ignore
+/.editorconfig                         export-ignore
+/.gitattributes                        export-ignore
+/.gitignore                            export-ignore
+/php-cs-fixer.php                      export-ignore
+/phpstan.neon                          export-ignore
+/phpstan-baseline.neon                 export-ignore
+/renovate.json                         export-ignore
+/Classes/Controller/Example            export-ignore
+/Configuration/Backend/Modules.php     export-ignore
+/Configuration/page.tsconfig           export-ignore
+/Configuration/TCA                     export-ignore
+/Resources/Private/Language/Example    export-ignore
+/Resources/Private/Templates/Example   export-ignore

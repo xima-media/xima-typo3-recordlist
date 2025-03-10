@@ -1,4 +1,5 @@
 config/system/settings.php
+public/.htaccess
 public/_assets/
 public/fileadmin/
 public/index.php
