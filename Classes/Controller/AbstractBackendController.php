@@ -1016,11 +1016,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         if ($this::WORKSPACE_ID) {
-            $columns['z_workspace'] = [
+            $columns['workspace-status'] = [
                 'columnName' => 'workspace-status',
                 'partial' => 'Workspace',
                 'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
                 'notSortable' => true,
+                'active' => false,
+                'filter' => [
+                    'partial' => 'Workspace',
+                ],
             ];
         }
 

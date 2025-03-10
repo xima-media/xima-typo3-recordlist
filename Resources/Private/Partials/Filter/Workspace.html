@@ -1,0 +1,15 @@
+<div class="row mb-3">
+    <div class="col-12">
+        <label class="form-label">
+            {f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status')}
+        </label>
+    </div>
+    <div class="col-auto">
+        <f:render
+            partial="Filter/Checkbox" arguments="{fieldName: 'is_offline', fieldValue: settings.onlyOfflineRecords, label: '{f:translate(key: \'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy\')}'}" />
+    </div>
+    <div class="col-auto">
+        <f:render
+            partial="Filter/Checkbox" arguments="{fieldName: 'is_ready_to_publish', fieldValue: settings.onlyReadyToPublish, label: '{f:translate(key: \'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting\')}'}" />
+    </div>
+</div>
