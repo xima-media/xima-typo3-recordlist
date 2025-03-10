@@ -177,6 +177,12 @@
 			<trans-unit id="filter.expr.lt">
 				<source>Less than</source>
 			</trans-unit>
+			<trans-unit id="filter.expr.in">
+				<source>Contains</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.notIn">
+				<source>Contains</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

@@ -204,32 +204,40 @@
 				<target>Aktualisieren</target>
 			</trans-unit>
 			<trans-unit id="filter.expr.label">
-				<source>Type</source>
+				<source />
 				<target>Art</target>
 			</trans-unit>
 			<trans-unit id="filter.expr.eq">
-				<source>Equals</source>
+				<source />
 				<target>Ist genau</target>
 			</trans-unit>
 			<trans-unit id="filter.expr.neq">
-				<source>Is not</source>
+				<source />
 				<target>Ist nicht</target>
 			</trans-unit>
 			<trans-unit id="filter.expr.like">
-				<source>Contains</source>
+				<source />
 				<target>Enthält</target>
 			</trans-unit>
 			<trans-unit id="filter.expr.notLike">
-				<source>Does not contain</source>
+				<source />
 				<target>Enthält nicht</target>
 			</trans-unit>
 			<trans-unit id="filter.expr.gt">
-				<source>Greater than</source>
+				<source />
 				<target>Mehr als</target>
 			</trans-unit>
 			<trans-unit id="filter.expr.lt">
-				<source>Less than</source>
+				<source />
 				<target>Weniger als</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.in">
+				<source />
+				<target>Enthält</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.notIn">
+				<source />
+				<target>Enthält nicht</target>
 			</trans-unit>
 		</body>
 	</file>

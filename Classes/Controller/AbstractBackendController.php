@@ -462,6 +462,23 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 if (!isset($data['value']) || $data['value'] === '') {
                     continue;
                 }
+                if (isset($data['mm']) && $data['mm'] === '1') {
+                    $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
+                    $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM'] ?? '';
+                    $mmMatchFields = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM_match_fields'] ?? [];
+                    $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($mmTable);
+                    $qb->select('uid_foreign')
+                        ->from($mmTable)
+                        ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'])))
+                        ->andWhere($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($recordsUids)));
+                    $uids = $qb->executeQuery()->fetchAllNumeric();
+                    // prepare for in constraint
+                    $data['value'] = array_map('current', $uids);
+                    if (empty($data['value'])) {
+                        continue;
+                    }
+                    $field = 'uid';
+                }
                 match ($data['expr'] ?? '') {
                     'neq' => $this->additionalConstraints[] = $this->queryBuilder->expr()->neq(
                         't1.' . $field,
@@ -482,6 +499,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     'notLike' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notLike(
                         't1.' . $field,
                         $this->queryBuilder->createNamedParameter('%' . $data['value'] . '%')
+                    ),
+                    'in' => $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                        't1.' . $field,
+                        $data['value']
+                    ),
+                    'notIn' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                        't1.' . $field,
+                        $data['value']
                     ),
                     default => $this->additionalConstraints[] = $this->queryBuilder->expr()->eq(
                         't1.' . $field,
@@ -934,7 +959,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if ($columnName === $languageColumn) {
                 $partial = 'Language';
                 $items = array_map(
-                    static fn ($language) => ['label' => $language['title'], 'value' => $language['uid']],
+                    static fn ($language) => ['label' => $language['title'], 'value' => $language['uid'] === 'all' ? '' : $language['uid']],
                     $this->getLanguages()
                 );
                 $filter = [
@@ -972,7 +997,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
-            if ($config['config']['type'] === 'category') {
+            if ($config['config']['type'] === 'select' && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
                 //$partial = 'Category';
                 $filter = [
                     'partial' => 'Category',
