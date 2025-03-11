@@ -45,7 +45,8 @@ class UserController extends AbstractBackendController
 
 Add a new backend module via
 the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ExtensionArchitecture/HowTo/BackendModule/ModuleConfiguration.html).
-You're free to adjust the settings as you like, the only important setting is the `controllerActions`, which needs to point to your newly created controller:
+You're free to adjust the settings as you like, the only important setting is the `controllerActions`, which needs to point to your newly
+created controller:
 
 ```php
 <?php
@@ -75,14 +76,15 @@ return [
 
 ### 3. Configure template path
 
-To use the template and partials, you need to add the template path to your sitepackge [with TSconfig](https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/12.0/Feature-96812-OverrideBackendTemplatesWithTSconfig.html#feature-96812):
+To use the template and partials, you need to add the template path to your
+sitepackge [with TSconfig](https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/12.0/Feature-96812-OverrideBackendTemplatesWithTSconfig.html#feature-96812):
 
 ```
 # EXT:my_extension/Configuration/page.tsconfig
 templates.vendor/my-extension.1740563365 = xima/xima-typo3-recordlist:Resources/Private/
 ```
 
-That's it. You can find working examples in the [examples_sitepackage](Tests/examples_sitepackage) directorys.
+That's it. You can find working examples in the [Example directory](Classes/Controller/Example).
 
 ## Customization
 
@@ -95,7 +97,8 @@ To a customize the template, partials or sections, you need to configure an addi
 templates.vendor/my-extension.1740570140 = my-vendor/my-extension:Resources/Private/TemplateOverrides
 ```
 
-Inside your TemplateOverrides folder, create a `templates` directory, copy the [Default.html](Resources/Private/Templates/Default.html) file into it and adjust it to your needs.
+Inside your TemplateOverrides folder, create a `templates` directory, copy the [Default.html](Resources/Private/Templates/Default.html) file
+into it and adjust it to your needs.
 
 In case you have multiple backend modules, you can adjust the template name by overriding the `TEMPLATE_NAME` constant in your controller:
 
@@ -127,25 +130,39 @@ Add new filter options
 ```php
 class UserController extends AbstractBackendController
 {
-    public function addAdditionalConstraints(): array
+    public function modifyQueryBuilder(): void
     {
-        $constraints = [];
-        $body = $this->request->getParsedBody();
-        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('fe_users');
-
-        // Set default value + check POST override
-        $registerDate = new DateTime();
         if (isset($body['register_date']) && $body['register_date']) {
             $registerDate = new DateTime($body['register_date']);
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->gte('register_date', $registerDate->getTimestamp());
         }
-
-        // Add value for form element to template
-        $this->view->assign('register_date', $registerDate);
-
-        // Add default condition
-        $constraints[] = $qb->expr()->gte('register_date', $registerDate->getTimestamp());
-
-        return $constraints;
     }
 }
 ```
+
+### Custom Columns
+
+To add custom columns, you can override the `getColumns` method:
+
+```php
+<?php
+
+class UserController extends AbstractBackendController
+{
+    public function getTableConfiguration(): array
+    {
+        $tableConfiguration = parent::getTableConfiguration();
+
+        // make title field inline editiable
+        $tableConfiguration['columns']['title']['partial'] = 'TextInlineEdit';
+
+        return $tableConfiguration;
+    }
+}
+```
+
+## Development and Contribution
+
+For easy development, you can use the provided ddev setup. Simply run `ddev start` and open the URL in your browser.
+
+After a `composer install`, you can run `ddev init-typo3` to setup a TYPO3 installation with example data. Login with `admin` / `Passw0rd!`.
