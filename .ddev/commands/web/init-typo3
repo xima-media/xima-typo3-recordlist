@@ -55,6 +55,11 @@ for file in "$fixturePath"/*.sql; do
     _done
 done
 
+# Copy File fixtures
+_progress "Copy file fixtures"
+    cp -r "$fixturePath/Files" /var/www/html/public/fileadmin/
+_done
+
 # Generate fixtures
 _progress "Generating fixtures"
     "$typo3Binary" faker:execute sys_category 17 25 en_US

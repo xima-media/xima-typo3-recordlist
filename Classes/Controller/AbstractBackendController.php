@@ -916,6 +916,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
         unset($column);
 
+        // sort active columns to top
         $sortedColumns = [];
         foreach ($activeColumns as $activeColumn) {
             $sortedColumns[] = $tableConfiguration['columns'][$activeColumn];

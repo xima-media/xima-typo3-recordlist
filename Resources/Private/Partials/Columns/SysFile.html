@@ -1,0 +1,6 @@
+{namespace be=TYPO3\CMS\Backend\ViewHelpers}
+
+<f:if condition="{item.sysFile}">
+    <core:iconForResource resource="{item.sysFile}" />
+    <f:link.file file="{item.sysFile}" target="_blank">{item.sysFile.properties.name}</f:link.file>
+</f:if>

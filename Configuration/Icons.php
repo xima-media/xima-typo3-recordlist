@@ -21,4 +21,8 @@ return [
         'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
         'source' => 'EXT:xima_typo3_recordlist/Resources/Public/Icons/example-4.svg',
     ],
+    'module-example-5' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:xima_typo3_recordlist/Resources/Public/Icons/example-5.svg',
+    ],
 ];
