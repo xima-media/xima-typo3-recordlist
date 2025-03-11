@@ -1,9 +1,9 @@
 /**!
- * Sortable 1.15.6
- * @author	RubaXa   <trash@rubaxa.org>
- * @author	owenm    <owen23355@gmail.com>
- * @license MIT
- */
+* Sortable 1.15.6
+* @author	RubaXa   <trash@rubaxa.org>
+* @author	owenm    <owen23355@gmail.com>
+* @license MIT
+*/
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
   if (Object.getOwnPropertySymbols) {
@@ -256,14 +256,14 @@ function getWindowScrollingElement() {
 }
 
 /**
- * Returns the "bounding client rect" of given element
- * @param  {HTMLElement} el                       The element whose boundingClientRect is wanted
- * @param  {[Boolean]} relativeToContainingBlock  Whether the rect should be relative to the containing block of (including) the container
- * @param  {[Boolean]} relativeToNonStaticParent  Whether the rect should be relative to the relative parent of (including) the contaienr
- * @param  {[Boolean]} undoScale                  Whether the container's scale() should be undone
- * @param  {[HTMLElement]} container              The parent the element will be placed in
- * @return {Object}                               The boundingClientRect of el, with specified adjustments
- */
+* Returns the "bounding client rect" of given element
+* @param  {HTMLElement} el                       The element whose boundingClientRect is wanted
+* @param  {[Boolean]} relativeToContainingBlock  Whether the rect should be relative to the containing block of (including) the container
+* @param  {[Boolean]} relativeToNonStaticParent  Whether the rect should be relative to the relative parent of (including) the contaienr
+* @param  {[Boolean]} undoScale                  Whether the container's scale() should be undone
+* @param  {[HTMLElement]} container              The parent the element will be placed in
+* @return {Object}                               The boundingClientRect of el, with specified adjustments
+*/
 function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoScale, container) {
   if (!el.getBoundingClientRect && el !== window) return;
   var elRect, top, left, bottom, right, height, width;
@@ -330,12 +330,12 @@ function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoS
 }
 
 /**
- * Checks if a side of an element is scrolled past a side of its parents
- * @param  {HTMLElement}  el           The element who's side being scrolled out of view is in question
- * @param  {String}       elSide       Side of the element in question ('top', 'left', 'right', 'bottom')
- * @param  {String}       parentSide   Side of the parent in question ('top', 'left', 'right', 'bottom')
- * @return {HTMLElement}               The parent scroll element that the el's side is scrolled past, or null if there is no such element
- */
+* Checks if a side of an element is scrolled past a side of its parents
+* @param  {HTMLElement}  el           The element who's side being scrolled out of view is in question
+* @param  {String}       elSide       Side of the element in question ('top', 'left', 'right', 'bottom')
+* @param  {String}       parentSide   Side of the parent in question ('top', 'left', 'right', 'bottom')
+* @return {HTMLElement}               The parent scroll element that the el's side is scrolled past, or null if there is no such element
+*/
 function isScrolledPast(el, elSide, parentSide) {
   var parent = getParentAutoScrollElement(el, true),
     elSideVal = getRect(el)[elSide];
@@ -357,13 +357,13 @@ function isScrolledPast(el, elSide, parentSide) {
 }
 
 /**
- * Gets nth child of el, ignoring hidden children, sortable's elements (does not ignore clone if it's visible)
- * and non-draggable elements
- * @param  {HTMLElement} el       The parent element
- * @param  {Number} childNum      The index of the child
- * @param  {Object} options       Parent Sortable's options
- * @return {HTMLElement}          The child at index childNum, or null if not found
- */
+* Gets nth child of el, ignoring hidden children, sortable's elements (does not ignore clone if it's visible)
+* and non-draggable elements
+* @param  {HTMLElement} el       The parent element
+* @param  {Number} childNum      The index of the child
+* @param  {Object} options       Parent Sortable's options
+* @return {HTMLElement}          The child at index childNum, or null if not found
+*/
 function getChild(el, childNum, options, includeDragEl) {
   var currentChild = 0,
     i = 0,
@@ -381,11 +381,11 @@ function getChild(el, childNum, options, includeDragEl) {
 }
 
 /**
- * Gets the last child in the el, ignoring ghostEl or invisible elements (clones)
- * @param  {HTMLElement} el       Parent element
- * @param  {selector} selector    Any other elements that should be ignored
- * @return {HTMLElement}          The last child, ignoring ghostEl
- */
+* Gets the last child in the el, ignoring ghostEl or invisible elements (clones)
+* @param  {HTMLElement} el       Parent element
+* @param  {selector} selector    Any other elements that should be ignored
+* @return {HTMLElement}          The last child, ignoring ghostEl
+*/
 function lastChild(el, selector) {
   var last = el.lastElementChild;
   while (last && (last === Sortable.ghost || css(last, 'display') === 'none' || selector && !matches(last, selector))) {
@@ -395,12 +395,12 @@ function lastChild(el, selector) {
 }
 
 /**
- * Returns the index of an element within its parent for a selected set of
- * elements
- * @param  {HTMLElement} el
- * @param  {selector} selector
- * @return {number}
- */
+* Returns the index of an element within its parent for a selected set of
+* elements
+* @param  {HTMLElement} el
+* @param  {selector} selector
+* @return {number}
+*/
 function index(el, selector) {
   var index = 0;
   if (!el || !el.parentNode) {
@@ -417,11 +417,11 @@ function index(el, selector) {
 }
 
 /**
- * Returns the scroll offset of the given element, added with all the scroll offsets of parent elements.
- * The value is returned in real pixels.
- * @param  {HTMLElement} el
- * @return {Array}             Offsets in the format of [left, top]
- */
+* Returns the scroll offset of the given element, added with all the scroll offsets of parent elements.
+* The value is returned in real pixels.
+* @param  {HTMLElement} el
+* @return {Array}             Offsets in the format of [left, top]
+*/
 function getRelativeScrollOffset(el) {
   var offsetLeft = 0,
     offsetTop = 0,
@@ -439,11 +439,11 @@ function getRelativeScrollOffset(el) {
 }
 
 /**
- * Returns the index of the object within the given array
- * @param  {Array} arr   Array that may or may not hold the object
- * @param  {Object} obj  An object that has a key-value pair unique to and identical to a key-value pair in the object you want to find
- * @return {Number}      The index of the object in the array, or -1
- */
+* Returns the index of the object within the given array
+* @param  {Array} arr   Array that may or may not hold the object
+* @param  {Object} obj  An object that has a key-value pair unique to and identical to a key-value pair in the object you want to find
+* @return {Number}      The index of the object in the array, or -1
+*/
 function indexOfObject(arr, obj) {
   for (var i in arr) {
     if (!arr.hasOwnProperty(i)) continue;
@@ -965,11 +965,11 @@ var documentExists = typeof document !== 'undefined',
     return dragElS1Opp === targetS1Opp || dragElS2Opp === targetS2Opp || dragElS1Opp + dragElOppLength / 2 === targetS1Opp + targetOppLength / 2;
   },
   /**
-   * Detects first nearest empty sortable to X and Y position using emptyInsertThreshold.
-   * @param  {Number} x      X position
-   * @param  {Number} y      Y position
-   * @return {HTMLElement}   Element of the first found nearest Sortable
-   */
+  * Detects first nearest empty sortable to X and Y position using emptyInsertThreshold.
+  * @param  {Number} x      X position
+  * @param  {Number} y      Y position
+  * @return {HTMLElement}   Element of the first found nearest Sortable
+  */
   _detectNearestEmptySortable = function _detectNearestEmptySortable(x, y) {
     var ret;
     sortables.some(function (sortable) {
@@ -1066,10 +1066,10 @@ var _checkOutsideTargetEl = function _checkOutsideTargetEl(evt) {
 };
 
 /**
- * @class  Sortable
- * @param  {HTMLElement}  el
- * @param  {Object}       [options]
- */
+* @class  Sortable
+* @param  {HTMLElement}  el
+* @param  {Object}       [options]
+*/
 function Sortable(el, options) {
   if (!(el && el.nodeType && el.nodeType === 1)) {
     throw "Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(el));
@@ -2079,9 +2079,9 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     }
   },
   /**
-   * Serializes the item into an array of string.
-   * @returns {String[]}
-   */
+  * Serializes the item into an array of string.
+  * @returns {String[]}
+  */
   toArray: function toArray() {
     var order = [],
       el,
@@ -2098,9 +2098,9 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     return order;
   },
   /**
-   * Sorts the elements according to the array.
-   * @param  {String[]}  order  order of the items
-   */
+  * Sorts the elements according to the array.
+  * @param  {String[]}  order  order of the items
+  */
   sort: function sort(order, useAnimation) {
     var items = {},
       rootEl = this.el;
@@ -2120,27 +2120,27 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     useAnimation && this.animateAll();
   },
   /**
-   * Save the current sorting
-   */
+  * Save the current sorting
+  */
   save: function save() {
     var store = this.options.store;
     store && store.set && store.set(this);
   },
   /**
-   * For each element in the set, get the first element that matches the selector by testing the element itself and traversing up through its ancestors in the DOM tree.
-   * @param   {HTMLElement}  el
-   * @param   {String}       [selector]  default: `options.draggable`
-   * @returns {HTMLElement|null}
-   */
+  * For each element in the set, get the first element that matches the selector by testing the element itself and traversing up through its ancestors in the DOM tree.
+  * @param   {HTMLElement}  el
+  * @param   {String}       [selector]  default: `options.draggable`
+  * @returns {HTMLElement|null}
+  */
   closest: function closest$1(el, selector) {
     return closest(el, selector || this.options.draggable, this.el, false);
   },
   /**
-   * Set/get option
-   * @param   {string} name
-   * @param   {*}      [value]
-   * @returns {*}
-   */
+  * Set/get option
+  * @param   {string} name
+  * @param   {*}      [value]
+  * @returns {*}
+  */
   option: function option(name, value) {
     var options = this.options;
     if (value === void 0) {
@@ -2158,8 +2158,8 @@ Sortable.prototype = /** @lends Sortable.prototype */{
     }
   },
   /**
-   * Destroy
-   */
+  * Destroy
+  */
   destroy: function destroy() {
     pluginEvent('destroy', this);
     var el = this.el;
@@ -2311,11 +2311,11 @@ function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, inv
 }
 
 /**
- * Gets the direction dragEl must be swapped relative to target in order to make it
- * seem that dragEl has been "inserted" into that element's position
- * @param  {HTMLElement} target       The target whose position dragEl is being inserted at
- * @return {Number}                   Direction dragEl must be swapped
- */
+* Gets the direction dragEl must be swapped relative to target in order to make it
+* seem that dragEl has been "inserted" into that element's position
+* @param  {HTMLElement} target       The target whose position dragEl is being inserted at
+* @return {Number}                   Direction dragEl must be swapped
+*/
 function _getInsertDirection(target) {
   if (index(dragEl) < index(target)) {
     return 1;
@@ -2325,11 +2325,11 @@ function _getInsertDirection(target) {
 }
 
 /**
- * Generate id
- * @param   {HTMLElement} el
- * @returns {String}
- * @private
- */
+* Generate id
+* @param   {HTMLElement} el
+* @returns {String}
+* @private
+*/
 function _generateId(el) {
   var str = el.tagName + el.className + el.src + el.href + el.textContent,
     i = str.length,
@@ -2387,18 +2387,18 @@ Sortable.utils = {
 };
 
 /**
- * Get the Sortable instance of an element
- * @param  {HTMLElement} element The element
- * @return {Sortable|undefined}         The instance of Sortable
- */
+* Get the Sortable instance of an element
+* @param  {HTMLElement} element The element
+* @return {Sortable|undefined}         The instance of Sortable
+*/
 Sortable.get = function (element) {
   return element[expando];
 };
 
 /**
- * Mount a plugin to Sortable
- * @param  {...SortablePlugin|SortablePlugin[]} plugins       Plugins being mounted
- */
+* Mount a plugin to Sortable
+* @param  {...SortablePlugin|SortablePlugin[]} plugins       Plugins being mounted
+*/
 Sortable.mount = function () {
   for (var _len = arguments.length, plugins = new Array(_len), _key = 0; _key < _len; _key++) {
     plugins[_key] = arguments[_key];
@@ -2414,10 +2414,10 @@ Sortable.mount = function () {
 };
 
 /**
- * Create sortable instance
- * @param {HTMLElement}  el
- * @param {Object}      [options]
- */
+* Create sortable instance
+* @param {HTMLElement}  el
+* @param {Object}      [options]
+*/
 Sortable.create = function (el, options) {
   return new Sortable(el, options);
 };
@@ -3269,9 +3269,9 @@ function MultiDragPlugin() {
     pluginName: 'multiDrag',
     utils: {
       /**
-       * Selects the provided multi-drag item
-       * @param  {HTMLElement} el    The element to be selected
-       */
+      * Selects the provided multi-drag item
+      * @param  {HTMLElement} el    The element to be selected
+      */
       select: function select(el) {
         var sortable = el.parentNode[expando];
         if (!sortable || !sortable.options.multiDrag || ~multiDragElements.indexOf(el)) return;
@@ -3283,9 +3283,9 @@ function MultiDragPlugin() {
         multiDragElements.push(el);
       },
       /**
-       * Deselects the provided multi-drag item
-       * @param  {HTMLElement} el    The element to be deselected
-       */
+      * Deselects the provided multi-drag item
+      * @param  {HTMLElement} el    The element to be deselected
+      */
       deselect: function deselect(el) {
         var sortable = el.parentNode[expando],
           index = multiDragElements.indexOf(el);
@@ -3350,10 +3350,10 @@ function insertMultiDragElements(clonesInserted, rootEl) {
 }
 
 /**
- * Insert multi-drag clones
- * @param  {[Boolean]} elementsInserted  Whether the multi-drag elements are inserted
- * @param  {HTMLElement} rootEl
- */
+* Insert multi-drag clones
+* @param  {[Boolean]} elementsInserted  Whether the multi-drag elements are inserted
+* @param  {HTMLElement} rootEl
+*/
 function insertMultiDragClones(elementsInserted, rootEl) {
   multiDragClones.forEach(function (clone, i) {
     var target = rootEl.children[clone.sortableIndex + (elementsInserted ? Number(i) : 0)];
