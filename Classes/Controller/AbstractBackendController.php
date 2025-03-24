@@ -884,12 +884,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function createColumnConfiguration(): void
     {
         $tableConfiguration = $this->getTableConfiguration();
-        $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
         $body = $this->request->getParsedBody();
 
-        // append label column (default) if not in active columns
-        if (!in_array($defaultColumn = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'] ?? '', $activeColumns, true)) {
-            $activeColumns = [$defaultColumn, ...$activeColumns];
+        $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
+        if (!count($activeColumns)) {
+            $defaultColumns = array_filter($tableConfiguration['columns'], static fn ($column) => isset($column['defaultPosition']) && $column['defaultPosition'] > 0);
+            uasort($defaultColumns, static fn ($a, $b) => $a['defaultPosition'] <=> $b['defaultPosition']);
+            $activeColumns = array_keys($defaultColumns);
         }
 
         foreach ($tableConfiguration['columns'] as $columnName => &$column) {
@@ -948,6 +949,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     'languageIndent' => true,
                     'icon' => true,
                     'active' => true,
+                    'defaultPosition' => 1,
                 ];
                 continue;
             }
@@ -1013,6 +1015,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'icon' => false,
                 'active' => false,
                 'filter' => $filter,
+                'defaultPosition' => 0,
             ];
         }
 
