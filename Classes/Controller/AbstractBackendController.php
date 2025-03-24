@@ -1098,7 +1098,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    private function addShowColumnsButtonToModuleTemplate(): void
+    protected function addShowColumnsButtonToModuleTemplate(): void
     {
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-show-columns.js')
