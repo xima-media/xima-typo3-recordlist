@@ -324,16 +324,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         // demand: offline records (1/2)
-        $onlyOfflineRecords = false;
-        if (isset($body['is_offline']) && $body['is_offline'] === '1') {
-            $onlyOfflineRecords = true;
+        $onlyOfflineRecords = $moduleData['settings']['onlyOfflineRecords'] ?? false;
+        if (isset($body['is_offline'])) {
+            $onlyOfflineRecords = $body['is_offline'] === '1';
         }
         $this->addToModuleDataSettings(['onlyOfflineRecords' => $onlyOfflineRecords]);
 
         // demand: readyToPublish (1/2)
-        $onlyReadyToPublish = false;
-        if (isset($body['is_ready_to_publish']) && $body['is_ready_to_publish'] === '1') {
-            $onlyReadyToPublish = true;
+        $onlyReadyToPublish = $moduleData['settings']['onlyReadyToPublish'] ?? false;
+        if (isset($body['is_ready_to_publish'])) {
+            $onlyReadyToPublish = $body['is_ready_to_publish'] === '1';
         }
         $this->addToModuleDataSettings(['onlyReadyToPublish' => $onlyReadyToPublish]);
     }
