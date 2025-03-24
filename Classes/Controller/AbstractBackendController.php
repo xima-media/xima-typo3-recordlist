@@ -1056,7 +1056,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $config;
     }
 
-    private function configureModuleTemplateDocHeader(): void
+    protected function configureModuleTemplateDocHeader(): void
     {
         // new buttons
         $this->addNewButtonToModuleTemplate();
@@ -1145,7 +1145,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
-    private function addSearchButtonToNewModuleTemplate(): void
+    protected function addSearchButtonToNewModuleTemplate(): void
     {
         $isSearchButtonActive = (string)$this->getModuleDataSetting('isSearchButtonActive');
         $searchClass = $isSearchButtonActive ? 'active' : '';
