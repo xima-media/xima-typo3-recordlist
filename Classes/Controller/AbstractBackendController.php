@@ -300,6 +300,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if (isset($body['reset'])) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
+                unset($moduleData['settings']['language'], $moduleData['settings']['onlyOfflineRecords'], $moduleData['settings']['onlyReadyToPublish']);
             }
 
             $moduleData['search'] = $body;
@@ -319,12 +320,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         // demand: offline records (1/2)
-        if (isset($body['is_offline'])) {
+        if (isset($body['is_offline']) && !isset($body['reset'])) {
             $this->addToModuleDataSettings(['onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
         // demand: readyToPublish (1/2)
-        if (isset($body['is_ready_to_publish'])) {
+        if (isset($body['is_ready_to_publish']) && !isset($body['reset'])) {
             $this->addToModuleDataSettings(['onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
         }
     }
