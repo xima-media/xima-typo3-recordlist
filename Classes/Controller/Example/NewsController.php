@@ -24,6 +24,7 @@ class NewsController extends AbstractBackendController
     {
         $configuration = parent::getTableConfiguration();
         $configuration['columns']['teaser']['partial'] = 'TextInlineEdit';
+        $configuration['columns']['workspace-status']['defaultPosition'] = 2;
 
         return $configuration;
     }

@@ -56,10 +56,15 @@ class FilesController extends AbstractBackendController
             'label' => 'Vorschau',
             'columnName' => 'fileinfo',
             'partial' => 'Thumbnail',
-            'active' => true,
+            'defaultPosition' => 1,
         ];
 
         $tableConfiguration['columns']['file']['partial'] = 'SysFile';
+        $tableConfiguration['columns']['file']['defaultPosition'] = 2;
+
+        $tableConfiguration['columns']['title']['defaultPosition'] = 3;
+        $tableConfiguration['columns']['alternative']['defaultPosition'] = 4;
+        $tableConfiguration['columns']['description']['defaultPosition'] = 5;
 
         $tableConfiguration['groupActions'] = [
             'Edit',
