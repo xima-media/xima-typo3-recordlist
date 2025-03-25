@@ -157,6 +157,7 @@ export default class RecordlistWorkspaceReadyToPublish {
 
     const eventTarget = e.currentTarget;
     const tr = eventTarget.closest("tr");
+    const workspaceId = tr.getAttribute("data-t3ver_wsid");
 
     if (!tr) {
       return;
@@ -178,7 +179,7 @@ export default class RecordlistWorkspaceReadyToPublish {
 
     NProgress.configure({ parent: `tr[data-uid="${tr.getAttribute("data-uid")}"]`, showSpinner: true });
     NProgress.start();
-    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
       .post(payload, {
         headers: {
           "Content-Type": "application/json; charset=utf-8"
@@ -203,7 +204,7 @@ export default class RecordlistWorkspaceReadyToPublish {
               type: "rpc"
             };
 
-            new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+            new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
               .post(payload, {
                 headers: {
                   "Content-Type": "application/json; charset=utf-8"

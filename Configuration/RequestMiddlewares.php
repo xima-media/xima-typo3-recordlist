@@ -11,5 +11,11 @@ return [
                 'typo3/cms-backend/output-compression',
             ],
         ],
+        'xima-typo3-recordlist/current-workspace-manipulation' => [
+            'target' => \Xima\XimaTypo3Recordlist\Middleware\CurrentWorkspaceManipulation::class,
+            'after' => [
+                'typo3/cms-core/response-propagation',
+            ],
+        ],
     ],
 ];

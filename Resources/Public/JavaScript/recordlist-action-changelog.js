@@ -18,6 +18,7 @@ export default class RecordlistActionChangelog {
     e.preventDefault();
 
     const $tr = $(e.currentTarget).closest("tr");
+    const workspaceId = $tr.attr("data-t3ver_wsid");
 
     const payload = {
       action: "RemoteServer",
@@ -33,7 +34,7 @@ export default class RecordlistActionChangelog {
       type: "rpc"
     };
 
-    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch).post(
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId).post(
       payload,
       {
         headers: {
