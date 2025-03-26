@@ -8,6 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Backend\View\BackendViewFactory;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
@@ -101,11 +103,11 @@ class AjaxController
         }
 
         // workspace admin deletes versioned record -> hard delete, since DataHandler cannot delete
-        if ($record['t3ver_wsid'] && $GLOBALS['BE_USER']->workspacePublishAccess($record['t3ver_wsid'])) {
+        if ($record['t3ver_wsid'] && $this->isWorkspaceAdmin($record['t3ver_wsid'])) {
             $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
             $qb->delete($table)
-                ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid, \PDO::PARAM_INT)))
-                ->execute();
+                ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid, Connection::PARAM_INT)))
+                ->executeQuery();
             return $this->responseFactory->createResponse();
         }
 
@@ -115,6 +117,24 @@ class AjaxController
         $dataHandler->process_cmdmap();
 
         return $this->responseFactory->createResponse();
+    }
+
+    protected function isWorkspaceAdmin(int $workspaceId): bool
+    {
+        // TYPO3 v13+
+        if (class_exists(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)) {
+            return GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)->isGranted(
+                $this->getBackendAuthentication(),
+                $workspaceId
+            );
+        }
+
+        return $this->getBackendAuthentication()->workspacePublishAccess($workspaceId);
+    }
+
+    protected function getBackendAuthentication(): BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'];
     }
 
     /**
@@ -132,7 +152,7 @@ class AjaxController
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_file_metadata');
         $sysFileUid = $qb->select('file')
             ->from('sys_file_metadata')
-            ->where($qb->expr()->eq('uid', $qb->createNamedParameter($sysFileMetaDataUid, \PDO::PARAM_INT)))
+            ->where($qb->expr()->eq('uid', $qb->createNamedParameter((int)$sysFileMetaDataUid, Connection::PARAM_INT)))
             ->executeQuery()
             ->fetchOne();
 
