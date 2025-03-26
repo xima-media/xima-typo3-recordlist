@@ -27,6 +27,7 @@ class NewsController extends AbstractBackendController
         $this->tableConfiguration['columns']['fal_media']['defaultPosition'] = 2;
         $this->tableConfiguration['columns']['author']['defaultPosition'] = 3;
         $this->tableConfiguration['columns']['sitemap_changefreq']['defaultPosition'] = 4;
-        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 5;
+        $this->tableConfiguration['columns']['sys_language_uid']['defaultPosition'] = 5;
+        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 6;
     }
 }

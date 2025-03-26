@@ -1,4 +1,10 @@
+<div align="center">
+
+![Extension icon](Resources/Public/Icons/Extension.svg)
+
 # TYPO3 Recordlist
+
+</div>
 
 This package allows you to quickly create backend modules for advanced record listing.
 
@@ -150,9 +156,29 @@ class UserController extends AbstractBackendController
 }
 ```
 
+### Default columns
+
+To change the default columns, you can override the `modifyTableConfiguration` method:
+
+```php
+<?php
+
+class NewsController extends AbstractBackendController
+{
+    public function modifyTableConfiguration(): void
+    {
+        $this->tableConfiguration['columns']['fal_media']['defaultPosition'] = 2;
+        $this->tableConfiguration['columns']['author']['defaultPosition'] = 3;
+        $this->tableConfiguration['columns']['sitemap_changefreq']['defaultPosition'] = 4;
+        $this->tableConfiguration['columns']['sys_language_uid']['defaultPosition'] = 5;
+        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 6;
+    }
+}
+```
+
 ### Custom Columns
 
-To add custom columns, you can override the `getColumns` method:
+To add custom columns, you can override the `modifyTableConfiguration` method:
 
 ```php
 <?php
