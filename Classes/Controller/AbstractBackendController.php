@@ -802,6 +802,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
+            if ($config['config']['type'] === 'file') {
+                $partial = 'SysFileReferences';
+                $filter = [];
+            }
+
             if ($config['config']['type'] === 'select') {
                 $partial = 'Select';
                 $items = [];
@@ -955,6 +960,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $this->addTranslationButtons();
         $this->addHiddenToggleButton();
+        $this->addSysFileReferences();
     }
 
     protected function addTranslationButtons(): void
@@ -1049,6 +1055,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-hidden-toggle.js')
         );
+    }
+
+    protected function addSysFileReferences(): void
+    {
+        foreach ($this->tableConfiguration['columns'] as $column) {
+            if ($column['partial'] !== 'SysFileReferences') {
+                continue;
+            }
+
+            foreach ($this->records as &$record) {
+                $record[$column['columnName']] = BackendUtility::resolveFileReferences($this->getTableName(), $column['columnName'], $record);
+            }
+        }
     }
 
     protected function setPaginatorItems(): void
