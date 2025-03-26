@@ -17,20 +17,6 @@
         <f:flashMessages queueIdentifier="{flashMessageQueueIdentifier}" />
 
         <f:render section="Content" arguments="{_all}" optional="true">
-            <f:render section="Headline" optional="true">
-                <h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then:
-                    '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')}
-                    {fullRecordCount}
-                    ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
-            </f:render>
-
-            <f:if condition="{fullRecordCount} && {recordCount} == 0">
-                <f:be.infobox
-                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.headline')}"
-                    state="-1">
-                    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.text')}
-                </f:be.infobox>
-            </f:if>
 
             <div id="workspace-settings-form">
                 <input type="hidden" name="depth" value="9" />
@@ -81,6 +67,21 @@
                         </div>
                     </div>
                 </div>
+
+                <f:render section="Headline" optional="true">
+                    <h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then:
+                        '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')}
+                        {fullRecordCount}
+                        ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
+                </f:render>
+
+                <f:if condition="{fullRecordCount} && {recordCount} == 0">
+                    <f:be.infobox
+                        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.headline')}"
+                        state="-1">
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.text')}
+                    </f:be.infobox>
+                </f:if>
 
                 <f:if condition="{records->f:count()}">
                     <main
