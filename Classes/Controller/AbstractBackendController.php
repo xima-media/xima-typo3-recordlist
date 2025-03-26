@@ -16,6 +16,7 @@ use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
@@ -220,7 +221,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     }
 
     /**
-     * @throws Exception|\Doctrine\DBAL\Exception
+     * @throws \Doctrine\DBAL\Exception
      */
     protected function getAccessibleChildPages(): array
     {
@@ -229,9 +230,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $result = $qb->select('uid', 'title')
             ->from('pages')
             ->where(
-                $qb->expr()->orX(
-                    $qb->expr()->eq('uid', $qb->createNamedParameter($pageUid, \PDO::PARAM_INT)),
-                    $qb->expr()->eq('pid', $qb->createNamedParameter($pageUid, \PDO::PARAM_INT))
+                $qb->expr()->or(
+                    $qb->expr()->eq('uid', $qb->createNamedParameter($pageUid, Connection::PARAM_INT)),
+                    $qb->expr()->eq('pid', $qb->createNamedParameter($pageUid, Connection::PARAM_INT))
                 )
             )
             ->executeQuery();
@@ -403,7 +404,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     }
 
     /**
-     * @throws Exception|\Doctrine\DBAL\Exception
+     * @throws \Doctrine\DBAL\Exception
      */
     protected function getFullRecordCount(): int
     {
