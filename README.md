@@ -149,14 +149,10 @@ To add custom columns, you can override the `getColumns` method:
 
 class UserController extends AbstractBackendController
 {
-    public function getTableConfiguration(): array
+    public function modifyTableConfiguration(): void
     {
-        $tableConfiguration = parent::getTableConfiguration();
-
         // make title field inline editiable
-        $tableConfiguration['columns']['title']['partial'] = 'TextInlineEdit';
-
-        return $tableConfiguration;
+        $this->tableConfiguration['columns']['title']['partial'] = 'TextInlineEdit';
     }
 }
 ```
