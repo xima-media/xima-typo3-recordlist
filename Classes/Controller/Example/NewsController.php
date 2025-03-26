@@ -22,7 +22,11 @@ class NewsController extends AbstractBackendController
 
     public function modifyTableConfiguration(): void
     {
-        $this->tableConfiguration['columns']['teaser']['partial'] = 'TextInlineEdit';
-        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 2;
+        $this->tableConfiguration['columns']['author']['partial'] = 'TextInlineEdit';
+
+        $this->tableConfiguration['columns']['fal_media']['defaultPosition'] = 2;
+        $this->tableConfiguration['columns']['author']['defaultPosition'] = 3;
+        $this->tableConfiguration['columns']['sitemap_changefreq']['defaultPosition'] = 4;
+        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 5;
     }
 }
