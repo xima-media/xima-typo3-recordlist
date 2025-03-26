@@ -1,0 +1,14 @@
+{namespace be=TYPO3\CMS\Backend\ViewHelpers}
+
+<f:if condition="{item.{colConfig.columnName}}">
+    <f:if condition="{item.{colConfig.columnName}.properties.type} == '2'">
+        <be:link.editRecord
+            uid="{item.uid}" table="{table}" returnUrl="{f:be.uri(route: moduleName)}">
+            <be:thumbnail image="{item.{colConfig.columnName}}" width="50" height="50" />
+        </be:link.editRecord>
+    </f:if>
+    <f:if condition="{item.{colConfig.columnName}.properties.type} != '2'">
+        <core:iconForResource resource="{item.{colConfig.columnName}}" />
+        <f:link.file file="{item.{colConfig.columnName}}" target="_blank">{item.{colConfig.columnName}.name}</f:link.file>
+    </f:if>
+</f:if>

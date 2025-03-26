@@ -11,6 +11,21 @@ parameters:
 			path: Classes/Controller/AbstractBackendController.php
 
 		-
+			message: "#^Offset 0 does not exist on array\\<string, array\\<int\\|string, mixed\\>\\>\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Property Xima\\\\XimaTypo3Recordlist\\\\Controller\\\\AbstractBackendController\\:\\:\\$records \\(array\\<string, array\\<int\\|string, mixed\\>\\>\\) does not accept array\\<int, array\\<string, mixed\\>\\>\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: "#^Property Xima\\\\XimaTypo3Recordlist\\\\Controller\\\\AbstractBackendController\\:\\:\\$records \\(array\\<string, array\\<int\\|string, mixed\\>\\>\\) does not accept array\\<int\\<0, max\\>, mixed\\>\\.$#"
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
 			message: "#^Strict comparison using \\=\\=\\= between 'all'\\|numeric\\-string and int will always evaluate to false\\.$#"
 			count: 1
 			path: Classes/Controller/AbstractBackendController.php

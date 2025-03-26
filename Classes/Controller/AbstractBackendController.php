@@ -29,6 +29,7 @@ use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
@@ -89,7 +90,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         protected UriBuilder $backendUriBuilder,
         protected FlashMessageService $flashMessageService,
         protected ContainerInterface $container,
-        protected ModuleTemplateFactory $moduleTemplateFactory
+        protected ModuleTemplateFactory $moduleTemplateFactory,
+        protected ResourceFactory $resourceFactory,
     ) {
     }
 
@@ -362,6 +364,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $language['active'] = true;
             }
         }
+        unset($language);
 
         $this->languages = $languages;
     }
@@ -715,6 +718,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
         }
+        unset($record);
 
         $this->records = array_filter($this->records);
     }
@@ -757,20 +761,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $columns = [];
         foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
-            // label column (default)
-            if ($columnName === $defaultColumn) {
-                $columns[$columnName] = [
-                    'columnName' => $columnName,
-                    'label' => $config['label'] ?? '',
-                    'partial' => 'Text',
-                    'languageIndent' => true,
-                    'icon' => true,
-                    'active' => true,
-                    'defaultPosition' => 1,
-                ];
-                continue;
-            }
-
             $partial = 'Text';
             $filter = [
                 'partial' => 'Text',
@@ -779,7 +769,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if ($columnName === $languageColumn) {
                 $partial = 'Language';
                 $items = array_map(
-                    static fn($language) => ['label' => $language['title'], 'value' => $language['uid'] === 'all' ? '' : $language['uid']],
+                    static fn ($language) => ['label' => $language['title'], 'value' => $language['uid'] === 'all' ? '' : $language['uid']],
                     $this->getLanguages()
                 );
                 $filter = [
@@ -829,6 +819,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
+            if ($config['config']['type'] === 'select' && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_file') {
+                $partial = 'SysFile';
+                $filter = [];
+            }
+
             $columns[$columnName] = [
                 'columnName' => $columnName,
                 'label' => $config['label'] ?? '',
@@ -839,6 +834,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'filter' => $filter,
                 'defaultPosition' => 0,
             ];
+
+            if ($columnName === $defaultColumn) {
+                $columns[$columnName]['languageIndent'] = true;
+                $columns[$columnName]['icon'] = true;
+                $columns[$columnName]['defaultPosition'] = 1;
+            }
         }
 
         if ($this::WORKSPACE_ID) {
@@ -882,14 +883,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function processTableConfiguration(): void
     {
-
         $body = $this->request->getParsedBody();
 
         $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
         if (!count($activeColumns)) {
-            $defaultColumns = array_filter($this->tableConfiguration['columns'],
-                static fn($column) => isset($column['defaultPosition']) && $column['defaultPosition'] > 0);
-            uasort($defaultColumns, static fn($a, $b) => $a['defaultPosition'] <=> $b['defaultPosition']);
+            $defaultColumns = array_filter(
+                $this->tableConfiguration['columns'],
+                static fn ($column) => isset($column['defaultPosition']) && $column['defaultPosition'] > 0
+            );
+            uasort($defaultColumns, static fn ($a, $b) => $a['defaultPosition'] <=> $b['defaultPosition']);
             $activeColumns = array_keys($defaultColumns);
         }
 
@@ -961,6 +963,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addTranslationButtons();
         $this->addHiddenToggleButton();
         $this->addSysFileReferences();
+        $this->addSysFiles();
     }
 
     protected function addTranslationButtons(): void
@@ -1065,7 +1068,24 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             foreach ($this->records as &$record) {
-                $record[$column['columnName']] = BackendUtility::resolveFileReferences($this->getTableName(), $column['columnName'], $record);
+                $record[$column['columnName']] = BackendUtility::resolveFileReferences(
+                    $this->getTableName(),
+                    $column['columnName'],
+                    $record
+                );
+            }
+        }
+    }
+
+    protected function addSysFiles(): void
+    {
+        foreach ($this->tableConfiguration['columns'] as $column) {
+            if ($column['partial'] !== 'SysFile') {
+                continue;
+            }
+
+            foreach ($this->records as &$record) {
+                $record[$column['columnName']] = $this->resourceFactory->getFileObject($record[$column['columnName']]);
             }
         }
     }
