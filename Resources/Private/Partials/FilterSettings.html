@@ -1,0 +1,9 @@
+<f:for each="{tableConfiguration.columns}" as="colConfig">
+    <f:if condition="{colConfig.active} && {colConfig.filter.partial}">
+        <div class="row mb-3">
+            <div class="col-12 col-xl-6">
+                <f:render partial="Filter/{colConfig.filter.partial}" arguments="{_all}" />
+            </div>
+        </div>
+    </f:if>
+</f:for>

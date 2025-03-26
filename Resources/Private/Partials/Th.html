@@ -1,18 +1,19 @@
 <th>
-	<f:if condition="{colConfig.notSortable}">
-		<f:then>
-			<f:translate key="{colConfig.label}">{colConfig.label}</f:translate>
-		</f:then>
-		<f:else>
-			<a href="#"
-			   data-order-field="{colConfig.columnName}"
-			   data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">
-				{colConfig.label}
-			</a>
-		</f:else>
-	</f:if>
-	<f:if condition="{order_field}==={colConfig.columnName}">
-		<core:icon identifier="actions-caret-{f:if(condition:'{order_direction}===\'DESC\'', then: 'down', else:'up')}"
-				   size="small" />
-	</f:if>
+    <f:if condition="{colConfig.notSortable}">
+        <f:then>
+            <f:translate key="{colConfig.label}">{colConfig.label}</f:translate>
+        </f:then>
+        <f:else>
+            <a
+                href="#"
+                data-order-field="{colConfig.columnName}"
+                data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">
+                {colConfig.label}
+            </a>
+        </f:else>
+    </f:if>
+    <f:if condition="{order_field}==={colConfig.columnName}">
+        <core:icon
+            identifier="actions-caret-{f:if(condition:'{order_direction}===\'DESC\'', then: 'down', else:'up')}" size="small" />
+    </f:if>
 </th>

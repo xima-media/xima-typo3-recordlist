@@ -1,0 +1,35 @@
+.text-inline-edit button {
+    visibility: hidden;
+}
+
+.text-inline-edit.changed button {
+    visibility: visible;
+}
+
+.text-inline-edit {
+    display: grid;
+    grid-template-columns: auto min-content min-content;
+    align-items: center;
+    gap: 3px;
+}
+
+span.inline-edit {
+    margin-right: 5px;
+}
+
+span.inline-edit:focus-within {
+    outline-offset: 5px;
+}
+
+.recordlist #nprogress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 3px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.table > tbody > tr:not([data-sys_language_uid="0"]) td[data-language-indent="1"] > *:first-child {
+    margin-left: 16px;
+}

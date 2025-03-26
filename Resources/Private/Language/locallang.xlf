@@ -30,6 +30,9 @@
 			<trans-unit id="table.label.records">
 				<source>Records</source>
 			</trans-unit>
+			<trans-unit id="filter.label.search">
+				<source>Search</source>
+			</trans-unit>
 			<trans-unit id="table.label.searchField">
 				<source>Enter search phrase</source>
 			</trans-unit>
@@ -72,11 +75,113 @@
 			<trans-unit id="table.button.translate">
 				<source>Translate record</source>
 			</trans-unit>
+			<trans-unit id="table.button.translate_deepl">
+				<source>Translate record with DeepL</source>
+			</trans-unit>
+			<trans-unit id="table.button.duplicate">
+				<source>Duplicate record</source>
+			</trans-unit>
+			<trans-unit id="table.button.hide">
+				<source>Hide record</source>
+			</trans-unit>
+			<trans-unit id="table.button.unhide">
+				<source>Un-hide record</source>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source>View filtered</source>
 			</trans-unit>
 			<trans-unit id="search.filtered.text">
 				<source>By using the 🔍 search you can filter the event list</source>
+			</trans-unit>
+			<trans-unit id="table.button.save">
+				<source>Save</source>
+			</trans-unit>
+			<trans-unit id="table.button.cancel">
+				<source>Cancel</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.title">
+				<source>Delete file</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.message">
+				<source>Are you sure you want to delete this file?</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.title">
+				<source>Delete record</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.message">
+				<source>Are you sure you want to delete this record?</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.cancel">
+				<source>No, cancel</source>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.confirm">
+				<source>Yes, delete</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.title">
+				<source>File deleted</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.message">
+				<source>The file has been deleted successfully</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.title">
+				<source>Record deleted</source>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.message">
+				<source>The record has been deleted successfully</source>
+			</trans-unit>
+			<trans-unit id="header.button.download">
+				<source>Download</source>
+			</trans-unit>
+			<trans-unit id="header.button.showColumns">
+				<source>Show columns</source>
+			</trans-unit>
+			<trans-unit id="showColumns.filter">
+				<source>Filter by</source>
+			</trans-unit>
+			<trans-unit id="showColumns.placeholder">
+				<source>Enter search term</source>
+			</trans-unit>
+			<trans-unit id="showColumns.checkAll">
+				<source>Check all</source>
+			</trans-unit>
+			<trans-unit id="showColumns.checkNone">
+				<source>Uncheck all</source>
+			</trans-unit>
+			<trans-unit id="showColumns.toggle">
+				<source>Toggle selection</source>
+			</trans-unit>
+			<trans-unit id="showColumns.abort">
+				<source>Abort</source>
+			</trans-unit>
+			<trans-unit id="showColumns.refresh">
+				<source>Refresh</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.label">
+				<source>Type</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.eq">
+				<source>Equals</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.neq">
+				<source>Is not</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.like">
+				<source>Contains</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.notLike">
+				<source>Does not contain</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.gt">
+				<source>Greater than</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.lt">
+				<source>Less than</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.in">
+				<source>Contains</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.notIn">
+				<source>Contains</source>
 			</trans-unit>
 		</body>
 	</file>

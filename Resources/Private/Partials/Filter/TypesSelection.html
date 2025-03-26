@@ -1,0 +1,13 @@
+<label for="filter[{colConfig.columnName}][expr]" class="form-label">
+    {f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.expr.label')}
+</label>
+<f:form.select
+    value="{colConfig.filter.expr}"
+    class="form-select"
+    name="filter[{colConfig.columnName}][expr]">
+    <f:for each="{options}" as="option">
+        <f:form.select.option
+            value="{option}"
+            label="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.expr.{option}')}" />
+    </f:for>
+</f:form.select>

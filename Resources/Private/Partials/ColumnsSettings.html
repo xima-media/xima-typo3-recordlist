@@ -1,0 +1,118 @@
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+
+<div class="sticky-form-actions border-bottom">
+    <div class="row row-cols-auto justify-content-between">
+        <div class="col flex-grow-1">
+            <div class="input-group">
+                <span class="input-group-addon" id="columns-filter-label">
+                    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:
+                </span>
+                <input
+                    type="search"
+                    name="columns-filter"
+                    class="form-control"
+                    value=""
+                    aria-labelledby="columns-filter-label"
+                    placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.placeholder')}">
+            </div>
+        </div>
+        <div class="col">
+            <div class="row row-cols-auto justify-content-end g-2 t3js-column-selector-actions">
+                <div class="col">
+                    <button type="button" class="btn btn-default" data-action="select-all">
+                        <core:icon identifier="actions-check-square" />
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkAll')}
+                    </button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-default" data-action="select-none">
+                        <core:icon identifier="actions-square" />
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkNone')}
+                    </button>
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-default" data-action="select-toggle">
+                        <core:icon identifier="actions-document-select" />
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.toggle')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="row" id="sortable-list">
+
+    <f:for each="{tableConfiguration.columns}" as="column">
+        <li class="col-6 t3js-column-selector-container d-flex gap-3 pt-2" data-column-name="{column.label}{column.columnName}">
+            <div class="form-check-icon">
+                <span class="drag mt-1"></span>
+            </div>
+            <div class="form-check form-check-type-icon-toggle disabled">
+                <input type="checkbox"
+                    id="select-column-{column.columnName}"
+                    name="selectedColumns[]"
+                    class="form-check-input t3js-column-selector"
+                    value="{column.columnName}"
+                    {f:if(condition:
+                    column.active,
+                    then:
+                'checked')}>
+                <label class="form-check-label" for="select-column-{column.columnName}">
+                    <span class="form-check-label-icon">
+                        <span class="form-check-label-icon-checked">
+                            <core:icon identifier="actions-check" />
+                        </span>
+                        <span class="form-check-label-icon-unchecked">
+                            <core:icon identifier="miscellaneous-placeholder" />
+                        </span>
+                    </span>
+                    <span>{column.label}</span>
+                    <span class="text-body-secondary font-monospace">[{column.columnName}]</span>
+                </label>
+            </div>
+        </li>
+    </f:for>
+
+</ul>
+
+<style>
+    /** Strange fix */
+    input[name="columns-filter"] {
+        width: 1px !important;
+    }
+
+    #sortable-list {
+        margin: 0;
+        padding: 0;
+    }
+
+    #sortable-list li {
+        cursor: move;
+    }
+
+    span.drag {
+        display: inline-block;
+        width: 8px;
+        height: 16px;
+        cursor: move;
+    }
+
+    span.drag,
+    span.drag::before {
+        background-image: radial-gradient(black 40%, transparent 40%);
+        background-size: 4px 4px;
+        background-position: 0 100%;
+        background-repeat: repeat;
+    }
+
+    span.drag::before {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+</style>
+
+</html>

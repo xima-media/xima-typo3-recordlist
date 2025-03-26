@@ -6,5 +6,5 @@ interface BackendControllerInterface
 {
     public function getRecordPid(): int;
 
-    public const TABLE_NAME = '';
+    public function getTableName(): string;
 }

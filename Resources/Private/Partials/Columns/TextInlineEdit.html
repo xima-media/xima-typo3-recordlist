@@ -1,0 +1,32 @@
+{namespace be=TYPO3\CMS\Backend\ViewHelpers}
+
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-inline-edit.js'}" />
+
+<f:if condition="{item.editable}">
+    <f:then>
+        <div class="text-inline-edit" data-column="{colConfig.columnName}">
+            <span
+                class="inline-edit"
+                contenteditable="true"
+                id="{colConfig.columnName}-{item.uid}" data-original-value="{item.{colConfig.columnName}}">{item.{colConfig.columnName}}
+            </span>
+            <button
+                data-action="save"
+                type="button"
+                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.save')}"
+                class="btn btn-sm btn-success">
+                <core:icon identifier="actions-check" />
+            </button>
+            <button
+                data-action="close"
+                type="button"
+                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.cancel')}"
+                class="btn btn-sm btn-danger">
+                <core:icon identifier="actions-close" />
+            </button>
+        </div>
+    </f:then>
+    <f:else>
+        <span class="workspace-state-{item.state}">{item.{colConfig.columnName}}</span>
+    </f:else>
+</f:if>

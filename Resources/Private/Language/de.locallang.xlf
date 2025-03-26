@@ -27,6 +27,10 @@
 				<source />
 				<target>Suchen</target>
 			</trans-unit>
+			<trans-unit id="filter.label.search">
+				<source />
+				<target>Suche</target>
+			</trans-unit>
 			<trans-unit id="table.filter.label">
 				<source />
 				<target>Einträge filtern</target>
@@ -95,6 +99,22 @@
 				<source />
 				<target>Übersetzung erstellen</target>
 			</trans-unit>
+			<trans-unit id="table.button.translate_deepl">
+				<source />
+				<target>Übersetzung mit DeepL erstellen</target>
+			</trans-unit>
+			<trans-unit id="table.button.duplicate">
+				<source />
+				<target>Duplizieren</target>
+			</trans-unit>
+			<trans-unit id="table.button.hide">
+				<source />
+				<target>Datensatz verbergen</target>
+			</trans-unit>
+			<trans-unit id="table.button.unhide">
+				<source />
+				<target>Datensatz einblenden</target>
+			</trans-unit>
 			<trans-unit id="search.filtered.headline">
 				<source />
 				<target>Ansicht gefiltert</target>
@@ -102,6 +122,122 @@
 			<trans-unit id="search.filtered.text">
 				<source />
 				<target>Über die 🔍 Suche können die Veranstaltungen gefiltert werden</target>
+			</trans-unit>
+			<trans-unit id="table.button.save">
+				<source />
+				<target>Speichern</target>
+			</trans-unit>
+			<trans-unit id="table.button.cancel">
+				<source />
+				<target>Abbrechen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.title">
+				<source />
+				<target>Datei löschen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.message">
+				<source />
+				<target>Sind Sie sicher, dass Sie diese Datei löschen möchten?</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.title">
+				<source />
+				<target>Eintrag löschen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.record.message">
+				<source />
+				<target>Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.cancel">
+				<source />
+				<target>Nein, abbrechen</target>
+			</trans-unit>
+			<trans-unit id="modal.delete.button.confirm">
+				<source />
+				<target>Ja, löschen</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.title">
+				<source />
+				<target>Datei gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.success.message">
+				<source />
+				<target>Die Datei wurde erfolgreich gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.title">
+				<source />
+				<target>Eintrag gelöscht</target>
+			</trans-unit>
+			<trans-unit id="notification.delete.record.success.message">
+				<source />
+				<target>Der Eintrag wurde erfolgreich gelöscht</target>
+			</trans-unit>
+			<trans-unit id="header.button.showColumns">
+				<source />
+				<target>Spalten anpassen</target>
+			</trans-unit>
+			<trans-unit id="showColumns.filter">
+				<source />
+				<target>Filtern nach</target>
+			</trans-unit>
+			<trans-unit id="showColumns.placeholder">
+				<source />
+				<target>Suchbegriff eingeben</target>
+			</trans-unit>
+			<trans-unit id="showColumns.checkAll">
+				<source />
+				<target>Alle auswählen</target>
+			</trans-unit>
+			<trans-unit id="showColumns.checkNone">
+				<source />
+				<target>Keine auswählen</target>
+			</trans-unit>
+			<trans-unit id="showColumns.toggle">
+				<source />
+				<target>Auswahl umkehren</target>
+			</trans-unit>
+			<trans-unit id="showColumns.abort">
+				<source />
+				<target>Abbruch</target>
+			</trans-unit>
+			<trans-unit id="showColumns.refresh">
+				<source />
+				<target>Aktualisieren</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.label">
+				<source />
+				<target>Art</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.eq">
+				<source />
+				<target>Ist genau</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.neq">
+				<source />
+				<target>Ist nicht</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.like">
+				<source />
+				<target>Enthält</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.notLike">
+				<source />
+				<target>Enthält nicht</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.gt">
+				<source />
+				<target>Mehr als</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.lt">
+				<source />
+				<target>Weniger als</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.in">
+				<source />
+				<target>Enthält</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.notIn">
+				<source />
+				<target>Enthält nicht</target>
 			</trans-unit>
 		</body>
 	</file>

@@ -1,12 +1,13 @@
 {namespace be=TYPO3\CMS\Backend\ViewHelpers}
 
 <f:if condition="{item.editable}">
-	<be:link.editRecord uid="{item.uid}"
-						table="{table}"
-						returnUrl="{f:be.uri(route: moduleName)}"
-						class="btn btn-default"
-						title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
-						data="{bs-toggle: 'tooltip'}">
-		<core:icon identifier="actions-open" size="small" />
-	</be:link.editRecord>
+    <be:link.editRecord
+        uid="{item.uid}"
+        table="{table}"
+        returnUrl="{f:be.uri(route: moduleName)}"
+        class="btn btn-default"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+        data="{bs-toggle: 'tooltip'}">
+        <core:icon identifier="actions-open" size="small" />
+    </be:link.editRecord>
 </f:if>
