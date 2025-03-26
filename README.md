@@ -4,6 +4,16 @@ This package allows you to quickly create backend modules for advanced record li
 
 Optional workspaces integration: More simple workflow for requesting and approving changes.
 
+![Screenshot](Documentation/Images/Preview.png)
+
+## Features
+
+* List records from any table
+* Filter records by any field
+* Sort records by any field
+* Configurable + sortable columns
+* Inline editing support
+
 ## Install
 
 ```bash
