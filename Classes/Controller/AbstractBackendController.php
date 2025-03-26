@@ -76,7 +76,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $languages = [];
 
+    /** @var array<string, array<string|int, mixed>> */
     protected array $records = [];
+
+    protected array $tableConfiguration = [];
 
     protected EditableArrayPaginator $paginator;
 
@@ -170,12 +173,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return $this->downloadRecords();
         }
 
+        // set columns, actions and group actions
+        $this->initTableConfiguration();
+        $this->modifyTableConfiguration();
+        $this->processTableConfiguration();
+
         // init pager -> modifies all records!
         $this->initPaginator();
         $this->modifyPaginatedRecords();
         $this->setPaginatorItems();
-
-        $this->createColumnConfiguration();
 
         $this->configureModuleTemplateDocHeader();
         return $this->moduleTemplate->renderResponse($this::TEMPLATE_NAME);
@@ -743,6 +749,179 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $response;
     }
 
+    public function initTableConfiguration(): void
+    {
+        $tableName = $this->getTableName();
+        $defaultColumn = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
+        $languageColumn = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
+
+        $columns = [];
+        foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
+            // label column (default)
+            if ($columnName === $defaultColumn) {
+                $columns[$columnName] = [
+                    'columnName' => $columnName,
+                    'label' => $config['label'] ?? '',
+                    'partial' => 'Text',
+                    'languageIndent' => true,
+                    'icon' => true,
+                    'active' => true,
+                    'defaultPosition' => 1,
+                ];
+                continue;
+            }
+
+            $partial = 'Text';
+            $filter = [
+                'partial' => 'Text',
+            ];
+
+            if ($columnName === $languageColumn) {
+                $partial = 'Language';
+                $items = array_map(
+                    static fn($language) => ['label' => $language['title'], 'value' => $language['uid'] === 'all' ? '' : $language['uid']],
+                    $this->getLanguages()
+                );
+                $filter = [
+                    'partial' => 'Select',
+                    'items' => $items,
+                ];
+            }
+
+            if ($config['config']['type'] === 'datetime') {
+                $partial = 'DateTime';
+                $filter = [
+                    'partial' => 'DateTime',
+                ];
+            }
+
+            if ($config['config']['type'] === 'check') {
+                $partial = 'Boolean';
+                $filter = [
+                    'partial' => 'Checkbox',
+                ];
+            }
+
+            if ($config['config']['type'] === 'select') {
+                $partial = 'Select';
+                $items = [];
+                foreach ($config['config']['items'] ?? [] as $item) {
+                    $items[$item['value']] = [
+                        'label' => $this->getLanguageService()->sL($item['label']),
+                        'value' => $item['value'],
+                    ];
+                }
+                $filter = [
+                    'partial' => 'Select',
+                    'items' => $items,
+                ];
+            }
+
+            if ($config['config']['type'] === 'select' && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
+                //$partial = 'Category';
+                $filter = [
+                    'partial' => 'Category',
+                ];
+            }
+
+            $columns[$columnName] = [
+                'columnName' => $columnName,
+                'label' => $config['label'] ?? '',
+                'partial' => $partial,
+                'languageIndent' => false,
+                'icon' => false,
+                'active' => false,
+                'filter' => $filter,
+                'defaultPosition' => 0,
+            ];
+        }
+
+        if ($this::WORKSPACE_ID) {
+            $columns['workspace-status'] = [
+                'columnName' => 'workspace-status',
+                'partial' => 'Workspace',
+                'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
+                'notSortable' => true,
+                'active' => false,
+                'filter' => [
+                    'partial' => 'Workspace',
+                ],
+            ];
+        }
+
+        ksort($columns);
+
+        $this->tableConfiguration = [
+            'columns' => $columns,
+            'groupActions' => [
+                'Translate',
+                'TranslateDeepl',
+                'Edit',
+                'HiddenToggle',
+                'Duplicate',
+                'Changelog',
+                'Revert',
+                'View',
+            ],
+            'actions' => [
+                'EditOriginal',
+                'Publish',
+                'ReadyToPublish',
+            ],
+        ];
+    }
+
+    protected function modifyTableConfiguration(): void
+    {
+    }
+
+    protected function processTableConfiguration(): void
+    {
+
+        $body = $this->request->getParsedBody();
+
+        $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
+        if (!count($activeColumns)) {
+            $defaultColumns = array_filter($this->tableConfiguration['columns'],
+                static fn($column) => isset($column['defaultPosition']) && $column['defaultPosition'] > 0);
+            uasort($defaultColumns, static fn($a, $b) => $a['defaultPosition'] <=> $b['defaultPosition']);
+            $activeColumns = array_keys($defaultColumns);
+        }
+
+        foreach ($this->tableConfiguration['columns'] as $columnName => &$column) {
+            // translate label
+            if (!isset($column['label'])) {
+                $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName]['label'] ?? '';
+            }
+            $column['label'] = $this->getLanguageService()->sL($column['label']);
+
+            // set filter value
+            if (isset($body['filter'][$columnName]['value']) && $body['filter'][$columnName]['value'] !== '') {
+                $column['filter']['value'] = $body['filter'][$columnName]['value'];
+            }
+
+            // set filter expr
+            if (!empty($body['filter'][$columnName]['expr'] ?? '')) {
+                $column['filter']['expr'] = $body['filter'][$columnName]['expr'];
+            }
+
+            // set active state
+            $column['active'] = in_array($columnName, $activeColumns, true);
+        }
+        unset($column);
+
+        // sort active columns to top
+        $sortedColumns = [];
+        foreach ($activeColumns as $activeColumn) {
+            $sortedColumns[] = $this->tableConfiguration['columns'][$activeColumn];
+        }
+        $sortedColumns = array_merge($sortedColumns, array_diff_key($this->tableConfiguration['columns'], array_flip($activeColumns)));
+
+        $this->tableConfiguration['columns'] = $sortedColumns;
+        $this->tableConfiguration['columnCount'] = count($activeColumns) + (isset($this->tableConfiguration['groupActions']) || isset($this->tableConfiguration['actions']) ? 1 : 0);
+        $this->moduleTemplate->assign('tableConfiguration', $this->tableConfiguration);
+    }
+
     protected function initPaginator(): void
     {
         $body = (array)$this->request->getParsedBody();
@@ -879,181 +1058,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('paginator', $this->paginator);
     }
 
-    protected function createColumnConfiguration(): void
-    {
-        $tableConfiguration = $this->getTableConfiguration();
-        $body = $this->request->getParsedBody();
-
-        $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
-        if (!count($activeColumns)) {
-            $defaultColumns = array_filter($tableConfiguration['columns'], static fn ($column) => isset($column['defaultPosition']) && $column['defaultPosition'] > 0);
-            uasort($defaultColumns, static fn ($a, $b) => $a['defaultPosition'] <=> $b['defaultPosition']);
-            $activeColumns = array_keys($defaultColumns);
-        }
-
-        foreach ($tableConfiguration['columns'] as $columnName => &$column) {
-            // translate label
-            if (!isset($column['label'])) {
-                $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName]['label'] ?? '';
-            }
-            $column['label'] = $this->getLanguageService()->sL($column['label']);
-
-            // set filter value
-            if (isset($body['filter'][$columnName]['value']) && $body['filter'][$columnName]['value'] !== '') {
-                $column['filter']['value'] = $body['filter'][$columnName]['value'];
-            }
-
-            // set filter expr
-            if (!empty($body['filter'][$columnName]['expr'] ?? '')) {
-                $column['filter']['expr'] = $body['filter'][$columnName]['expr'];
-            }
-
-            // set active state
-            if (in_array($columnName, $activeColumns, true)) {
-                $column['active'] = true;
-            }
-        }
-        unset($column);
-
-        // sort active columns to top
-        $sortedColumns = [];
-        foreach ($activeColumns as $activeColumn) {
-            $sortedColumns[] = $tableConfiguration['columns'][$activeColumn];
-        }
-        $sortedColumns = array_merge($sortedColumns, array_diff_key($tableConfiguration['columns'], array_flip($activeColumns)));
-
-        $tableConfiguration['columns'] = $sortedColumns;
-        $tableConfiguration['columnCount'] = count($activeColumns) + (isset($tableConfiguration['groupActions']) || isset($tableConfiguration['actions']) ? 1 : 0);
-        $this->moduleTemplate->assign('tableConfiguration', $tableConfiguration);
-    }
-
-    /**
-     * @return array<string, array<string|int, mixed>>
-     */
-    public function getTableConfiguration(): array
-    {
-        $tableName = $this->getTableName();
-        $defaultColumn = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
-        $languageColumn = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
-
-        $columns = [];
-        foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
-            // label column (default)
-            if ($columnName === $defaultColumn) {
-                $columns[$columnName] = [
-                    'columnName' => $columnName,
-                    'label' => $config['label'] ?? '',
-                    'partial' => 'Text',
-                    'languageIndent' => true,
-                    'icon' => true,
-                    'active' => true,
-                    'defaultPosition' => 1,
-                ];
-                continue;
-            }
-
-            $partial = 'Text';
-            $filter = [
-                'partial' => 'Text',
-            ];
-
-            if ($columnName === $languageColumn) {
-                $partial = 'Language';
-                $items = array_map(
-                    static fn ($language) => ['label' => $language['title'], 'value' => $language['uid'] === 'all' ? '' : $language['uid']],
-                    $this->getLanguages()
-                );
-                $filter = [
-                    'partial' => 'Select',
-                    'items' => $items,
-                ];
-            }
-
-            if ($config['config']['type'] === 'datetime') {
-                $partial = 'DateTime';
-                $filter = [
-                    'partial' => 'DateTime',
-                ];
-            }
-
-            if ($config['config']['type'] === 'check') {
-                $partial = 'Boolean';
-                $filter = [
-                    'partial' => 'Checkbox',
-                ];
-            }
-
-            if ($config['config']['type'] === 'select') {
-                $partial = 'Select';
-                $items = [];
-                foreach ($config['config']['items'] ?? [] as $item) {
-                    $items[$item['value']] = [
-                        'label' => $this->getLanguageService()->sL($item['label']),
-                        'value' => $item['value'],
-                    ];
-                }
-                $filter = [
-                    'partial' => 'Select',
-                    'items' => $items,
-                ];
-            }
-
-            if ($config['config']['type'] === 'select' && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
-                //$partial = 'Category';
-                $filter = [
-                    'partial' => 'Category',
-                ];
-            }
-
-            $columns[$columnName] = [
-                'columnName' => $columnName,
-                'label' => $config['label'] ?? '',
-                'partial' => $partial,
-                'languageIndent' => false,
-                'icon' => false,
-                'active' => false,
-                'filter' => $filter,
-                'defaultPosition' => 0,
-            ];
-        }
-
-        if ($this::WORKSPACE_ID) {
-            $columns['workspace-status'] = [
-                'columnName' => 'workspace-status',
-                'partial' => 'Workspace',
-                'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status',
-                'notSortable' => true,
-                'active' => false,
-                'filter' => [
-                    'partial' => 'Workspace',
-                ],
-            ];
-        }
-
-        ksort($columns);
-
-        $config = [
-            'columns' => $columns,
-            'groupActions' => [
-                'Translate',
-                'TranslateDeepl',
-                'Edit',
-                'HiddenToggle',
-                'Duplicate',
-                'Changelog',
-                'Revert',
-                'View',
-            ],
-            'actions' => [
-                'EditOriginal',
-                'Publish',
-                'ReadyToPublish',
-            ],
-        ];
-
-        return $config;
-    }
-
     protected function configureModuleTemplateDocHeader(): void
     {
         // new buttons
@@ -1118,7 +1122,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-download-button.js')
-                ->instance($this->getTableName(), $this->getTableConfiguration())
+                ->instance($this->getTableName(), $this->tableConfiguration['columns'])
         );
 
         $url = $this->backendUriBuilder->buildUriFromRoutePath($this->request->getAttribute('module')->getPath());

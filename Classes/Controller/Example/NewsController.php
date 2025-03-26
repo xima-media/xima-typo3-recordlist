@@ -20,12 +20,9 @@ class NewsController extends AbstractBackendController
         return 'tx_news_domain_model_news';
     }
 
-    public function getTableConfiguration(): array
+    public function modifyTableConfiguration(): void
     {
-        $configuration = parent::getTableConfiguration();
-        $configuration['columns']['teaser']['partial'] = 'TextInlineEdit';
-        $configuration['columns']['workspace-status']['defaultPosition'] = 2;
-
-        return $configuration;
+        $this->tableConfiguration['columns']['teaser']['partial'] = 'TextInlineEdit';
+        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 2;
     }
 }

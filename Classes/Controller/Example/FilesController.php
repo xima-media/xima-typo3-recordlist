@@ -48,29 +48,26 @@ class FilesController extends AbstractBackendController
         $record['sysFile'] = $this->resourceFactory->getFileObjectByStorageAndIdentifier($record['s1_storage'], $record['s1_identifier']);
     }
 
-    public function getTableConfiguration(): array
+    public function modifyTableConfiguration(): void
     {
-        $tableConfiguration = parent::getTableConfiguration();
-
-        $tableConfiguration['columns']['fileinfo'] = [
+        $this->tableConfiguration['columns']['fileinfo'] = [
             'label' => 'Vorschau',
             'columnName' => 'fileinfo',
             'partial' => 'Thumbnail',
             'defaultPosition' => 1,
         ];
 
-        $tableConfiguration['columns']['file']['partial'] = 'SysFile';
-        $tableConfiguration['columns']['file']['defaultPosition'] = 2;
+        $this->tableConfiguration['columns']['file']['partial'] = 'SysFile';
+        $this->tableConfiguration['columns']['file']['defaultPosition'] = 2;
 
-        $tableConfiguration['columns']['title']['defaultPosition'] = 3;
-        $tableConfiguration['columns']['alternative']['defaultPosition'] = 4;
-        $tableConfiguration['columns']['description']['defaultPosition'] = 5;
+        $this->tableConfiguration['columns']['title']['defaultPosition'] = 3;
+        $this->tableConfiguration['columns']['alternative']['defaultPosition'] = 4;
+        $this->tableConfiguration['columns']['description']['defaultPosition'] = 5;
 
-        $tableConfiguration['groupActions'] = [
+        $this->tableConfiguration['groupActions'] = [
             'Edit',
             'DeleteFile',
         ];
-        return $tableConfiguration;
     }
 
     protected function addOrderConstraint(): void
