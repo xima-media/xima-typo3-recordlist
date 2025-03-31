@@ -1166,10 +1166,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $url = $this->backendUriBuilder->buildUriFromRoutePath($this->request->getAttribute('module')->getPath());
 
-        $downloadArguments = $this->request->getQueryParams();
-
         $this->moduleTemplate->assignMultiple([
-            'downloadArguments' => $downloadArguments,
             'formats' => array_keys(self::DOWNLOAD_FORMATS),
             'formatOptions' => self::DOWNLOAD_FORMATS,
         ]);
