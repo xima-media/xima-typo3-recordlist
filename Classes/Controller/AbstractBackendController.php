@@ -152,7 +152,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
         $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
         $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
-        $this->moduleTemplate->assign('workspaceId', self::WORKSPACE_ID);
+        $this->moduleTemplate->assign('workspaceId', static::WORKSPACE_ID);
         $this->moduleTemplate->assign('languages', $this->getLanguages());
         $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
         $this->moduleTemplate->assign('table', $this->getTableName());

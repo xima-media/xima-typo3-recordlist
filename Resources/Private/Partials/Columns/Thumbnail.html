@@ -1,8 +1,9 @@
 {namespace be=TYPO3\CMS\Backend\ViewHelpers}
+{namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
 <f:if condition="{item.sysFile} && {item.sysFile.type} == 2">
-    <be:link.editRecord
-        uid="{item.uid}" table="{table}" returnUrl="{f:be.uri(route: moduleName)}">
+    <xm:link.editRecord
+        returnUrl="{f:be.uri(route: moduleName)}" table="{table}" uid="{item.uid}" workspaceId="{workspaceId}">
         <be:thumbnail image="{item.sysFile}" width="50" height="50" />
-    </be:link.editRecord>
+    </xm:link.editRecord>
 </f:if>

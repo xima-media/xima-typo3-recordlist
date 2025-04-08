@@ -1,18 +1,19 @@
 <html
     data-namespace-typo3-fluid="true"
-    xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    xmlns:xm="http://typo3.org/ns/Xima/XimaTypo3Recordlist/ViewHelpers"
     xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
 <f:if condition="{item.sys_language_uid} == 0">
-    <be:link.editRecord
+    <xm:link.editRecord
         class="btn btn-default duplicate"
         data="{bs-toggle: 'tooltip'}"
         table="{table}"
         title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.duplicate')}"
-        uid="{item.uid}">
+        uid="{item.uid}"
+        workspaceId="{workspaceId}">
         <core:icon identifier="actions-duplicate" size="small" />
-    </be:link.editRecord>
+    </xm:link.editRecord>
 </f:if>
 
 </html>
