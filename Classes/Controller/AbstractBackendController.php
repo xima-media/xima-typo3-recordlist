@@ -486,6 +486,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     }
                     $field = 'uid';
                 }
+                if (isset($data['dataType']) && $data['dataType'] === 'date') {
+                    $data['value'] = strtotime($data['value']);
+                }
                 match ($data['expr'] ?? '') {
                     'neq' => $this->additionalConstraints[] = $this->queryBuilder->expr()->neq(
                         't1.' . $field,
