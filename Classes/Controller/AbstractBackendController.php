@@ -1023,7 +1023,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $record['possible_translations'] ??= [];
                 $record['possible_translations'][$languageUid] = $targetUrl;
 
-                if (ExtensionManagementUtility::isLoaded('wv_deepltranslate') && \WebVision\WvDeepltranslate\Utility\DeeplBackendUtility::isDeeplApiKeySet()) {
+                if (ExtensionManagementUtility::isLoaded('deepltranslate_core') &&
+                    \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
+                ) {
                     $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
                         'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
                             'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
@@ -1032,12 +1034,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         'cmd' => [
                             $this->getTableName() => [
                                 $record['uid'] => [
-                                    'localize' => $languageUid,
-                                ],
-                            ],
-                            'localization' => [
-                                'custom' => [
-                                    'mode' => 'deepl',
+                                    'deepltranslate' => $languageUid,
                                 ],
                             ],
                         ],

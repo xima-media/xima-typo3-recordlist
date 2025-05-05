@@ -37,7 +37,7 @@
 	},
 	"suggest": {
 		"typo3/cms-workspaces": "For workspace integration",
-		"web-vision/wv_deepltranslate": "For DeepL integration"
+		"web-vision/deepltranslate-core": "For DeepL integration"
 	},
 	"autoload": {
 		"psr-4": {
