@@ -152,7 +152,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
         $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
         $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
-        $this->moduleTemplate->assign('workspaceId', self::WORKSPACE_ID);
+        $this->moduleTemplate->assign('workspaceId', static::WORKSPACE_ID);
         $this->moduleTemplate->assign('languages', $this->getLanguages());
         $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
         $this->moduleTemplate->assign('table', $this->getTableName());
@@ -490,6 +490,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         continue;
                     }
                     $field = 'uid';
+                }
+                if (isset($data['dataType']) && $data['dataType'] === 'date') {
+                    $data['value'] = strtotime($data['value']);
                 }
                 match ($data['expr'] ?? '') {
                     'neq' => $this->additionalConstraints[] = $this->queryBuilder->expr()->neq(
@@ -1025,7 +1028,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $record['possible_translations'] ??= [];
                 $record['possible_translations'][$languageUid] = $targetUrl;
 
-                if (ExtensionManagementUtility::isLoaded('wv_deepltranslate') && \WebVision\WvDeepltranslate\Utility\DeeplBackendUtility::isDeeplApiKeySet()) {
+                if (ExtensionManagementUtility::isLoaded('deepltranslate_core') &&
+                    \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
+                ) {
                     $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
                         'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
                             'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
@@ -1034,12 +1039,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         'cmd' => [
                             $this->getTableName() => [
                                 $record['uid'] => [
-                                    'localize' => $languageUid,
-                                ],
-                            ],
-                            'localization' => [
-                                'custom' => [
-                                    'mode' => 'deepl',
+                                    'deepltranslate' => $languageUid,
                                 ],
                             ],
                         ],
@@ -1171,10 +1171,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $url = $this->backendUriBuilder->buildUriFromRoutePath($this->request->getAttribute('module')->getPath());
 
-        $downloadArguments = $this->request->getQueryParams();
-
         $this->moduleTemplate->assignMultiple([
-            'downloadArguments' => $downloadArguments,
             'formats' => array_keys(self::DOWNLOAD_FORMATS),
             'formatOptions' => self::DOWNLOAD_FORMATS,
         ]);

@@ -4,7 +4,7 @@
     data-namespace-typo3-fluid="true">
 
 <f:be.pageRenderer
-    includeRequireJsModules="{0: 'TYPO3/CMS/Backend/Tooltip'}"
+    includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
     includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
 
 <f:render section="Before" arguments="{_all}" optional="true" />
@@ -25,6 +25,8 @@
             </div>
 
             <f:form>
+
+                <f:form.hidden name="id" value="{currentPid}" />
 
                 <div class="hidden" id="downloadSettingsForm">
                     <f:render partial="DownloadSettings" arguments="{_all}" />

@@ -36,7 +36,8 @@
 		"typo3/cms-workspaces": "^12.4 || ^13.4"
 	},
 	"suggest": {
-		"typo3/cms-workspaces": "For workspace integration"
+		"typo3/cms-workspaces": "For workspace integration",
+		"web-vision/deepltranslate-core": "For DeepL integration"
 	},
 	"autoload": {
 		"psr-4": {

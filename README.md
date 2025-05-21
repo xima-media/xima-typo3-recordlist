@@ -197,4 +197,4 @@ class UserController extends AbstractBackendController
 
 For easy development, you can use the provided ddev setup. Simply run `ddev start` and open the URL in your browser.
 
-After a `composer install`, you can run `ddev init-typo3` to setup a TYPO3 installation with example data. Login with `admin` / `Passw0rd!`.
+After a `composer install`, you can run `ddev init-typo3` to setup a TYPO3 installation with example data. Login with `admin` / `Passw0rd!` and `editor` / `Passw0rd!`.

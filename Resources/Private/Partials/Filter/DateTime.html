@@ -4,6 +4,7 @@
     <f:variable name="fieldName" value="filter[{colConfig.columnName}][value]"></f:variable>
     <f:variable name="fieldValue" value="{colConfig.filter.value}"></f:variable>
     <f:variable name="label" value="{colConfig.label}"></f:variable>
+    <f:form.hidden name="filter[{colConfig.columnName}][dataType]" value="date" />
 </f:if>
 
 <div class="row">
@@ -14,7 +15,7 @@
             class="formengine-field-item t3js-formengine-field-item d-flex w-100" recordfieldid="{fieldName}">
             <div class="input-group">
                 <f:form.textfield
-                    value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'c\', date: fieldValue)}')}"
+                    value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'Y-m-d\', date: fieldValue)}')}"
                     id="{fieldName}"
                     type="date"
                     name="{fieldName}"

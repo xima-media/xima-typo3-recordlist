@@ -21,7 +21,7 @@ class CurrentWorkspaceManipulation implements MiddlewareInterface
          */
         $route = $request->getAttribute('route');
         $identifier = $route->getOption('_identifier');
-        if ($identifier !== 'ajax_workspace_dispatch') {
+        if ($identifier !== 'ajax_workspace_dispatch' && $identifier !== 'record_edit') {
             return $handler->handle($request);
         }
 
