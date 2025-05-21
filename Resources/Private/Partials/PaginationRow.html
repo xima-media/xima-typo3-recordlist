@@ -39,30 +39,28 @@
                         </f:else>
                     </f:if>
 
-                    <li class="page-item " aria-hidden="true">
-                        <f:if condition="{prev_page}">
-                            <f:then>
-                                <li class="page-item" aria-hidden="true">
-                                    <a
-                                        class="page-link"
-                                        href="#"
-                                        data-currentpage="{current_page}"
-                                        data-nextpage="{prev_page}"
-                                        title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:previous')}"
-                                        aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:previous')}">
-                                        <core:icon identifier="actions-view-paging-previous" size="small" />
-                                    </a>
-                                </li>
-                            </f:then>
-                            <f:else>
-                                <li class="page-item disabled" aria-hidden="true">
-                                    <span class="page-link">
-                                        <core:icon identifier="actions-view-paging-previous" size="small" />
-                                    </span>
-                                </li>
-                            </f:else>
-                        </f:if>
-                    </li>
+                    <f:if condition="{prev_page}">
+                        <f:then>
+                            <li class="page-item" aria-hidden="true">
+                                <a
+                                    class="page-link"
+                                    href="#"
+                                    data-currentpage="{current_page}"
+                                    data-nextpage="{prev_page}"
+                                    title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:previous')}"
+                                    aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:previous')}">
+                                    <core:icon identifier="actions-view-paging-previous" size="small" />
+                                </a>
+                            </li>
+                        </f:then>
+                        <f:else>
+                            <li class="page-item disabled" aria-hidden="true">
+                                <span class="page-link">
+                                    <core:icon identifier="actions-view-paging-previous" size="small" />
+                                </span>
+                            </li>
+                        </f:else>
+                    </f:if>
 
                     <li class="page-item ">
                         <span class="page-link">
