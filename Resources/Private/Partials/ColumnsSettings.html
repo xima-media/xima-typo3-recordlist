@@ -1,43 +1,32 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
 
 <div class="sticky-form-actions border-bottom">
-    <div class="row row-cols-auto justify-content-between">
-        <div class="col flex-grow-1">
-            <div class="input-group">
-                <span class="input-group-addon" id="columns-filter-label">
-                    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:
-                </span>
-                <input
-                    type="search"
-                    name="columns-filter"
-                    class="form-control"
-                    value=""
-                    aria-labelledby="columns-filter-label"
-                    placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.placeholder')}">
-            </div>
-        </div>
-        <div class="col">
-            <div class="row row-cols-auto justify-content-end g-2 t3js-column-selector-actions">
-                <div class="col">
-                    <button type="button" class="btn btn-default" data-action="select-all">
-                        <core:icon identifier="actions-check-square" />
-                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkAll')}
-                    </button>
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-default" data-action="select-none">
-                        <core:icon identifier="actions-square" />
-                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkNone')}
-                    </button>
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-default" data-action="select-toggle">
-                        <core:icon identifier="actions-document-select" />
-                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.toggle')}
-                    </button>
-                </div>
-            </div>
-        </div>
+    <div class="input-group">
+        <span class="input-group-addon input-group-text" id="columns-filter-label">
+            {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:
+        </span>
+        <input
+            type="search"
+            name="columns-filter"
+            class="form-control"
+            value=""
+            aria-labelledby="columns-filter-label"
+            placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.placeholder')}">
+    </div>
+
+    <div class="btn-group t3js-column-selector-actions">
+        <button type="button" class="btn btn-default" data-action="select-all">
+            <core:icon identifier="actions-check-square" />
+            {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkAll')}
+        </button>
+        <button type="button" class="btn btn-default" data-action="select-none">
+            <core:icon identifier="actions-square" />
+            {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkNone')}
+        </button>
+        <button type="button" class="btn btn-default" data-action="select-toggle">
+            <core:icon identifier="actions-document-select" />
+            {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.toggle')}
+        </button>
     </div>
 </div>
 
