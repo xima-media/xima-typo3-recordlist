@@ -183,6 +183,12 @@
 			<trans-unit id="filter.expr.notIn">
 				<source>Contains</source>
 			</trans-unit>
+			<trans-unit id="pagination.page">
+				<source>Page</source>
+			</trans-unit>
+			<trans-unit id="pagination.of">
+				<source>of %1$d</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

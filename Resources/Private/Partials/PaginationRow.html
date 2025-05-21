@@ -1,85 +1,139 @@
 <f:if condition="{paginator.numberOfPages} > 1">
     <tr>
         <td colspan="{tableConfiguration.columnCount}">
-            <nav class="mb-2 mt-2" aria-labelledby="recordlist-pagination">
+            <nav aria-labelledby="recordlist-pagination">
 
-                <span id="recordlist-pagination" class="page-item ps-2 pe-2 pagination-label">
-                    Datensätze 1 - 100
-                    <span class="visually-hidden">, Seite {current_page} von {paginator.numberOfPages}</span>
-                </span>
+                <ul class="pagination mb-0">
+                    <li class="page-item">
+                        <span id="recordlist-pagination" class="page-link">
+                            <f:translate
+                                key="LLL:EXT:core/Resources/Private/Language/locallang_mod_web_list.xlf:rangeIndicator"
+                                arguments="{firstElement: '{paginator.keyOfFirstPaginatedItem + 1}', lastElement: '{paginator.keyOfLastPaginatedItem + 1}'}" />
+                            <span class="visually-hidden">,
+                                <f:translate
+                                    key="LLL:EXT:core/Resources/Private/Language/locallang_mod_web_list.xlf:pageIndicator"
+                                    arguments="{currentPage: current_page, totalPages: paginator.numberOfPages}" />
+                            </span>
+                        </span>
+                    </li>
 
-                <ul class="pagination">
-                    <li class="page-item ps-2" aria-hidden="true">
-                        <f:if condition="{current_page} !== 1">
-                            <f:then>
-                                <a href="#" data-nextpage="1" aria-label="Erste">
+                    <f:if condition="{current_page} !== 1">
+                        <f:then>
+                            <li class="page-item " aria-hidden="true">
+                                <a
+                                    class="page-link"
+                                    href="#"
+                                    data-nextpage="1"
+                                    aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:first')}"
+                                    title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:first')}">
                                     <core:icon identifier="actions-view-paging-first" size="small" />
                                 </a>
-                            </f:then>
-                            <f:else>
-                                <core:icon identifier="actions-view-paging-first" size="small" />
-                            </f:else>
-                        </f:if>
-                    </li>
-                    <li class="page-item ps-2" aria-hidden="true">
+                            </li>
+                        </f:then>
+                        <f:else>
+                            <li class="page-item disabled " aria-hidden="true">
+                                <span class="page-link">
+                                    <core:icon identifier="actions-view-paging-first" size="small" />
+                                </span>
+                            </li>
+                        </f:else>
+                    </f:if>
+
+                    <li class="page-item " aria-hidden="true">
                         <f:if condition="{prev_page}">
                             <f:then>
-                                <a
-                                    href="#" data-currentpage="{current_page}" data-nextpage="{prev_page}" aria-label="Nächste">
-                                    <core:icon identifier="actions-view-paging-previous" size="small" />
-                                </a>
+                                <li class="page-item" aria-hidden="true">
+                                    <a
+                                        class="page-link"
+                                        href="#"
+                                        data-currentpage="{current_page}"
+                                        data-nextpage="{prev_page}"
+                                        title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:previous')}"
+                                        aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:previous')}">
+                                        <core:icon identifier="actions-view-paging-previous" size="small" />
+                                    </a>
+                                </li>
                             </f:then>
                             <f:else>
-                                <core:icon identifier="actions-view-paging-previous" size="small" />
+                                <li class="page-item disabled" aria-hidden="true">
+                                    <span class="page-link">
+                                        <core:icon identifier="actions-view-paging-previous" size="small" />
+                                    </span>
+                                </li>
                             </f:else>
                         </f:if>
                     </li>
 
-                    <li class="page-item ps-2">
-                        <label>Seite
+                    <li class="page-item ">
+                        <span class="page-link">
+                            {f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:pagination.page')}
                             <f:form.textfield
                                 type="number"
                                 additionalAttributes="{autocomplete:'off'}"
                                 data="{current_page: current_page}"
                                 name="current_page"
                                 value="{current_page}"
+                                min="1"
+                                max="{paginator.numberOfPages}"
                                 size="3"
-                                class="t3js-recordlist-paging form-control form-control-xs paginator-input" />
-                        </label>
-                        <span aria-hidden="true">
-                            von {paginator.numberOfPages}
+                                class="t3js-recordlist-paging form-control form-control-sm paginator-input" />
+                            <span aria-hidden="true">
+                                {f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:pagination.of',
+                                arguments: {0: paginator.numberOfPages})}
+                            </span>
                         </span>
                     </li>
 
-                    <li class="page-item ps-2">
-                        <f:if condition="{next_page}">
-                            <f:then>
+                    <f:if condition="{next_page}">
+                        <f:then>
+                            <li class="page-item">
                                 <a
-                                    href="#" data-currentpage="{current_page}" data-nextpage="{next_page}" aria-label="Nächste">
+                                    class="page-link"
+                                    href="#"
+                                    data-currentpage="{current_page}"
+                                    data-nextpage="{next_page}"
+                                    title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:next')}"
+                                    aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:next')}">
                                     <core:icon identifier="actions-view-paging-next" size="small" />
                                 </a>
-                            </f:then>
-                            <f:else>
-                                <core:icon identifier="actions-view-paging-next" size="small" />
-                            </f:else>
-                        </f:if>
-                    </li>
-                    <li class="page-item ps-2">
-                        <f:if condition="{current_page} !== {paginator.numberOfPages}">
-                            <f:then>
-                                <a href="#" data-nextpage="{paginator.numberOfPages}" aria-label="Letzte">
+                            </li>
+                        </f:then>
+                        <f:else>
+                            <li class="page-item disabled" aria-hidden="true">
+                                <span class="page-link">
+                                    <core:icon identifier="actions-view-paging-next" size="small" />
+                                </span>
+                            </li>
+                        </f:else>
+                    </f:if>
+                    <f:if condition="{current_page} !== {paginator.numberOfPages}">
+                        <f:then>
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="#"
+                                    data-nextpage="{paginator.numberOfPages}"
+                                    aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:last')}"
+                                    title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:last')}">
                                     <core:icon identifier="actions-view-paging-last" size="small" />
                                 </a>
-                            </f:then>
-                            <f:else>
-                                <core:icon identifier="actions-view-paging-last" size="small" />
-                            </f:else>
-                        </f:if>
-
-                    </li>
-
-                    <li class="page-item ps-2">
-                        <a href="#" aria-label="Neu laden" data-nextpage="{current_page}">
+                            </li>
+                        </f:then>
+                        <f:else>
+                            <li class="page-item disabled" aria-hidden="true">
+                                <span class="page-link">
+                                    <core:icon identifier="actions-view-paging-last" size="small" />
+                                </span>
+                            </li>
+                        </f:else>
+                    </f:if>
+                    <li class="page-item">
+                        <a
+                            class="page-link"
+                            href="#"
+                            aria-label="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:reload')}"
+                            title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:reload')}"
+                            data-nextpage="{current_page}">
                             <core:icon identifier="actions-refresh" size="small" />
                         </a>
                     </li>
