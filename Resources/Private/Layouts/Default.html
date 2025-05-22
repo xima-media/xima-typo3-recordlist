@@ -150,7 +150,7 @@
                             </tbody>
                         </table>
 
-                        <f:if condition="{workspaceId}">
+                        <f:if condition="{typo3version} < 13 && {workspaceId}">
                             <h3>
                                 <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.label" />
                             </h3>

@@ -25,6 +25,7 @@ use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -145,6 +146,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $this->loadWorkspaceScripts();
 
+        $typo3Version = GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion();
+
         // build view
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         $this->moduleTemplate->assign('settings', $this->getModuleData()['settings'] ?? []);
@@ -156,6 +159,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('languages', $this->getLanguages());
         $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
         $this->moduleTemplate->assign('table', $this->getTableName());
+        $this->moduleTemplate->assign('typo3version', $typo3Version);
 
         // build and execute query
         $this->createQueryBuilder();
