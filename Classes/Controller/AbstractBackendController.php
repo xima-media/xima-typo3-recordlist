@@ -409,6 +409,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function isWorkspaceAdmin(): bool
     {
+        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+            return false;
+        }
+
         // TYPO3 v13+
         if (class_exists(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)) {
             return GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)->isGranted($this->getBackendAuthentication(), $this::WORKSPACE_ID);
