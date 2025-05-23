@@ -4,8 +4,13 @@
     data-namespace-typo3-fluid="true">
 
 <f:be.pageRenderer
-    includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
     includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
+
+<f:if condition="{typo3version} > 12">
+    <f:be.pageRenderer
+        includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
+        includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/contrib/tooltip.css'}" />
+</f:if>
 
 <f:render section="Before" arguments="{_all}" optional="true" />
 
