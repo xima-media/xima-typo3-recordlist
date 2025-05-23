@@ -146,8 +146,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $this->loadWorkspaceScripts();
 
-        $typo3Version = GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion();
-
         // build view
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
         $this->moduleTemplate->assign('settings', $this->getModuleData()['settings'] ?? []);
@@ -159,7 +157,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('languages', $this->getLanguages());
         $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
         $this->moduleTemplate->assign('table', $this->getTableName());
-        $this->moduleTemplate->assign('typo3version', $typo3Version);
+        $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
 
         // build and execute query
         $this->createQueryBuilder();
@@ -1261,5 +1259,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
+    }
+
+    protected function getTypo3Version(): int
+    {
+        return GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion();
     }
 }
