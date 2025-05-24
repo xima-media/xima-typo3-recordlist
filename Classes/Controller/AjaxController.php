@@ -14,6 +14,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class AjaxController
@@ -121,12 +122,13 @@ class AjaxController
 
     protected function isWorkspaceAdmin(int $workspaceId): bool
     {
+        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+            return false;
+        }
+
         // TYPO3 v13+
         if (class_exists(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)) {
-            return GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)->isGranted(
-                $this->getBackendAuthentication(),
-                $workspaceId
-            );
+            return GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)->isGranted($this->getBackendAuthentication(), $workspaceId);
         }
 
         return $this->getBackendAuthentication()->workspacePublishAccess($workspaceId);
