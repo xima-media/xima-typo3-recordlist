@@ -1,6 +1,6 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
 
-<div class="sticky-form-actions border-bottom">
+<div class="d-flex gap-3 sticky-form-actions border-bottom">
     <div class="input-group">
         <span class="input-group-addon input-group-text" id="columns-filter-label">
             {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:
@@ -14,7 +14,7 @@
             placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.placeholder')}">
     </div>
 
-    <div class="btn-group t3js-column-selector-actions">
+    <div class="btn-group t3js-column-selector-actions flex-shrink-0">
         <button type="button" class="btn btn-default" data-action="select-all">
             <core:icon identifier="actions-check-square" />
             {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkAll')}
