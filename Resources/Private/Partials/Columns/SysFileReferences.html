@@ -2,16 +2,16 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
 <f:if condition="{item.{colConfig.columnName} -> f:count()}">
-    <f:for each="{item.{colConfig.columnName}}" as="item">
-        <f:if condition="{item.properties.type} == '2'">
+    <f:for each="{item.{colConfig.columnName}}" as="file">
+        <f:if condition="{file.properties.type} == '2'">
             <xm:link.editRecord
                 returnUrl="{f:be.uri(route: moduleName)}" table="{table}" uid="{item.uid}" workspaceId="{workspaceId}">
-                <be:thumbnail image="{item}" width="50" height="50" />
+                <be:thumbnail image="{file}" width="50" height="50" />
             </xm:link.editRecord>
         </f:if>
-        <f:if condition="{item.properties.type} != '2'">
-            <core:iconForResource resource="{item.originalFile}" />
-            <f:link.file file="{item.originalFile}" target="_blank">{item.properties.name}</f:link.file>
+        <f:if condition="{file.properties.type} != '2'">
+            <core:iconForResource resource="{file.originalFile}" />
+            <f:link.file file="{file.originalFile}" target="_blank">{file.properties.name}</f:link.file>
         </f:if>
     </f:for>
 </f:if>

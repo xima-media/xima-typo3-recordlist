@@ -25,6 +25,7 @@ use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -156,6 +157,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('languages', $this->getLanguages());
         $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
         $this->moduleTemplate->assign('table', $this->getTableName());
+        $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
 
         // build and execute query
         $this->createQueryBuilder();
@@ -409,6 +411,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function isWorkspaceAdmin(): bool
     {
+        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+            return false;
+        }
+
+        // TYPO3 v13+
+        if (class_exists(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)) {
+            return GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)->isGranted($this->getBackendAuthentication(), $this::WORKSPACE_ID);
+        }
+
         return $this->getBackendAuthentication()->workspacePublishAccess($this::WORKSPACE_ID);
     }
 
@@ -1248,5 +1259,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
+    }
+
+    protected function getTypo3Version(): int
+    {
+        return GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion();
     }
 }
