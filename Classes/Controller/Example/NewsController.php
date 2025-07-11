@@ -44,7 +44,7 @@ class NewsController extends AbstractBackendController
             ],
         ];
 
-        if ($record['t3ver_oid']) {
+        if (isset($record['t3ver_wsid']) && $record['t3ver_wsid'] > 0) {
             $parameters['workspaceId'] = $this::WORKSPACE_ID;
         }
 
