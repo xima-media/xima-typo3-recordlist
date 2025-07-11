@@ -30,4 +30,29 @@ class NewsController extends AbstractBackendController
         $this->tableConfiguration['columns']['sys_language_uid']['defaultPosition'] = 5;
         $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 6;
     }
+
+    public function modifyRecord(array &$record): void
+    {
+        // Add url for view button
+        $uid = $record['t3ver_oid'] ?: $record['uid'];
+        $detailPid = 11;
+        $parameters = [
+            'tx_news_pi1' => [
+                'controller' => 'News',
+                'action' => 'detail',
+                'news' => $uid,
+            ],
+        ];
+
+        if ($record['t3ver_oid']) {
+            $parameters['workspaceId'] = $this::WORKSPACE_ID;
+        }
+
+        $url = $this->site->getRouter()->generateUri(
+            $detailPid,
+            $parameters
+        );
+
+        $record['url'] = $url;
+    }
 }

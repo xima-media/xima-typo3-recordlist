@@ -18,4 +18,12 @@ return [
             ],
         ],
     ],
+    'frontend' => [
+        'xima-typo3-recordlist/current-workspace-manipulation' => [
+            'target' => \Xima\XimaTypo3Recordlist\Middleware\CurrentWorkspaceManipulation::class,
+            'before' => [
+                'typo3/cms-workspaces/preview',
+            ],
+        ],
+    ],
 ];
