@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
+use TYPO3\CMS\Backend\Routing\PreviewUriBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\Buttons\GenericButton;
@@ -37,6 +38,7 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\CsvUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
@@ -978,6 +980,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addHiddenToggleButton();
         $this->addSysFileReferences();
         $this->addSysFiles();
+        $this->addPreviewButton();
     }
 
     protected function addTranslationButtons(): void
@@ -1097,6 +1100,34 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             foreach ($this->records as &$record) {
                 $record[$column['columnName']] = $this->resourceFactory->getFileObject($record[$column['columnName']]);
+            }
+        }
+    }
+
+    protected function addPreviewButton(): void
+    {
+        // check if preview is possible
+        $previewPageId = BackendUtility::getPagesTSconfig($this->getRecordPid())['TCEMAIN.']['preview.'][$this->getTableName() . '.']['previewPageId'] ?? 0;
+        if ($this->getTableName() !== 'pages' && !MathUtility::canBeInterpretedAsInteger($previewPageId)) {
+            return;
+        }
+
+        // save current workspace
+        $currentWorkspace = $this->getBackendAuthentication()->workspace;
+
+        foreach ($this->records as &$record) {
+            // override user workspace
+            if ($this::WORKSPACE_ID !== 0 && $record['t3ver_oid'] > 0) {
+                $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
+            }
+
+            $record['url'] = PreviewUriBuilder::createForRecordPreview($this->getTableName(), $record['uid'], $previewPageId)->buildUri();
+
+            // add workspace id to url + restore user workspace
+            if ($this::WORKSPACE_ID !== 0 && $record['t3ver_oid'] > 0) {
+                $record['url'] .= '&workspaceId=' . $this::WORKSPACE_ID;
+                // restore user workspace
+                $this->getBackendAuthentication()->workspace = $currentWorkspace;
             }
         }
     }
