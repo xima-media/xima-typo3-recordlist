@@ -9,7 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 
-class CurrentWorkspaceManipulation implements MiddlewareInterface
+class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
