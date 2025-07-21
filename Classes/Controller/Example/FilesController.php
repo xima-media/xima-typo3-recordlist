@@ -23,6 +23,7 @@ class FilesController extends AbstractBackendController
         $this->tableConfiguration['columns']['description']['defaultPosition'] = 4;
 
         $this->tableConfiguration['groupActions'] = [
+            'View',
             'Edit',
             'DeleteFile',
         ];
