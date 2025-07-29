@@ -12,7 +12,15 @@ return [
             ],
         ],
         'xima-typo3-recordlist/current-workspace-manipulation' => [
-            'target' => \Xima\XimaTypo3Recordlist\Middleware\CurrentWorkspaceManipulation::class,
+            'target' => \Xima\XimaTypo3Recordlist\Middleware\CurrentBackendWorkspaceManipulation::class,
+            'after' => [
+                'typo3/cms-core/response-propagation',
+            ],
+        ],
+    ],
+    'frontend' => [
+        'xima-typo3-recordlist/current-workspace-manipulation' => [
+            'target' => \Xima\XimaTypo3Recordlist\Middleware\CurrentFrontendWorkspaceManipulation::class,
             'after' => [
                 'typo3/cms-core/response-propagation',
             ],
