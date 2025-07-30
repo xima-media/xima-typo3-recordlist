@@ -38,6 +38,7 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\CsvUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\HttpUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
@@ -1097,7 +1098,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addPreviewButton(): void
     {
         // check if preview is possible
-        $previewPageId = BackendUtility::getPagesTSconfig($this->getRecordPid())['TCEMAIN.']['preview.'][$this->getTableName() . '.']['previewPageId'] ?? 0;
+        $previewSettings = BackendUtility::getPagesTSconfig($this->getRecordPid())['TCEMAIN.']['preview.'][$this->getTableName() . '.'] ?? [];
+        $previewPageId = $previewSettings['previewPageId'] ?? 0;
         if ($this->getTableName() !== 'pages' && $this->getTableName() !== 'tt_content' && !MathUtility::canBeInterpretedAsInteger($previewPageId)) {
             return;
         }
@@ -1124,6 +1126,26 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             if ($this->getTableName() === 'sys_file_metadata') {
                 $record['url'] = $record['file']?->getPublicUrl() ?? '';
+            } elseif ($this->getTypo3Version() === 12) {
+                $linkParameters = [];
+
+                // map record data to GET parameters
+                if (isset($previewSettings['fieldToParameterMap.'])) {
+                    foreach ($previewSettings['fieldToParameterMap.'] as $field => $parameterName) {
+                        $value = $record[$field] ?? '';
+                        $linkParameters[$parameterName] = $value;
+                    }
+                }
+
+                // add/override parameters by configuration
+                if (isset($previewSettings['additionalGetParameters.'])) {
+                    $linkParameters = array_replace($linkParameters, GeneralUtility::removeDotsFromTS($previewSettings['additionalGetParameters.']));
+                }
+
+                $previewUri = PreviewUriBuilder::create($previewPageId)
+                    ->withAdditionalQueryParameters(HttpUtility::buildQueryString($linkParameters, '&'))
+                    ->buildUri($previewSettings['fieldToParameterMap.'] ?? []);
+                $record['url'] = $previewUri;
             } else {
                 $record['url'] = PreviewUriBuilder::createForRecordPreview(
                     $this->getTableName(),
