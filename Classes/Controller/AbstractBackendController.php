@@ -1133,6 +1133,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 if (isset($previewSettings['fieldToParameterMap.'])) {
                     foreach ($previewSettings['fieldToParameterMap.'] as $field => $parameterName) {
                         $value = $record[$field] ?? '';
+                        if ($field === 'uid') {
+                            $value = $record['t3ver_oid'] === 0 ? $record['uid'] : $record['t3ver_oid'];
+                        }
                         $linkParameters[$parameterName] = $value;
                     }
                 }
