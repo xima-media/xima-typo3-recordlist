@@ -1109,7 +1109,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         foreach ($this->records as &$record) {
             // check if controller + record is workspace aware
-            $isWorkspaceAware = $this::WORKSPACE_ID !== 0 && isset($record['t3ver_oid']) && $record['t3ver_oid'] > 0;
+            $isWorkspaceAware = $this::WORKSPACE_ID !== 0 && isset($record['t3ver_wsid']) && $record['t3ver_wsid'] > 0;
 
             // override user workspace
             if ($isWorkspaceAware) {
