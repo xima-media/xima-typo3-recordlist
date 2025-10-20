@@ -634,9 +634,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             $record['editable'] = true;
-            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
+            $record['state'] = 'published';
 
-            // has version record => replace with versioned record
+            // if record has a version record => replace with versioned record
+            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
             if (is_array($vRecord)) {
                 $record = $vRecord;
                 $record['editable'] = true;
@@ -661,6 +662,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $workspaceStatus['level'] = 'success';
                     $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
                     $record['editable'] = $this->isWorkspaceAdmin();
+                    $record['state'] = 'pending';
 
                     $referencesToPublish = [];
                     foreach ($GLOBALS['TCA'][$this->getTableName()]['columns'] as $columnName => $column) {
