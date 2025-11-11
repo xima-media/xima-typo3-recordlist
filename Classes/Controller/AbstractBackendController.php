@@ -490,6 +490,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     // prepare for in constraint
                     $data['value'] = array_map('current', $uids);
                     if (empty($data['value'])) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
                         continue;
                     }
                     $field = 'uid';
