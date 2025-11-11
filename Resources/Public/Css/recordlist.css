@@ -37,3 +37,16 @@ span.inline-edit:focus-within {
 main.recordlist ul.pagination input.form-control {
     min-width: unset;
 }
+
+.category-badge {
+    font-weight: normal;
+    display: inline-flex;
+    line-height: 1.4;
+    gap: 4px;
+}
+
+.category-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}

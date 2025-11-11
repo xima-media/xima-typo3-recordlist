@@ -823,8 +823,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
-            if ($config['config']['type'] === 'select' && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
-                //$partial = 'Category';
+            if (in_array($config['config']['type'], ['select', 'category']) && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
+                $partial = 'Category';
                 $filter = [
                     'partial' => 'Category',
                 ];
@@ -976,6 +976,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addSysFileReferences();
         $this->addSysFiles();
         $this->addPreviewButton();
+        $this->addSysCategories();
     }
 
     protected function addTranslationButtons(): void
@@ -1162,6 +1163,68 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $record['url'] .= '&workspaceId=' . $this::WORKSPACE_ID;
                 // restore user workspace
                 $this->getBackendAuthentication()->workspace = $currentWorkspace;
+            }
+        }
+    }
+
+    protected function addSysCategories(): void
+    {
+        foreach ($this->tableConfiguration['columns'] as $column) {
+            if (($column['partial'] ?? '') !== 'Category') {
+                continue;
+            }
+
+            $recordUids = array_column($this->records, 'uid');
+            if (empty($recordUids)) {
+                continue;
+            }
+
+            $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $categoryRelations = $qb->select('mm.uid_foreign')
+                ->addSelectLiteral('GROUP_CONCAT(c.uid) as category_uids')
+                ->from('sys_category', 'c')
+                ->innerJoin('c', 'sys_category_record_mm', 'mm', $qb->expr()->and(
+                    $qb->expr()->eq('mm.uid_local', 'c.uid'),
+                    $qb->expr()->eq('mm.tablenames', $qb->createNamedParameter($this->getTableName())),
+                    $qb->expr()->eq('mm.fieldname', $qb->createNamedParameter($column['columnName'])),
+                    $qb->expr()->in('mm.uid_foreign', $qb->quoteArrayBasedValueListToIntegerList($recordUids))
+                ))
+                ->groupBy('mm.uid_foreign')
+                ->executeQuery()
+                ->fetchAllKeyValue();
+
+            $categoryUids = [];
+            foreach ($categoryRelations as &$relation) {
+                $relation = GeneralUtility::intExplode(',', $relation, true);
+                $categoryUids = array_merge($categoryUids, $relation);
+            }
+
+            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $categories = $queryBuilder->select('uid', 'title')
+                ->from('sys_category')
+                ->where(
+                    $queryBuilder->expr()->in(
+                        'uid',
+                        $queryBuilder->quoteArrayBasedValueListToIntegerList(array_unique($categoryUids))
+                    )
+                )
+                ->executeQuery()
+                ->fetchAllKeyValue();
+
+            foreach ($categoryRelations as &$categoryUids) {
+                foreach ($categoryUids as &$categoryUid) {
+                    $categoryUid = [
+                        'uid' => $categoryUid,
+                        'title' => $categories[$categoryUid] ?? '',
+                    ];
+                }
+            }
+
+            foreach ($this->records as &$record) {
+                if (!isset($categoryRelations[$record['uid']])) {
+                    continue;
+                }
+                $record['_' . $column['columnName']] = $categoryRelations[$record['uid']];
             }
         }
     }
