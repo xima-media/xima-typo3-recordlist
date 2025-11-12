@@ -35,7 +35,7 @@
                 <input type="hidden" name="stage" value="-99" />
             </div>
 
-            <f:form id="recordlist-search-form">
+            <f:form id="recordlist-search-form" section="sectionAnchor">
 
                 <f:form.hidden name="id" value="{currentPid}" />
 
@@ -80,6 +80,8 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="sectionAnchor"></div>
 
                 <f:render section="Headline" optional="true">
                     <h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then:
