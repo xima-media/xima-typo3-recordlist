@@ -1,9 +1,3 @@
-import Icons from '@typo3/backend/icons.js'
-import AjaxRequest from '@typo3/core/ajax/ajax-request.js'
-import Notification from "@typo3/backend/notification.js";
-import Modal from '@typo3/backend/modal.js';
-import {SeverityEnum} from '@typo3/backend/enum/severity.js'
-
 class RecordlistColCategory {
 
 
@@ -37,7 +31,6 @@ class RecordlistColCategory {
             valuesArray.splice(valueIndex, 1)
           }
           input.value = valuesArray.join(',')
-
         } else {
           overrideValuesArray.push(categoryUid)
           input.dataset.overridevalues = JSON.stringify(overrideValuesArray)
