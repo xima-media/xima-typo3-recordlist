@@ -33,3 +33,20 @@ span.inline-edit:focus-within {
 .table > tbody > tr:not([data-sys_language_uid="0"]) td[data-language-indent="1"] > *:first-child {
     margin-left: 16px;
 }
+
+main.recordlist ul.pagination input.form-control {
+    min-width: unset;
+}
+
+.category-badge {
+    font-weight: normal;
+    display: inline-flex;
+    line-height: 1.4;
+    gap: 4px;
+}
+
+.category-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}

@@ -4,6 +4,8 @@
     xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-action-duplicate.js'}" />
+
 <f:if condition="{item.sys_language_uid} == 0">
     <xm:link.editRecord
         class="btn btn-default duplicate"

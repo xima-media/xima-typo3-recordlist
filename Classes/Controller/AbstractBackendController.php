@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
+use TYPO3\CMS\Backend\Routing\PreviewUriBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\Components\Buttons\GenericButton;
@@ -25,6 +26,7 @@ use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
@@ -36,6 +38,8 @@ use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\CsvUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\HttpUtility;
+use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
@@ -126,16 +130,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-pagination.js')
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-delete.js')
-        );
-        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-loading-animations.js')
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-new-record.js')
-        );
-        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-duplicate.js')
         );
 
         $this->setLanguages();
@@ -156,6 +154,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('languages', $this->getLanguages());
         $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
         $this->moduleTemplate->assign('table', $this->getTableName());
+        $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
 
         // build and execute query
         $this->createQueryBuilder();
@@ -409,6 +408,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function isWorkspaceAdmin(): bool
     {
+        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+            return false;
+        }
+
+        // TYPO3 v13+
+        if (class_exists(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)) {
+            return GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)->isGranted($this->getBackendAuthentication(), $this::WORKSPACE_ID);
+        }
+
         return $this->getBackendAuthentication()->workspacePublishAccess($this::WORKSPACE_ID);
     }
 
@@ -482,6 +490,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     // prepare for in constraint
                     $data['value'] = array_map('current', $uids);
                     if (empty($data['value'])) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
                         continue;
                     }
                     $field = 'uid';
@@ -634,9 +643,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             $record['editable'] = true;
-            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
+            $record['state'] = 'live';
 
-            // has version record => replace with versioned record
+            // if record has a version record => replace with versioned record
+            $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
             if (is_array($vRecord)) {
                 $record = $vRecord;
                 $record['editable'] = true;
@@ -661,6 +671,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $workspaceStatus['level'] = 'success';
                     $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
                     $record['editable'] = $this->isWorkspaceAdmin();
+                    $record['state'] = 'pending';
 
                     $referencesToPublish = [];
                     foreach ($GLOBALS['TCA'][$this->getTableName()]['columns'] as $columnName => $column) {
@@ -815,8 +826,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
-            if ($config['config']['type'] === 'select' && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
-                //$partial = 'Category';
+            if (in_array($config['config']['type'], ['select', 'category']) && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
+                $partial = 'Category';
                 $filter = [
                     'partial' => 'Category',
                 ];
@@ -967,6 +978,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addHiddenToggleButton();
         $this->addSysFileReferences();
         $this->addSysFiles();
+        $this->addPreviewButton();
+        $this->addSysCategories();
     }
 
     protected function addTranslationButtons(): void
@@ -1054,10 +1067,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         $this->moduleTemplate->assign('hiddenField', $hiddenField);
-
-        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-hidden-toggle.js')
-        );
     }
 
     protected function addSysFileReferences(): void
@@ -1086,6 +1095,143 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             foreach ($this->records as &$record) {
                 $record[$column['columnName']] = $this->resourceFactory->getFileObject($record[$column['columnName']]);
+            }
+        }
+    }
+
+    protected function addPreviewButton(): void
+    {
+        // check if preview is possible
+        $previewSettings = BackendUtility::getPagesTSconfig($this->getRecordPid())['TCEMAIN.']['preview.'][$this->getTableName() . '.'] ?? [];
+        $previewPageId = $previewSettings['previewPageId'] ?? 0;
+        if ($this->getTableName() !== 'pages' && $this->getTableName() !== 'tt_content' && !MathUtility::canBeInterpretedAsInteger($previewPageId)) {
+            return;
+        }
+
+        // save current workspace
+        $currentWorkspace = $this->getBackendAuthentication()->workspace;
+
+        foreach ($this->records as &$record) {
+            // check if controller + record is workspace aware
+            $isWorkspaceAware = $this::WORKSPACE_ID !== 0 && isset($record['t3ver_wsid']) && $record['t3ver_wsid'] > 0;
+
+            // override user workspace
+            if ($isWorkspaceAware) {
+                $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
+            }
+
+            if ($this->getTableName() === 'pages') {
+                $previewPageId = $record['uid'];
+            }
+
+            if ($this->getTableName() === 'tt_content') {
+                $previewPageId = $record['pid'];
+            }
+
+            if ($this->getTableName() === 'sys_file_metadata') {
+                $record['url'] = $record['file']?->getPublicUrl() ?? '';
+            } elseif ($this->getTypo3Version() === 12) {
+                $linkParameters = [];
+
+                // map record data to GET parameters
+                if (isset($previewSettings['fieldToParameterMap.'])) {
+                    foreach ($previewSettings['fieldToParameterMap.'] as $field => $parameterName) {
+                        $value = $record[$field] ?? '';
+                        if ($field === 'uid') {
+                            $value = $record['t3ver_oid'] === 0 ? $record['uid'] : $record['t3ver_oid'];
+                        }
+                        $linkParameters[$parameterName] = $value;
+                    }
+                }
+
+                // add/override parameters by configuration
+                if (isset($previewSettings['additionalGetParameters.'])) {
+                    $linkParameters = array_replace($linkParameters, GeneralUtility::removeDotsFromTS($previewSettings['additionalGetParameters.']));
+                }
+
+                $previewUri = PreviewUriBuilder::create($previewPageId)
+                    ->withAdditionalQueryParameters(HttpUtility::buildQueryString($linkParameters, '&'))
+                    ->buildUri($previewSettings['fieldToParameterMap.'] ?? []);
+                $record['url'] = $previewUri;
+            } else {
+                $record['url'] = PreviewUriBuilder::createForRecordPreview(
+                    $this->getTableName(),
+                    $record['uid'],
+                    $previewPageId
+                )->buildUri();
+            }
+
+            // add workspace id to url + restore user workspace
+            if ($isWorkspaceAware) {
+                $record['url'] .= '&workspaceId=' . $this::WORKSPACE_ID;
+                // restore user workspace
+                $this->getBackendAuthentication()->workspace = $currentWorkspace;
+            }
+        }
+    }
+
+    protected function addSysCategories(): void
+    {
+        foreach ($this->tableConfiguration['columns'] as $column) {
+            if (($column['partial'] ?? '') !== 'Category') {
+                continue;
+            }
+
+            $recordUids = array_column($this->records, 'uid');
+            if (empty($recordUids)) {
+                continue;
+            }
+
+            $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $categoryRelations = $qb->select('mm.uid_foreign')
+                ->addSelectLiteral('GROUP_CONCAT(c.uid) as category_uids')
+                ->from('sys_category', 'c')
+                ->innerJoin('c', 'sys_category_record_mm', 'mm', $qb->expr()->and(
+                    $qb->expr()->eq('mm.uid_local', 'c.uid'),
+                    $qb->expr()->eq('mm.tablenames', $qb->createNamedParameter($this->getTableName())),
+                    $qb->expr()->eq('mm.fieldname', $qb->createNamedParameter($column['columnName'])),
+                    $qb->expr()->in('mm.uid_foreign', $qb->quoteArrayBasedValueListToIntegerList($recordUids))
+                ))
+                ->groupBy('mm.uid_foreign')
+                ->executeQuery()
+                ->fetchAllKeyValue();
+
+            $categoryUids = [];
+            foreach ($categoryRelations as &$relation) {
+                $relation = GeneralUtility::intExplode(',', $relation, true);
+                $categoryUids = array_merge($categoryUids, $relation);
+            }
+
+            if (empty($categoryUids)) {
+                continue;
+            }
+
+            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $categories = $queryBuilder->select('uid', 'title')
+                ->from('sys_category')
+                ->where(
+                    $queryBuilder->expr()->in(
+                        'uid',
+                        $queryBuilder->quoteArrayBasedValueListToIntegerList(array_unique($categoryUids))
+                    )
+                )
+                ->executeQuery()
+                ->fetchAllKeyValue();
+
+            foreach ($categoryRelations as &$categoryUids) {
+                foreach ($categoryUids as &$categoryUid) {
+                    $categoryUid = [
+                        'uid' => $categoryUid,
+                        'title' => $categories[$categoryUid] ?? '',
+                    ];
+                }
+            }
+
+            foreach ($this->records as &$record) {
+                if (!isset($categoryRelations[$record['uid']])) {
+                    continue;
+                }
+                $record['_' . $column['columnName']] = $categoryRelations[$record['uid']];
             }
         }
     }
@@ -1248,5 +1394,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
         }
+    }
+
+    protected function getTypo3Version(): int
+    {
+        return GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion();
     }
 }

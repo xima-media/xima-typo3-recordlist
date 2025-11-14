@@ -4,8 +4,19 @@
     data-namespace-typo3-fluid="true">
 
 <f:be.pageRenderer
-    includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
     includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
+
+<f:if condition="{typo3version} > 12">
+    <f:then>
+        <f:be.pageRenderer
+            includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
+            includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/contrib/tooltip.css'}" />
+        </f:then>
+    <f:else>
+        <f:be.pageRenderer
+            includeJavaScriptModules="{0: '@typo3/backend/tooltip.js'}" />
+    </f:else>
+</f:if>
 
 <f:render section="Before" arguments="{_all}" optional="true" />
 
@@ -24,7 +35,7 @@
                 <input type="hidden" name="stage" value="-99" />
             </div>
 
-            <f:form>
+            <f:form id="recordlist-search-form" section="sectionAnchor">
 
                 <f:form.hidden name="id" value="{currentPid}" />
 
@@ -70,6 +81,8 @@
                     </div>
                 </div>
 
+                <div id="sectionAnchor"></div>
+
                 <f:render section="Headline" optional="true">
                     <h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then:
                         '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')}
@@ -112,7 +125,7 @@
                                 <tr
                                     data-uid="{item.uid}"
                                     data-pid="{item.pid}"
-                                    data-t3ver_oid="{item.t3ver_oid}"
+                                    data-t3ver_oid="{f:if(condition: item.t3ver_oid, then: item.t3ver_oid, else: item.uid)}"
                                     data-t3ver_wsid="1"
                                     data-sys_language_uid="{item.sys_language_uid}"
                                     data-stage="{item.t3ver_stage}"
@@ -149,35 +162,6 @@
                             <f:render partial="PaginationRow" arguments="{_all}" />
                             </tbody>
                         </table>
-
-                        <f:if condition="{workspaceId}">
-                            <h3>
-                                <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.label" />
-                            </h3>
-
-                            <ul class="workspace-legend mb-5">
-                                <li>
-                                    <span class="workspace-state-unchanged">
-                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.unchanged" />
-                                    </span>
-                                </li>
-                                <li>
-                                    <span class="workspace-state-modified">
-                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.edited" />
-                                    </span>
-                                </li>
-                                <li>
-                                    <span class="workspace-state-new">
-                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.new" />
-                                    </span>
-                                </li>
-                                <li>
-                                    <span class="workspace-state-deleted">
-                                        <f:translate key="LLL:EXT:workspaces/Resources/Private/Language/locallang.xlf:legend.deleted" />
-                                    </span>
-                                </li>
-                            </ul>
-                        </f:if>
                     </main>
                 </f:if>
             </f:form>

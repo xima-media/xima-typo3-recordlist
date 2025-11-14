@@ -193,6 +193,27 @@ class UserController extends AbstractBackendController
 }
 ```
 
+### View Action
+
+The view button is automatically displayed if [TCEMAIN.preview](https://docs.typo3.org/permalink/t3tsref:pagetcemain-preview) is configured for this table.
+
+To manually add a view action, you can override the `url` property of records:
+
+```php
+
+class UserController extends AbstractBackendController
+{
+    protected function modifyPaginatedRecords(): void
+    {
+        parent::modifyPaginatedRecords();
+
+        foreach ($this->records as &$record) {
+            $record['url'] = 'https://example.com/view/' . $record['uid'];
+        }
+    }
+}
+```
+
 ## Development and Contribution
 
 For easy development, you can use the provided ddev setup. Simply run `ddev start` and open the URL in your browser.

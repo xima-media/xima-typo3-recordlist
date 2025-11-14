@@ -239,6 +239,14 @@
 				<source />
 				<target>Enthält nicht</target>
 			</trans-unit>
+			<trans-unit id="pagination.page">
+				<source>Page</source>
+				<target>Seite</target>
+			</trans-unit>
+			<trans-unit id="pagination.of">
+				<source>of %1$d</source>
+				<target>von %1$d</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
