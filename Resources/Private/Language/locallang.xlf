@@ -181,7 +181,7 @@
 				<source>Contains</source>
 			</trans-unit>
 			<trans-unit id="filter.expr.notIn">
-				<source>Contains</source>
+				<source>Contains not</source>
 			</trans-unit>
 			<trans-unit id="pagination.page">
 				<source>Page</source>

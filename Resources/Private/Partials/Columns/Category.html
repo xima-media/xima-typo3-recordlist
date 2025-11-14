@@ -1,0 +1,19 @@
+{namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-category.js'}" />
+
+<f:if condition="{item._{colConfig.columnName}}">
+    <span class="category-badge-container">
+        <f:for each="{item._{colConfig.columnName}}" as="category">
+            <a
+                href="#"
+                title="Filter category"
+                class="badge badge-pill category-badge {category.uid -> xm:categoryActiveClass(activeCategories: colConfig.filter.value)}"
+                data-category-uid="{category.uid}"
+                data-field-name="{colConfig.columnName}"
+                data-bs-toggle="tooltip">
+                <core:icon identifier="mimetypes-x-sys_category" size="small" />
+                {category.title}
+            </a>
+        </f:for>
+    </span>
+</f:if>
