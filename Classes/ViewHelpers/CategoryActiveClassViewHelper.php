@@ -16,8 +16,8 @@ class CategoryActiveClassViewHelper extends AbstractViewHelper
 
     public function initializeArguments(): void
     {
-        $this->registerArgument('value', 'string', 'The string to explode');
-        $this->registerArgument('activeCategories', 'string', 'Separator string to explode with', true);
+        $this->registerArgument('value', 'string', 'The category uid to check');
+        $this->registerArgument('activeCategories', 'string', 'Comma separated list of category uids', true);
     }
 
     public function render(): string
