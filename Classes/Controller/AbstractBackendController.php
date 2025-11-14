@@ -1202,6 +1202,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $categoryUids = array_merge($categoryUids, $relation);
             }
 
+            if (empty($categoryUids)) {
+                continue;
+            }
+
             $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
             $categories = $queryBuilder->select('uid', 'title')
                 ->from('sys_category')
