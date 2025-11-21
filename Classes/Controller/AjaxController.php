@@ -104,7 +104,8 @@ class AjaxController
         }
 
         // workspace admin deletes versioned record -> hard delete, since DataHandler cannot delete
-        if ($record['t3ver_wsid'] && $this->isWorkspaceAdmin($record['t3ver_wsid'])) {
+        $workspaceId = (int)($record['t3ver_wsid'] ?? 0);
+        if ($workspaceId && $this->isWorkspaceAdmin($workspaceId)) {
             $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
             $qb->delete($table)
                 ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid, Connection::PARAM_INT)))
