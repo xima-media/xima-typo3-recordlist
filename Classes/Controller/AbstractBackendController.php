@@ -149,7 +149,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('moduleName', $this->getModuleName());
         $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
         $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
-        $this->moduleTemplate->assign('canPublishDirectly', $this->canPublishDirectly());
+        $this->moduleTemplate->assign('isDirectPublishingAllowed', $this->isDirectPublishingAllowed());
         $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
         $this->moduleTemplate->assign('workspaceId', static::WORKSPACE_ID);
         $this->moduleTemplate->assign('languages', $this->getLanguages());
@@ -441,7 +441,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
      *
      * @return bool TRUE if user can publish directly from any stage to live, bypassing stage "Ready to Publish"
      */
-    protected function canPublishDirectly(): bool
+    protected function isDirectPublishingAllowed(): bool
     {
         if (!ExtensionManagementUtility::isLoaded('workspaces')) {
             return false;
