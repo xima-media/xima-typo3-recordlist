@@ -121,6 +121,12 @@ class AjaxController
         return $this->responseFactory->createResponse();
     }
 
+    /**
+    * Check if current user has permission to publish or delete workspace items.
+    *
+    * @param int $workspaceId The workspace ID to check permissions for
+    * @return bool TRUE if user is allowed to move the item
+    */
     protected function isWorkspaceAdmin(int $workspaceId): bool
     {
         if (!ExtensionManagementUtility::isLoaded('workspaces')) {

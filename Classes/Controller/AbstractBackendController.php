@@ -149,6 +149,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('moduleName', $this->getModuleName());
         $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
         $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
+        $this->moduleTemplate->assign('canPublishDirectly', $this->canPublishDirectly());
         $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
         $this->moduleTemplate->assign('workspaceId', static::WORKSPACE_ID);
         $this->moduleTemplate->assign('languages', $this->getLanguages());
@@ -406,6 +407,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
+    /**
+     * Check if user has permission to publish workspace items from stage "Ready to Publish" to "Live".
+     *
+     * This checks the basic publish permission - to check whether the user can bypass the review stage
+     * use canPublishDirectly().
+     *
+     * @return bool TRUE if user is allowed to publish the item
+     */
     protected function isWorkspaceAdmin(): bool
     {
         if (!ExtensionManagementUtility::isLoaded('workspaces')) {
@@ -418,6 +427,37 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         return $this->getBackendAuthentication()->workspacePublishAccess($this::WORKSPACE_ID);
+    }
+
+    /**
+     * Check if user can publish directly from any stage, bypassing the "Ready to Publish" stage.
+     *
+     * This requires TWO conditions:
+     * 1. User must be a workspace owner (listed in workspace's adminusers field)
+     * 2. Workspace setting "publish_access" must NOT have PUBLISH_ACCESS_ONLY_IN_PUBLISH_STAGE flag set
+     *
+     * If the workspace has the "Only publish from Ready to Publish stage" checkbox enabled (which is a default),
+     * even workspace owners must use the two-step workflow (Edit → Ready to Publish → Live).
+     *
+     * @return bool TRUE if user can publish directly from any stage to live, bypassing stage "Ready to Publish"
+     */
+    protected function canPublishDirectly(): bool
+    {
+        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
+            return false;
+        }
+
+        $workspaceAccess = $this->getBackendAuthentication()->checkWorkspace($this::WORKSPACE_ID);
+        if (!is_array($workspaceAccess) || ($workspaceAccess['_ACCESS'] ?? '') !== 'owner') {
+            return false;
+        }
+
+        $publishAccess = (int)($workspaceAccess['publish_access'] ?? 0);
+        if ($publishAccess & 1) { // Bitmask Condition: WorkspaceService::PUBLISH_ACCESS_ONLY_IN_PUBLISH_STAGE = 1
+            return false;
+        }
+
+        return true;
     }
 
     /**
