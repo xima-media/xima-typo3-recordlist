@@ -453,7 +453,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         $publishAccess = (int)($workspaceAccess['publish_access'] ?? 0);
-        if ($publishAccess & 1) { // Bitmask Condition: WorkspaceService::PUBLISH_ACCESS_ONLY_IN_PUBLISH_STAGE = 1
+        if ($publishAccess & \TYPO3\CMS\Workspaces\Service\WorkspaceService::PUBLISH_ACCESS_ONLY_IN_PUBLISH_STAGE) {
             return false;
         }
 
