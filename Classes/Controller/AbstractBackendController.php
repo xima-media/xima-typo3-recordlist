@@ -411,7 +411,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
      * Check if user has permission to publish workspace items from stage "Ready to Publish" to "Live".
      *
      * This checks the basic publish permission - to check whether the user can bypass the review stage
-     * use canPublishDirectly().
+     * use isDirectPublishingAllowed().
      *
      * @return bool TRUE if user is allowed to publish the item
      */
