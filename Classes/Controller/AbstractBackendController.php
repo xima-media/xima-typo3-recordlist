@@ -433,11 +433,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
      * Check if user can publish directly from any stage, bypassing the "Ready to Publish" stage.
      *
      * This requires TWO conditions:
-     * 1. User must be a workspace owner (listed in workspace's adminusers field)
+     * 1. User must be a workspace owner (listed in workspace's adminusers field) or an admin
      * 2. Workspace setting "publish_access" must NOT have PUBLISH_ACCESS_ONLY_IN_PUBLISH_STAGE flag set
      *
      * If the workspace has the "Only publish from Ready to Publish stage" checkbox enabled (which is a default),
-     * even workspace owners must use the two-step workflow (Edit → Ready to Publish → Live).
+     * even workspace owners (and admins) must use the two-step workflow (Edit → Ready to Publish → Live).
      *
      * @return bool TRUE if user can publish directly from any stage to live, bypassing stage "Ready to Publish"
      */
@@ -448,7 +448,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         $workspaceAccess = $this->getBackendAuthentication()->checkWorkspace($this::WORKSPACE_ID);
-        if (!is_array($workspaceAccess) || ($workspaceAccess['_ACCESS'] ?? '') !== 'owner') {
+        if (!is_array($workspaceAccess) || !in_array(($workspaceAccess['_ACCESS'] ?? ''), ['owner', 'admin'])) {
             return false;
         }
 
