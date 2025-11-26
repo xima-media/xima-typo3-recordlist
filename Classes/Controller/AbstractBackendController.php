@@ -447,6 +447,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return false;
         }
 
+        if ($this::WORKSPACE_ID === 0) {
+            return false;
+        }
+
         $workspaceAccess = $this->getBackendAuthentication()->checkWorkspace($this::WORKSPACE_ID);
         if (!is_array($workspaceAccess) || !in_array(($workspaceAccess['_ACCESS'] ?? ''), ['owner', 'admin'])) {
             return false;
