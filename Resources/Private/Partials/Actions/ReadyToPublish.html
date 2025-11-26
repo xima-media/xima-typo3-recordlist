@@ -1,4 +1,5 @@
 <f:if condition="{item.t3ver_oid} || {item.t3ver_state} === 1">
+    <f:comment>Regular users without publish permission request review from workspace admins</f:comment>
     <f:if condition="!{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
         <div class="btn-group">
             <a href="#" data-workspace-action="readyToPublish" class="btn btn-success">
@@ -7,6 +8,7 @@
             </a>
         </div>
     </f:if>
+    <f:comment>Admin users send to review (same workflow action but different UI/wording to reflect permissions)</f:comment>
     <f:if condition="{isWorkspaceAdmin} && {item.t3ver_stage} === 0">
         <div class="btn-group">
             <a href="#" data-workspace-action="readyToPublish" class="btn btn-warning">
