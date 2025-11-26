@@ -21,4 +21,12 @@ return [
         'path' => '/xima/recordlist/downloadsettings',
         'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::downloadSettings',
     ],
+    'xima_categorytree_configuration' => [
+        'path' => '/xima/recordlist/categorytree/configuration',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::fetchConfigurationAction',
+    ],
+    'xima_categorytree_data' => [
+        'path' => '/xima/recordlist/categorytree/data',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::fetchDataAction',
+    ],
 ];
