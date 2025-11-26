@@ -443,11 +443,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     protected function isDirectPublishingAllowed(): bool
     {
-        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
-            return false;
-        }
-
-        if ($this::WORKSPACE_ID === 0) {
+        if (!ExtensionManagementUtility::isLoaded('workspaces') || $this::WORKSPACE_ID === 0) {
             return false;
         }
 
