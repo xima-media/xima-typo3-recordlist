@@ -109,7 +109,7 @@ class AjaxController
             $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
             $qb->delete($table)
                 ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid, Connection::PARAM_INT)))
-                ->executeQuery();
+                ->executeStatement();
             return $this->responseFactory->createResponse();
         }
 
