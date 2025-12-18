@@ -1,7 +1,7 @@
 /**
- * Currently a mixture between namespace and global object
- * Add types as you use them
- */
+* Currently a mixture between namespace and global object
+* Add types as you use them
+*/
 declare namespace TYPO3 {
   export let Backend: typeof import('@typo3/backend/viewport').default;
   export let ExtensionManager: typeof import('@typo3/extensionmanager/main').default;

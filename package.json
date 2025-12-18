@@ -151,6 +151,7 @@
 		"typo3-typescript-sources": "^13.4.20"
 	},
 	"scripts": {
-		"build": "tsc"
+		"start": "node esbuild.config.mjs --watch",
+		"build": "node esbuild.config.mjs --build"
 	}
 }

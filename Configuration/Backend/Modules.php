@@ -39,7 +39,7 @@ return [
                 'processRequest',
             ],
         ],
-        'navigationComponent' => '@xima/recordlist/category-tree-element'
+        'navigationComponent' => '@xima/recordlist/category-tree-element',
     ],
     'example_feusers' => [
         'parent' => 'example',

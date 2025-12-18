@@ -17,7 +17,7 @@ const buildConfig = {
     format: "esm",
     plugins: [],
     logLevel: "info",
-    sourcemap: true,
+    sourcemap: false,
     external: ["@typo3/*", "interactjs"],
 };
 

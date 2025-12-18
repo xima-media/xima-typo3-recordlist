@@ -1,15 +1,15 @@
 /*
- * This file is part of the TYPO3 CMS project.
- *
- * It is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, either version 2
- * of the License, or any later version.
- *
- * For the full copyright and license information, please read the
- * LICENSE.txt file that was distributed with this source code.
- *
- * The TYPO3 project - inspiring people to share!
- */
+* This file is part of the TYPO3 CMS project.
+*
+* It is free software; you can redistribute it and/or modify it under
+* the terms of the GNU General Public License, either version 2
+* of the License, or any later version.
+*
+* For the full copyright and license information, please read the
+* LICENSE.txt file that was distributed with this source code.
+*
+* The TYPO3 project - inspiring people to share!
+*/
 
 import { html, LitElement, type TemplateResult, nothing } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
@@ -32,14 +32,14 @@ import type { DragTooltipMetadata } from '@typo3/backend/drag-tooltip.js';
 import type { DataTransferStringItem, Tree} from '@typo3/backend/tree/tree.js';
 
 /**
- * This module defines the Custom Element for rendering the navigation component for an editable page tree
- * including drag+drop, deletion, in-place editing and a custom toolbar for this component.
- *
- * It is used as custom element via "<typo3-backend-navigation-component-categorytree>".
- *
- * The navigationComponentName export is used by the NavigationContainer in order to
- * create an instance of PageTreeNavigationComponent via document.createElement().
- */
+* This module defines the Custom Element for rendering the navigation component for an editable page tree
+* including drag+drop, deletion, in-place editing and a custom toolbar for this component.
+*
+* It is used as custom element via "<typo3-backend-navigation-component-categorytree>".
+*
+* The navigationComponentName export is used by the NavigationContainer in order to
+* create an instance of PageTreeNavigationComponent via document.createElement().
+*/
 
 export const navigationComponentName: string = 'typo3-backend-navigation-component-categorytree';
 
@@ -74,9 +74,9 @@ interface NodeNewOptions extends NodePositionOptions {
 }
 
 /**
- * PageTree which allows for drag+drop, and in-place editing, as well as
- * tree highlighting from the outside
- */
+* PageTree which allows for drag+drop, and in-place editing, as well as
+* tree highlighting from the outside
+*/
 @customElement('typo3-backend-navigation-component-categorytree-tree')
 export class EditablePageTree extends PageTree {
   protected override allowNodeEdit: boolean = true;
@@ -132,8 +132,8 @@ export class EditablePageTree extends PageTree {
   }
 
   /**
-   * Initializes a drag&drop when called on the page tree. Should be moved somewhere else at some point
-   */
+  * Initializes a drag&drop when called on the page tree. Should be moved somewhere else at some point
+  */
   public initializeDragForNode() {
     throw new Error('unused');
   }
