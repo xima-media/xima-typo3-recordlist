@@ -62,9 +62,5 @@ _done
 
 # Generate fixtures
 _progress "Generating fixtures"
-    "$typo3Binary" faker:execute sys_category 17 25 en_US
-    "$typo3Binary" faker:execute sys_category 18 25 de_DE
-    mysql -e "UPDATE sys_category set sys_language_uid=1, l10n_parent=uid-25 where uid>25" $dbCredentials "$dbName"
-
     "$typo3Binary" faker:execute fe_users 19 10 en_US
 _done
