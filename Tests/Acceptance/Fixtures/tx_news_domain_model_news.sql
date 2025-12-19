@@ -1,8 +1,3 @@
--- TYPO3 News Domain Model Fixture
--- 60 English news (sys_language_uid = 0)
--- 60 German translations (sys_language_uid = 1, l10n_parent references English version)
--- All records use pid = 15
-
 INSERT INTO `tx_news_domain_model_news`
 	(`uid`, `pid`, `sys_language_uid`, `l10n_parent`, `title`, `path_segment`, `teaser`, `bodytext`, `datetime`, `author`)
 VALUES
