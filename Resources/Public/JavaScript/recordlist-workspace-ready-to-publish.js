@@ -142,7 +142,8 @@ export default class RecordlistWorkspaceReadyToPublish {
       type: "rpc"
     };
 
-    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+      .withQueryArguments({workspaceId: workspaceId})
       .post(payload, {
         headers: {
           "Content-Type": "application/json; charset=utf-8"
