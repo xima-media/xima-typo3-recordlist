@@ -66,10 +66,5 @@ _progress "Generating fixtures"
     "$typo3Binary" faker:execute sys_category 18 25 de_DE
     mysql -e "UPDATE sys_category set sys_language_uid=1, l10n_parent=uid-25 where uid>25" $dbCredentials "$dbName"
 
-    "$typo3Binary" faker:execute tx_news_domain_model_news 15 60 en_US
-    "$typo3Binary" faker:execute tx_news_domain_model_news 16 60 de_DE
-    mysql -e "UPDATE tx_news_domain_model_news set sys_language_uid=1, l10n_parent=uid-60 where uid>60" $dbCredentials "$dbName"
-    mysql -e "UPDATE tx_news_domain_model_news n1 set n1.datetime=(SELECT n2.datetime from tx_news_domain_model_news n2 where n2.uid=n1.l10n_parent), n1.author=(SELECT n2.author from tx_news_domain_model_news n2 where n2.uid=n1.l10n_parent) where n1.uid>60" $dbCredentials "$dbName"
-
     "$typo3Binary" faker:execute fe_users 19 10 en_US
 _done
