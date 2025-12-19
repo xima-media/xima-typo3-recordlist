@@ -8,7 +8,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\Core\Rendering\RenderingContext;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
 
 class EditRecordViewHelper extends AbstractTagBasedViewHelper
@@ -18,10 +17,15 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
      */
     protected $tagName = 'a';
 
+    public function __construct(
+        private readonly UriBuilder $uriBuilder
+    ) {
+        parent::__construct();
+    }
+
     public function initializeArguments(): void
     {
         parent::initializeArguments();
-        $this->registerUniversalTagAttributes();
         $this->registerArgument('uid', 'int', 'uid of record to be edited', true);
         $this->registerArgument('table', 'string', 'target database table', true);
         $this->registerArgument('fields', 'string', 'Edit only these fields (comma separated list)');
@@ -36,11 +40,11 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
     public function render(): string
     {
         if ($this->arguments['uid'] < 1) {
-            throw new \InvalidArgumentException('Uid must be a positive integer, ' . $this->arguments['uid'] . ' given.', 1526127158);
+            throw new \InvalidArgumentException('Uid must be a positive integer, ' . $this->arguments['uid'] . ' given.', 1766135800);
         }
-        /** @var RenderingContext $renderingContext */
-        $renderingContext = $this->renderingContext;
-        $request = $renderingContext->getRequest();
+        $request = $this->renderingContext->hasAttribute(ServerRequestInterface::class) ?
+            $this->renderingContext->getAttribute(ServerRequestInterface::class) : null;
+
         if (empty($this->arguments['returnUrl'])
             && $request instanceof ServerRequestInterface
         ) {
@@ -49,6 +53,7 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
 
         $params = [
             'edit' => [$this->arguments['table'] => [$this->arguments['uid'] => 'edit']],
+            'module' => ($this->arguments['module'] ?? '') ?: ($request?->getAttribute('module')?->getIdentifier() ?? ''),
             'returnUrl' => $this->arguments['returnUrl'],
             'workspaceId' => $this->arguments['workspaceId'],
         ];
@@ -57,8 +62,7 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
                 $this->arguments['table'] => GeneralUtility::trimExplode(',', $this->arguments['fields'], true),
             ];
         }
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $uri = (string)$uriBuilder->buildUriFromRoute('record_edit', $params);
+        $uri = (string)$this->uriBuilder->buildUriFromRoute('record_edit', $params);
         $this->tag->addAttribute('href', $uri);
         $this->tag->setContent($this->renderChildren());
         $this->tag->forceClosingTag(true);
