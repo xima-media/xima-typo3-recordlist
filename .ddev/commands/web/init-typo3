@@ -59,8 +59,3 @@ done
 _progress "Copy file fixtures"
     cp -r "$fixturePath/Files" /var/www/html/public/fileadmin/
 _done
-
-# Generate fixtures
-_progress "Generating fixtures"
-    "$typo3Binary" faker:execute fe_users 19 10 en_US
-_done
