@@ -80,6 +80,7 @@ export default class RecordlistWorkspaceReadyToPublish {
     const self = this;
     const uid = parseInt(tr.getAttribute("data-uid") ?? "");
     const table = tr.getAttribute("data-table") ?? "";
+    const workspaceId = btn.getAttribute("data-workspace-id") ?? "";
     let t3verOid = parseInt(tr.getAttribute("data-t3ver_oid") ?? "");
     if (!t3verOid) {
       t3verOid = uid;
@@ -118,7 +119,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           icon: "actions-check",
           btnClass: "btn-success",
           trigger: function() {
-            self.publishRecords(recordsToPublish);
+            self.publishRecords(recordsToPublish, workspaceId);
             modal.hideModal();
           }
         }
@@ -126,7 +127,7 @@ export default class RecordlistWorkspaceReadyToPublish {
     });
   }
 
-  publishRecords(records) {
+  publishRecords(records, workspaceId) {
     const payload = {
       action: "Actions",
       data: [
@@ -141,7 +142,7 @@ export default class RecordlistWorkspaceReadyToPublish {
       type: "rpc"
     };
 
-    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
       .post(payload, {
         headers: {
           "Content-Type": "application/json; charset=utf-8"
