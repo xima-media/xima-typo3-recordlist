@@ -16,6 +16,7 @@ use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 
 class AjaxController
 {
@@ -133,12 +134,7 @@ class AjaxController
             return false;
         }
 
-        // TYPO3 v13+
-        if (class_exists(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)) {
-            return GeneralUtility::makeInstance(\TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate::class)->isGranted($this->getBackendAuthentication(), $workspaceId);
-        }
-
-        return $this->getBackendAuthentication()->workspacePublishAccess($workspaceId);
+        return GeneralUtility::makeInstance(WorkspacePublishGate::class)->isGranted($this->getBackendAuthentication(), $workspaceId);
     }
 
     protected function getBackendAuthentication(): BackendUserAuthentication

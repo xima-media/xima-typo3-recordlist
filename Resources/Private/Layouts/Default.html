@@ -6,17 +6,9 @@
 <f:be.pageRenderer
     includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
 
-<f:if condition="{typo3version} > 12">
-    <f:then>
-        <f:be.pageRenderer
-            includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
-            includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/contrib/tooltip.css'}" />
-        </f:then>
-    <f:else>
-        <f:be.pageRenderer
-            includeJavaScriptModules="{0: '@typo3/backend/tooltip.js'}" />
-    </f:else>
-</f:if>
+<f:be.pageRenderer
+    includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
+    includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/contrib/tooltip.css'}" />
 
 <f:render section="Before" arguments="{_all}" optional="true" />
 
