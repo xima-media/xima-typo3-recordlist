@@ -29,6 +29,7 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
         $this->registerArgument('uid', 'int', 'uid of record to be edited', true);
         $this->registerArgument('table', 'string', 'target database table', true);
         $this->registerArgument('fields', 'string', 'Edit only these fields (comma separated list)');
+        $this->registerArgument('module', 'string', 'Set module identifier for context - marking as active when editing the record', false, '');
         $this->registerArgument('returnUrl', 'string', 'return to this URL after closing the edit dialog', false, '');
         $this->registerArgument('workspaceId', 'int', 'workspace uid to respect in edit view', false, 0);
     }
