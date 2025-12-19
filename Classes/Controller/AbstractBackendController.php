@@ -24,8 +24,8 @@ use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
-use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
@@ -1322,7 +1322,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
                     ->setTitle($key === 0 ? 'New ' . $this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
                     ->setShowLabelText(true)
-                    ->setIcon($this->iconFactory->getIcon('actions-add', ICON::SIZE_SMALL))
+                    ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
             );
         }
     }
@@ -1365,7 +1365,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.download'))
                 ->setShowLabelText(true)
                 ->setClasses('recordlist-download-button')
-                ->setIcon($this->iconFactory->getIcon('actions-download', ICON::SIZE_SMALL)),
+                ->setIcon($this->iconFactory->getIcon('actions-download', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_RIGHT,
             3
         );
@@ -1381,7 +1381,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
                 ->setShowLabelText(false)
                 ->setClasses($searchClass . ' toggleSearchButton')
-                ->setIcon($this->iconFactory->getIcon('actions-search', ICON::SIZE_SMALL)),
+                ->setIcon($this->iconFactory->getIcon('actions-search', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             2
         );
