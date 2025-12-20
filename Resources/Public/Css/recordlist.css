@@ -50,3 +50,15 @@ main.recordlist ul.pagination input.form-control {
     flex-wrap: wrap;
     gap: 6px;
 }
+
+.recordlist table.table tr[data-state="new"] td {
+    background-color: color-mix(in srgb, var(--typo3-badge-success-bg) 15%, transparent) !important;
+}
+
+.recordlist table.table tr[data-state="modified"] td {
+    background-color: color-mix(in srgb, var(--typo3-badge-warning-bg) 15%, transparent) !important;
+}
+
+.recordlist table.table tr[data-state="deleted"] td {
+    background-color: color-mix(in srgb, var(--typo3-badge-danger-bg) 15%, transparent) !important;
+}
