@@ -1289,7 +1289,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                     ->setHref($this->backendUriBuilder->buildUriFromRoute(
                         'record_edit',
-                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals, 'module' => $this->getModuleName()]
+                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals, 'module' => $this->getModuleName(), 'workspaceId' => $this::WORKSPACE_ID]
                     ))
                     ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
                     ->setTitle($key === 0 ? 'New ' . $this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
