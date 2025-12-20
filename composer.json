@@ -16,6 +16,7 @@
 	],
 	"homepage": "https://www.xima.de",
 	"require": {
+		"php": "^8.2",
 		"typo3/cms-core": "^13.4 || ^14.0"
 	},
 	"require-dev": {
