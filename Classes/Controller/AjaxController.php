@@ -14,9 +14,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 
 class AjaxController
 {
@@ -110,21 +108,6 @@ class AjaxController
         $dataHandler->process_cmdmap();
 
         return $this->responseFactory->createResponse();
-    }
-
-    /**
-    * Check if current user has permission to publish or delete workspace items.
-    *
-    * @param int $workspaceId The workspace ID to check permissions for
-    * @return bool TRUE if user is allowed to move the item
-    */
-    protected function isWorkspaceAdmin(int $workspaceId): bool
-    {
-        if (!ExtensionManagementUtility::isLoaded('workspaces')) {
-            return false;
-        }
-
-        return GeneralUtility::makeInstance(WorkspacePublishGate::class)->isGranted($this->getBackendAuthentication(), $workspaceId);
     }
 
     protected function getBackendAuthentication(): BackendUserAuthentication
