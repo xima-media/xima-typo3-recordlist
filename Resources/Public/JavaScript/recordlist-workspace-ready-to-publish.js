@@ -184,7 +184,8 @@ export default class RecordlistWorkspaceReadyToPublish {
 
     NProgress.configure({ parent: `tr[data-uid="${tr.getAttribute("data-uid")}"]`, showSpinner: true });
     NProgress.start();
-    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+      .withQueryArguments({workspaceId: workspaceId})
       .post(payload, {
         headers: {
           "Content-Type": "application/json; charset=utf-8"
@@ -209,7 +210,8 @@ export default class RecordlistWorkspaceReadyToPublish {
               type: "rpc"
             };
 
-            new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
+            new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+              .withQueryArguments({workspaceId: workspaceId})
               .post(payload, {
                 headers: {
                   "Content-Type": "application/json; charset=utf-8"
