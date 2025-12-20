@@ -1392,7 +1392,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $items = [];
         $activeItem = null;
         foreach ($languages as $languageKey => $language) {
-            $item = $componentFactory->createDropDownItem()
+            $item = $componentFactory->createDropDownRadio()
                 ->setIcon($this->iconFactory->getIcon($language['flagIcon'], IconSize::SMALL))
                 ->setLabel($language['title'])
                 ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
