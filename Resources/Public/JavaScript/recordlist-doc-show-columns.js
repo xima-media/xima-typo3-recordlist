@@ -56,7 +56,7 @@ export default class RecordlistDocShowColumns {
 
     this.modal.querySelector('.modal-body').querySelector('input[name="columns-filter"]').addEventListener('input', (e) => {
       columnsItems.forEach(li => {
-        if (li.getAttribute('data-column-name').includes(e.currentTarget.value)) {
+        if (li.getAttribute('data-column-name').toLowerCase().includes(e.currentTarget.value.toLowerCase())) {
           li.classList.remove('d-none')
         } else {
           li.classList.add('d-none')
