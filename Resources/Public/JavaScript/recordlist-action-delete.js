@@ -18,6 +18,7 @@ export default class RecordlistActionDelete {
     const btn = e.currentTarget;
     const table = btn.closest("tr").getAttribute("data-table");
     const uid = btn.closest("tr").getAttribute("data-uid");
+    const workspaceId = parseInt(btn.closest("tr").getAttribute("data-t3ver_wsid"));
 
     const payload = new FormData();
     payload.append("table", table);
@@ -42,10 +43,14 @@ export default class RecordlistActionDelete {
           btnClass: "btn-warning",
           name: "ok",
           trigger: () => {
-            new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_delete).post("", { body: payload }, "")
+            new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_delete)
+              .withQueryArguments({workspaceId: workspaceId})
+              .post("", { body: payload }, "")
               .then(async () => {
                 top?.TYPO3.Backend.ContentContainer.refresh();
-                Notification.success(TYPO3.lang["notification.delete.record.success.title"], TYPO3.lang["notification.delete.record.success.message"], 5);
+                if (!workspaceId) {
+                  Notification.success(TYPO3.lang["notification.delete.record.success.title"], TYPO3.lang["notification.delete.record.success.message"], 5);
+                }
               })
               .finally(() => {
                 Modal.dismiss();

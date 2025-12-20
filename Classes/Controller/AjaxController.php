@@ -104,16 +104,6 @@ class AjaxController
             return $this->responseFactory->createResponse(403, 'No permissions to delete record');
         }
 
-        // workspace admin deletes versioned record -> hard delete, since DataHandler cannot delete
-        $workspaceId = (int)($record['t3ver_wsid'] ?? 0);
-        if ($workspaceId && $this->isWorkspaceAdmin($workspaceId)) {
-            $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
-            $qb->delete($table)
-                ->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid, Connection::PARAM_INT)))
-                ->executeStatement();
-            return $this->responseFactory->createResponse();
-        }
-
         $cmd[$table][$uid]['delete'] = 1;
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
         $dataHandler->start([], $cmd);

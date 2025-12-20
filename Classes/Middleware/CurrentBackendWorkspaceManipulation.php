@@ -22,7 +22,12 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
          */
         $route = $request->getAttribute('route');
         $identifier = $route->getOption('_identifier');
-        if ($identifier !== 'ajax_workspace_dispatch' && $identifier !== 'record_edit') {
+        $routesToHandle = [
+            'ajax_workspace_dispatch',
+            'record_edit',
+            'ajax_xima_recordlist_delete',
+        ];
+        if (!in_array($identifier, $routesToHandle, true)) {
             return $handler->handle($request);
         }
 
