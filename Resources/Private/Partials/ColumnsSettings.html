@@ -1,6 +1,6 @@
 <html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
 
-<div class="d-flex gap-3 sticky-form-actions border-bottom">
+<div class="d-flex gap-3 sticky-form-actions">
     <div class="input-group">
         <span class="input-group-addon input-group-text" id="columns-filter-label">
             {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.filter')}:
@@ -89,7 +89,7 @@
 
     span.drag,
     span.drag::before {
-        background-image: radial-gradient(black 40%, transparent 40%);
+        background-image: radial-gradient(var(--typo3-modal-border-color, black) 40%, transparent 40%);
         background-size: 4px 4px;
         background-position: 0 100%;
         background-repeat: repeat;
