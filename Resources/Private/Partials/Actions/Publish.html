@@ -1,5 +1,5 @@
 <f:if condition="({isWorkspaceAdmin} && {item.t3ver_stage} === -10) || ({isDirectPublishingAllowed} && {item.t3ver_wsid} > 0 && {item.t3ver_stage} >= 0)">
-    <a href="#" data-workspace-action="publish" class="btn btn-success" data-workspace-id="{workspaceId}">
+    <a href="#" data-workspace-action="publish" class="btn btn-success">
         <core:icon identifier="actions-check" size="small" />
         {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.publish')}
     </a>

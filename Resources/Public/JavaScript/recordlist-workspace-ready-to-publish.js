@@ -29,6 +29,7 @@ export default class RecordlistWorkspaceReadyToPublish {
     e.preventDefault();
     const btn = e.currentTarget;
     const tr = btn.closest("tr");
+    const workspaceId = tr.getAttribute("data-t3ver_wsid");
     const modal = Modal.confirm(TYPO3.lang["window.discard.title"], TYPO3.lang["window.discard.message"], SeverityEnum.warning, [
       {
         text: TYPO3.lang.cancel,
@@ -47,7 +48,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           const payload = {
             action: "Actions",
             data: [tr.getAttribute("data-table"), tr.getAttribute("data-uid")],
-            method: "deleteSingleRecord",
+            method: "discardSingleRecord",
             tid: 2,
             type: "rpc"
           };
@@ -55,6 +56,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           modal.hideModal();
 
           new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+            .withQueryArguments({workspaceId: workspaceId})
             .post(payload, {
               headers: {
                 "Content-Type": "application/json; charset=utf-8"
@@ -80,7 +82,7 @@ export default class RecordlistWorkspaceReadyToPublish {
     const self = this;
     const uid = parseInt(tr.getAttribute("data-uid") ?? "");
     const table = tr.getAttribute("data-table") ?? "";
-    const workspaceId = btn.getAttribute("data-workspace-id") ?? "";
+    const workspaceId = tr.getAttribute("data-t3ver_wsid");
     let t3verOid = parseInt(tr.getAttribute("data-t3ver_oid") ?? "");
     if (!t3verOid) {
       t3verOid = uid;
