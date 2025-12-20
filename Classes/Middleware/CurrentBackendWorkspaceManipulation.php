@@ -9,13 +9,14 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 
+/**
+ * Middleware to manipulate the current backend workspace based on a custom parameter.
+ */
 class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         /**
-         * Make sure it is the ajax request for fetching tree data
-         *
          * @var Route $route
          * @phpstan-ignore-next-line
          */
@@ -25,13 +26,27 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
             return $handler->handle($request);
         }
 
+        // Check for custom workspaceId parameter
         $workspaceId = $request->getQueryParams()['workspaceId'] ?? false;
-        if ($workspaceId) {
-            /** @var BackendUserAuthentication $backendUser */
-            $backendUser = $GLOBALS['BE_USER'];
-            $backendUser->workspace = (int)$workspaceId;
+        if (!$workspaceId) {
+            return $handler->handle($request);
+        }
+
+        $backendUser = $this->getBackendUser();
+
+        // Overwrite current workspace for this request
+        $backendUser->workspace = (int)$workspaceId;
+
+        // Grant access to workspaces_publish module if not already granted
+        if (!str_contains($backendUser->groupData['modules'], 'workspaces_publish')) {
+            $backendUser->groupData['modules'] .= ',workspaces_publish';
         }
 
         return $handler->handle($request);
+    }
+
+    private function getBackendUser(): BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'];
     }
 }
