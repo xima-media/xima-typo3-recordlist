@@ -202,7 +202,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->site = $site;
     }
 
-    private function findSiteByCurrentHostname(): ?Site
+    protected function findSiteByCurrentHostname(): ?Site
     {
         $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
         foreach ($siteFinder->getAllSites() as $foundSite) {
@@ -291,7 +291,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return (string)$this->backendUriBuilder->buildUriFromRoute($this->getModuleName(), ['id' => $this->getAccessiblePids()[0]]);
     }
 
-    private function getModuleName(): string
+    protected function getModuleName(): string
     {
         /** @var ExtbaseModule $module */
         $module = $this->request->getAttribute('route')?->getOption('module');
@@ -340,7 +340,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    private function getModuleData(): array
+    protected function getModuleData(): array
     {
         $moduleData = $this->getBackendAuthentication()->getModuleData($this->getModuleName()) ?? [];
         return is_array($moduleData) ? $moduleData : [];
@@ -483,7 +483,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $this->getCurrentPid() === $this->getAccessiblePids()[0] ? $this->getAccessiblePids() : [$this->getCurrentPid()];
     }
 
-    private function createQueryBuilder(): void
+    protected function createQueryBuilder(): void
     {
         $tableName = $this->getTableName();
         $this->queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
@@ -491,7 +491,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
     }
 
-    private function addSearchConstraint(): void
+    protected function addSearchConstraint(): void
     {
         $body = $this->request->getParsedBody();
         if (isset($body['search_field']) && $body['search_field']) {
@@ -581,7 +581,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    private function getActiveLanguage(): int
+    protected function getActiveLanguage(): int
     {
         return $this->getModuleDataSetting('language') ?? -1;
     }
@@ -591,7 +591,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $this->getModuleData()['settings'][$setting] ?? null;
     }
 
-    public function addAdditionalConstraints(): void
+    protected function addAdditionalConstraints(): void
     {
     }
 
@@ -661,11 +661,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    public function modifyQueryBuilder(): void
+    protected function modifyQueryBuilder(): void
     {
     }
 
-    private function fetchRecords(): void
+    protected function fetchRecords(): void
     {
         $this->records = $this->queryBuilder
             ->executeQuery()
@@ -779,7 +779,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $GLOBALS['LANG'];
     }
 
-    private function downloadRecords(): ResponseInterface
+    protected function downloadRecords(): ResponseInterface
     {
         $format = $this->request->getParsedBody()['format'] ?? 'csv';
         $filename = ($this->request->getParsedBody()['filename'] ?? $this->getTableName()) ?: $this->getTableName();
@@ -804,7 +804,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $response;
     }
 
-    public function initTableConfiguration(): void
+    protected function initTableConfiguration(): void
     {
         $tableName = $this->getTableName();
         $defaultColumn = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
@@ -1005,7 +1005,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     /**
      * @param mixed[] $record
      */
-    public function modifyRecord(array &$record): void
+    protected function modifyRecord(array &$record): void
     {
     }
 
@@ -1096,7 +1096,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    private function addHiddenToggleButton(): void
+    protected function addHiddenToggleButton(): void
     {
         $hiddenField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['enablecolumns']['disabled'] ?? '';
         if (!$hiddenField) {
