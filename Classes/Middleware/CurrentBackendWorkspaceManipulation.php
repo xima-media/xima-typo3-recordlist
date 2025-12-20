@@ -8,6 +8,8 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
 /**
  * Middleware to manipulate the current backend workspace based on a custom parameter.
@@ -40,11 +42,19 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
 
         $backendUser = $this->getBackendUser();
 
+        // Validate workspace exists and user has access
+        $workspaceService = GeneralUtility::makeInstance(WorkspaceService::class);
+        $availableWorkspaces = $workspaceService->getAvailableWorkspaces();
+        if (!isset($availableWorkspaces[(int)$workspaceId])) {
+            return $handler->handle($request);
+        }
+
         // Overwrite current workspace for this request
         $backendUser->workspace = (int)$workspaceId;
 
-        // Grant access to workspaces_publish module if not already granted
-        if (!str_contains($backendUser->groupData['modules'], 'workspaces_publish')) {
+        // Grant access to workspaces_publish module if not already granted (use more precise check)
+        $modules = explode(',', $backendUser->groupData['modules'] ?? '');
+        if (!in_array('workspaces_publish', $modules, true)) {
             $backendUser->groupData['modules'] .= ',workspaces_publish';
         }
 
