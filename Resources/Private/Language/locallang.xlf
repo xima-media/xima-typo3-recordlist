@@ -63,6 +63,9 @@
 			<trans-unit id="table.button.publish">
 				<source>Grant approval</source>
 			</trans-unit>
+			<trans-unit id="table.button.requestChanges">
+				<source>Request changes</source>
+			</trans-unit>
 			<trans-unit id="table.button.original">
 				<source>Original</source>
 			</trans-unit>

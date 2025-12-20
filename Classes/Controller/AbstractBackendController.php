@@ -922,8 +922,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ],
             'actions' => [
                 'EditOriginal',
-                'Publish',
                 'ReadyToPublish',
+                'RequestChanges',
+                'Publish',
             ],
         ];
     }

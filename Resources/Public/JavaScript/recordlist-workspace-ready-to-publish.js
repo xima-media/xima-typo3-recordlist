@@ -12,8 +12,8 @@ export default class RecordlistWorkspaceReadyToPublish {
   }
 
   init() {
-    document.querySelectorAll("[data-workspace-action=\"readyToPublish\"]").forEach(btn => {
-      btn.addEventListener("click", this.onReadyToPublishClick.bind(this));
+    document.querySelectorAll("[data-workspace-action=\"sendToSpecificStageExecute\"]").forEach(btn => {
+      btn.addEventListener("click", this.onSendToSpecificStageClick.bind(this));
     });
 
     document.querySelectorAll("[data-workspace-action=\"remove\"]").forEach(btn => {
@@ -157,12 +157,13 @@ export default class RecordlistWorkspaceReadyToPublish {
       });
   }
 
-  onReadyToPublishClick(e) {
+  onSendToSpecificStageClick(e) {
     e.preventDefault();
 
     const eventTarget = e.currentTarget;
     const tr = eventTarget.closest("tr");
     const workspaceId = tr.getAttribute("data-t3ver_wsid");
+    const workspaceStage = eventTarget.getAttribute("data-workspace-stage");
 
     if (!tr) {
       return;
@@ -176,7 +177,7 @@ export default class RecordlistWorkspaceReadyToPublish {
 
     const payload = {
       action: "Actions",
-      data: ["-10", [affectedRecord], TYPO3.settings.Workspaces.token],
+      data: [workspaceStage, [affectedRecord], TYPO3.settings.Workspaces.token],
       method: "sendToSpecificStageWindow",
       tid: 1,
       type: "rpc"
@@ -199,7 +200,7 @@ export default class RecordlistWorkspaceReadyToPublish {
             const serializedForm = Utility.convertFormToObject(modal.querySelector("form"));
             serializedForm.affects = {
               elements: [affectedRecord],
-              nextStage: "-10"
+              nextStage: workspaceStage
             };
 
             const payload = {

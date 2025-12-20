@@ -83,6 +83,10 @@
 				<source />
 				<target>Freigabe erteilen</target>
 			</trans-unit>
+			<trans-unit id="table.button.requestChanges">
+				<source />
+				<target>Änderungen anfordern</target>
+			</trans-unit>
 			<trans-unit id="table.button.original">
 				<source />
 				<target>Original</target>
