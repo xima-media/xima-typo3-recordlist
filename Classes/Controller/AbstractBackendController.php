@@ -1362,27 +1362,61 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addLanguageSelectionToModuleTemplate(): void
     {
         $languageField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
-        if (!$languageField) {
+        $languages = $this->getLanguages();
+        if (!$languageField || count($languages) <= 1) {
             return;
         }
-        $languageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
-        $languageMenu->setIdentifier('languageSelector');
-        $languageMenu->setLabel('');
-        $languages = $this->getLanguages();
+
+        if ($this->getTypo3Version() === 13) {
+            $languageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+            $languageMenu->setIdentifier('languageSelector');
+            $languageMenu->setLabel('');
+            foreach ($languages as $languageKey => $language) {
+                $menuItem = $languageMenu
+                    ->makeMenuItem()
+                    ->setTitle($language['title'])
+                    ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
+                        $this->getModuleName(),
+                        ['id' => $this->getCurrentPid(), 'language' => $languageKey]
+                    ));
+                if ($this->getActiveLanguage() === $languageKey) {
+                    $menuItem->setActive(true);
+                }
+                $languageMenu->addMenuItem($menuItem);
+            }
+            $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $items = [];
+        $activeItem = null;
         foreach ($languages as $languageKey => $language) {
-            $menuItem = $languageMenu
-                ->makeMenuItem()
-                ->setTitle($language['title'])
+            $item = $componentFactory->createDropDownItem()
+                ->setIcon($this->iconFactory->getIcon($language['flagIcon'], IconSize::SMALL))
+                ->setLabel($language['title'])
                 ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                     $this->getModuleName(),
                     ['id' => $this->getCurrentPid(), 'language' => $languageKey]
-                ));
+                ))
+                ->setTitle($language['title']);
             if ($this->getActiveLanguage() === $languageKey) {
-                $menuItem->setActive(true);
+                $activeItem = $language;
+                $item->setActive(true);
             }
-            $languageMenu->addMenuItem($menuItem);
+            $items[] = $item;
         }
-        $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($languageMenu);
+        $activeItem ??= $items[0];
+        $selectorLabel = $activeItem['title'];
+        $languageSelector = $componentFactory->createDropDownButton()
+            ->setLabel($selectorLabel)
+            ->setShowActiveLabelText(true)
+            ->setIcon($this->iconFactory->getIcon($activeItem['flagIcon']))
+            ->setShowLabelText(true);
+        foreach ($items as $item) {
+            $languageSelector->addItem($item);
+        }
+        $this->moduleTemplate->getDocHeaderComponent()->setLanguageSelector($languageSelector);
     }
 
     protected function addPidSelectionToModuleTemplate(): void
