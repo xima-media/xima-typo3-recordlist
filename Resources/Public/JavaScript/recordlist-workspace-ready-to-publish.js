@@ -28,6 +28,7 @@ export default class RecordlistWorkspaceReadyToPublish {
   confirmDeleteRecordFromWorkspace(e) {
     e.preventDefault();
     const btn = e.currentTarget;
+    const typo3version = parseInt(btn.getAttribute("data-typo3-version"));
     const tr = btn.closest("tr");
     const workspaceId = tr.getAttribute("data-t3ver_wsid");
     const modal = Modal.confirm(TYPO3.lang["window.discard.title"], TYPO3.lang["window.discard.message"], SeverityEnum.warning, [
@@ -48,7 +49,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           const payload = {
             action: "Actions",
             data: [tr.getAttribute("data-table"), tr.getAttribute("data-uid")],
-            method: "discardSingleRecord",
+            method: typo3version === 13 ? "deleteSingleRecord" : "discardSingleRecord",
             tid: 2,
             type: "rpc"
           };

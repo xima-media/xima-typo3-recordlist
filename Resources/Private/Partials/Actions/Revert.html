@@ -6,7 +6,13 @@
 </f:if>
 
 <f:if condition="{item.t3ver_oid} && {item.editable}">
-    <a href="#" class="btn btn-default" title="{f:translate(key:label)}" data-bs-toggle="tooltip" data-workspace-action="remove">
+    <a
+        href="#"
+        class="btn btn-default"
+        title="{f:translate(key:label)}"
+        data-bs-toggle="tooltip"
+        data-workspace-action="remove"
+        data-typo3-version="{typo3version}">
         <core:icon identifier="actions-undo" size="small" />
     </a>
 </f:if>
