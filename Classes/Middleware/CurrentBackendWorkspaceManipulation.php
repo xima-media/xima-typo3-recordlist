@@ -26,6 +26,7 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
             'ajax_workspace_dispatch',
             'record_edit',
             'ajax_xima_recordlist_delete',
+            'ajax_xima_recordlist_inline_edit',
         ];
         if (!in_array($identifier, $routesToHandle, true)) {
             return $handler->handle($request);

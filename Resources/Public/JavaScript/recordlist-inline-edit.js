@@ -85,6 +85,7 @@ class RecordlistInlineEdit {
             button.innerHTML = icon
         })
 
+        const workspaceId = tr.getAttribute('data-t3ver_wsid');
         const table = tr.dataset.table;
         const uid = tr.dataset.uid;
         const column = div.dataset.column;
@@ -96,7 +97,10 @@ class RecordlistInlineEdit {
         payload.append('column', column);
         payload.append('newValue', newValue);
 
-        return new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_inline_edit).post('', {body: payload}).then(() => {
+        return new AjaxRequest(TYPO3.settings.ajaxUrls.xima_recordlist_inline_edit)
+          .withQueryArguments({workspaceId: workspaceId})
+          .post('', {body: payload})
+          .then(() => {
             span.dataset.originalValue = newValue;
             div.classList.remove('changed');
         }).finally(() => {
