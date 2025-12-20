@@ -16,6 +16,10 @@ class FilesController extends AbstractBackendController
         return 0;
     }
 
+    protected function addNewButtonToModuleTemplate(): void
+    {
+    }
+
     public function modifyTableConfiguration(): void
     {
         $this->tableConfiguration['columns']['title']['defaultPosition'] = 2;
