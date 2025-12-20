@@ -1402,17 +1402,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ))
                 ->setTitle($language['title']);
             if ($this->getActiveLanguage() === $languageKey) {
-                $activeItem = $language;
+                $activeItem = $item;
                 $item->setActive(true);
             }
             $items[] = $item;
         }
         $activeItem ??= $items[0];
-        $selectorLabel = $activeItem['title'];
+        $selectorLabel = $activeItem->getTitle();
         $languageSelector = $componentFactory->createDropDownButton()
             ->setLabel($selectorLabel)
             ->setShowActiveLabelText(true)
-            ->setIcon($this->iconFactory->getIcon($activeItem['flagIcon']))
+            ->setIcon($activeItem->getIcon())
             ->setShowLabelText(true);
         foreach ($items as $item) {
             $languageSelector->addItem($item);
