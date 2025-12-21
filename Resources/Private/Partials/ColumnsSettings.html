@@ -30,7 +30,7 @@
     </div>
 </div>
 
-<ul class="row" id="sortable-list">
+<ul class="row typo3version-{typo3version}" id="sortable-list">
 
     <f:for each="{tableConfiguration.columns}" as="column">
         <li class="col-6 t3js-column-selector-container d-flex gap-3 pt-2" data-column-name="{column.label}{column.columnName}">
@@ -87,9 +87,17 @@
         cursor: move;
     }
 
+    .typo3version-13 {
+        --drag-handle-color: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.3));
+    }
+
+    .typo3version-14 {
+        --drag-handle-color: var(--typo3-modal-border-color);
+    }
+
     span.drag,
     span.drag::before {
-        background-image: radial-gradient(var(--typo3-modal-border-color, black) 40%, transparent 40%);
+        background-image: radial-gradient(var(--drag-handle-color) 40%, transparent 40%);
         background-size: 4px 4px;
         background-position: 0 100%;
         background-repeat: repeat;
