@@ -237,44 +237,6 @@ export default class RecordlistWorkspaceReadyToPublish {
     const result = response[0].result;
     const $form = $("<form />");
 
-    if (typeof result.sendMailTo !== "undefined" && result.sendMailTo.length > 0) {
-
-      for (const recipient of result.sendMailTo) {
-        $form.append(
-          $("<div />", { class: "form-check hidden" }).append(
-            $("<input />", {
-              type: "checkbox",
-              name: "recipients",
-              class: "form-check-input t3js-workspace-recipient",
-              id: recipient.name,
-              value: recipient.value
-            }).prop("checked", recipient.checked).prop("disabled", recipient.disabled),
-            $("<label />", {
-              class: "form-check-label",
-              for: recipient.name
-            }).text(recipient.label)
-          )
-        );
-      }
-    }
-
-    if (typeof result.additional !== "undefined") {
-      $form.append(
-        $("<div />", { class: "form-group hidden" }).append(
-          $("<label />", {
-            class: "form-label",
-            "for": "additional"
-          }).text(TYPO3.lang["window.sendToNextStageWindow.additionalRecipients"]),
-          $("<textarea />", {
-            class: "form-control",
-            name: "additional",
-            id: "additional"
-          }).text(result.additional.value),
-          $("<div />", { class: "form-text" }).text(TYPO3.lang["window.sendToNextStageWindow.additionalRecipients.hint"])
-        )
-      );
-    }
-
     $form.append(
       $("<div />", { class: "form-group" }).append(
         $("<label />", {
