@@ -104,13 +104,13 @@ export default class RecordlistWorkspaceReadyToPublish {
     }
 
     const modal = Modal.advanced({
-      title: "Datensatz veröffentlichen",
+      title: TYPO3.lang['workspace.readyToPublish.modal.title'],
       size: Modal.sizes.small,
       severity: SeverityEnum.info,
-      content: "Möchten Sie den Datensatz wirklich veröffentlichen?",
+      content: TYPO3.lang['workspace.readyToPublish.modal.content'],
       buttons: [
         {
-          text: "Nein, abbrechen",
+          text: TYPO3.lang['workspace.readyToPublish.button.cancel'],
           icon: "actions-close",
           btnClass: "btn-default",
           trigger: function() {
@@ -118,7 +118,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           }
         },
         {
-          text: "Ja, veröffentlichen",
+          text: TYPO3.lang['workspace.readyToPublish.button.confirm'],
           icon: "actions-check",
           btnClass: "btn-success",
           trigger: function() {
@@ -163,7 +163,8 @@ export default class RecordlistWorkspaceReadyToPublish {
     const eventTarget = e.currentTarget;
     const tr = eventTarget.closest("tr");
     const workspaceId = tr.getAttribute("data-t3ver_wsid");
-    const workspaceStage = eventTarget.getAttribute("data-workspace-stage");
+    const workspaceStage = parseInt(eventTarget.getAttribute("data-workspace-stage"));
+    const stageName = workspaceStage === -10 ? 'readyToPublish' : 'requestChanges';
 
     if (!tr) {
       return;
@@ -219,7 +220,10 @@ export default class RecordlistWorkspaceReadyToPublish {
                 }
               })
               .then(async () => {
-                Notification.success("Anfrage erfolgreich", "Die Anfrage zur Freigabe wurde erfolgreich übermittelt");
+                Notification.success(
+                  TYPO3.lang[`workspace.${stageName}.notification.success.title`],
+                  TYPO3.lang[`workspace.${stageName}.notification.success.description`]
+                );
                 modal.hideModal();
                 top?.TYPO3.Backend.ContentContainer.refresh();
               });

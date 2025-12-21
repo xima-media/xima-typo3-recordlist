@@ -255,6 +255,38 @@
 				<source>of %1$d</source>
 				<target>von %1$d</target>
 			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.title">
+				<source />
+				<target>Datensatz veröffentlichen</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.content">
+				<source />
+				<target>Möchten Sie den Datensatz wirklich veröffentlichen?</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.cancel">
+				<source />
+				<target>Nein, abbrechen</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.confirm">
+				<source />
+				<target>Ja, veröffentlichen</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.title">
+				<source />
+				<target>Anfrage erfolgreich</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.description">
+				<source />
+				<target>Die Anfrage zur Freigabe wurde erfolgreich übermittelt</target>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.title">
+				<source />
+				<target>Anfrage erfolgreich</target>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.description">
+				<source />
+				<target>Die Anfrage für Änderungen wurde erfolgreich übermittelt</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

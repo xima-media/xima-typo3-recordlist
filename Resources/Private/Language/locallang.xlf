@@ -192,6 +192,30 @@
 			<trans-unit id="pagination.of">
 				<source>of %1$d</source>
 			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.title">
+				<source>Publish record</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.content">
+				<source>Are you sure you want to mark this record as ready to publish?</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.cancel">
+				<source>No, cancel</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.confirm">
+				<source>Yes, publish</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.title">
+				<source>Request successful</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.description">
+				<source>The record has been marked as ready to publish.</source>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.title">
+				<source>Request successful</source>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.description">
+				<source>The change request has been sent successfully.</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
