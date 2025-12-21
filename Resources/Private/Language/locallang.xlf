@@ -196,7 +196,7 @@
 				<source>Publish record</source>
 			</trans-unit>
 			<trans-unit id="workspace.readyToPublish.modal.content">
-				<source>Are you sure you want to mark this record as ready to publish?</source>
+				<source>Are you sure you want to publish this record?</source>
 			</trans-unit>
 			<trans-unit id="workspace.readyToPublish.button.cancel">
 				<source>No, cancel</source>
