@@ -72,8 +72,9 @@
                             class="dropdown-item t3js-record-edit-multiple"
                             title="{editFieldOfRecordslabel}"
                             aria-label="{editFieldOfRecordslabel}"
-                            data-return-url="#"
-                            data-columns-only="[&quot;title&quot;]">
+                            data-table="{table}"
+                            data-return-url="{f:uri.action()}"
+                            data-columns-only="[&quot;{colConfig.columnName}&quot;]">
                             <span class="dropdown-item-columns">
                                 <span class="dropdown-item-column dropdown-item-column-icon">
                                     <core:icon identifier="actions-document-open" size="small" />
