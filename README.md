@@ -4,21 +4,62 @@
 
 # TYPO3 Recordlist
 
+**Quickly create feature-rich TYPO3 backend modules for managing records**
+
 </div>
 
-This package allows you to quickly create backend modules for advanced record listing.
+[![TYPO3](https://img.shields.io/badge/TYPO3-13.4%20%7C%2014.0-orange.svg)](https://typo3.org/)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://www.php.net/)
+[![License](https://img.shields.io/badge/license-GPL--2.0--or--later-green.svg)](LICENSE)
 
-Optional workspaces integration: More simple workflow for requesting and approving changes.
+---
+
+This extension provides a powerful abstract controller for creating advanced record listing backend modules in TYPO3. Save development time by extending `AbstractBackendController` instead of building record lists from scratch.
 
 ![Screenshot](Documentation/Images/Preview.png)
 
+## Table of Contents
+
+- [Why Use This Extension?](#why-use-this-extension)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Install](#install)
+- [Quick Start](#quick-start)
+- [Customization](#customization)
+    - [Templates](#templates)
+    - [Modifying Records](#modifying-records)
+    - [Custom Filters](#custom-filters)
+    - [Column Configuration](#column-configuration)
+    - [Custom Actions](#custom-actions)
+- [Contributing](#contributing)
+- [Documentation](#documentation)
+
+## Why Use This Extension?
+
+Building custom backend modules for listing and managing records typically requires significant boilerplate code. This extension eliminates that overhead by providing:
+
+- **Rapid Development**: Get a fully-functional backend module with just a few lines of code
+- **Rich Features Out-of-the-Box**: Filtering, sorting, pagination, inline editing, and more
+- **Multiple Table Support**: Manage related tables in a single module with automatic table switching
+- **Workspace Integration**: Built-in support for TYPO3 workspaces with simplified approval workflows
+- **Highly Customizable**: Override templates, modify queries, add custom columns, and extend behavior
+
 ## Features
 
-* List records from any table
-* Filter records by any field
-* Sort records by any field
-* Configurable + sortable columns
-* Inline editing support
+- **List records** from any TYPO3 table
+- **Filter records** by any field with customizable filters
+- **Sort records** by any column
+- **Configurable columns** with user-customizable visibility and order
+- **Inline editing** for quick record updates
+- **Multiple tables** in a single module with dropdown selection
+- **Workspace integration** for content approval workflows
+- **Pagination** for handling large datasets
+- **View record** button linking to frontend preview
+
+## Requirements
+
+- TYPO3 13.4+ or 14.0+
+- PHP 8.2+
 
 ## Install
 
@@ -26,14 +67,21 @@ Optional workspaces integration: More simple workflow for requesting and approvi
 composer require xima/xima-typo3-recordlist
 ```
 
-## Usage
+## Documentation
 
-Start by creating a new backend controller in your TYPO3 extension.
+- 📋 [Changelog](CHANGELOG.md) - See what's new in each version
+- 🔄 [Migration Guide](MIGRATION.md) - Upgrading from 13.x to 14.x
+- 📁 [Example Controllers](Classes/Controller/Example) - Working implementation examples
+- 🛠️ [Contributing Guide](CONTRIBUTING.md) - Development setup and contribution guidelines
+
+## Quick Start
+
+Get a working backend module in 3 simple steps:
 
 ### 1. Extend new controller from `AbstractBackendController`
 
 The controller implements the `BackendControllerInterface` which requires you to add the
-methods `getTableName()` and `getRecordPid()`:
+methods `getTableNames()` and `getRecordPid()`:
 
 ```php
 <?php
@@ -45,9 +93,9 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 
 class UserController extends AbstractBackendController
 {
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'fe_users';
+        return ['fe_users'];
     }
 
     public function getRecordPid(): int
@@ -57,150 +105,178 @@ class UserController extends AbstractBackendController
 }
 ```
 
-### 2. Register Backend module
+**Note:** For multiple tables in one module, return multiple table names:
+```php
+public function getTableNames(): array
+{
+    return ['be_users', 'be_groups', 'sys_filemounts'];
+}
+```
 
-Add a new backend module via
-the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ExtensionArchitecture/HowTo/BackendModule/ModuleConfiguration.html).
-You're free to adjust the settings as you like, the only important setting is the `controllerActions`, which needs to point to your newly
-created controller:
+### 2. Register Backend Module
+
+Register your module using the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ExtensionArchitecture/HowTo/BackendModule/ModuleConfiguration.html). The key setting is `controllerActions`, which must reference your controller:
 
 ```php
 <?php
 // EXT:my_extension/Configuration/Backend/Modules.php
 
-use Xima\XimaTypo3Recordlist\Controller\ExamplePagesController;
+use Vendor\MyExtension\Controller\Backend\UserController;
 
 return [
-    'example_pages' => [
+    'my_extension_users' => [
         'parent' => 'web',
         'position' => ['after' => 'list'],
         'access' => 'user',
-        'iconIdentifier' => 'module-cshmanual',
+        'iconIdentifier' => 'content-text',
         'workspaces' => '*',
-        'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang_pages_module.xlf',
+        'labels' => 'LLL:EXT:my_extension/Resources/Private/Language/locallang_module.xlf',
         'extensionName' => 'MyExtension',
         'controllerActions' => [
-            ExamplePagesController::class => [
-                'processRequest',
+            UserController::class => [
+                'processRequest', // Required action
             ],
         ],
         'inheritNavigationComponentFromMainModule' => false,
     ],
 ];
-
 ```
 
-### 3. Configure template path
+### 3. Configure Template Path
 
-To use the template and partials, you need to add the template path to your
-sitepackge [with TSconfig](https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/12.0/Feature-96812-OverrideBackendTemplatesWithTSconfig.html#feature-96812):
+Add the template path to your sitepackage [using TSconfig](https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/12.0/Feature-96812-OverrideBackendTemplatesWithTSconfig.html#feature-96812):
 
-```
+```typoscript
 # EXT:my_extension/Configuration/page.tsconfig
 templates.vendor/my-extension.1740563365 = xima/xima-typo3-recordlist:Resources/Private/
 ```
 
-That's it. You can find working examples in the [Example directory](Classes/Controller/Example).
+**That's it!** Your backend module is now ready to use. Open the TYPO3 backend and navigate to your new module to see it in action.
+
+> 💡 **Tip:** Check out the [Example directory](Classes/Controller/Example) for working implementations including single-table and multi-table modules.
 
 ## Customization
 
-### Template
+The extension is highly customizable through method overrides in your controller. Here are the most common customization options:
 
-To a customize the template, partials or sections, you need to configure an additional template path in your TSconfig:
+### Templates
 
-```
+Override templates, partials, or sections by configuring an additional template path in your TSconfig:
+
+```typoscript
 # EXT:my_extension/Configuration/page.tsconfig
 templates.vendor/my-extension.1740570140 = my-vendor/my-extension:Resources/Private/TemplateOverrides
 ```
 
-Inside your TemplateOverrides folder, create a `templates` directory, copy the [Default.html](Resources/Private/Templates/Default.html) file
-into it and adjust it to your needs.
+Inside your TemplateOverrides folder, create a `Templates` directory, copy the [Default.html](Resources/Private/Templates/Default.html) file, and customize it.
 
-In case you have multiple backend modules, you can adjust the template name by overriding the `TEMPLATE_NAME` constant in your controller:
+**Using a Custom Template Name**
+
+If you have multiple backend modules, specify a different template name:
 
 ```php
-<?php
-
 class UserController extends AbstractBackendController
 {
     protected const TEMPLATE_NAME = 'Custom';
 }
 ```
 
-### Data
+### Modifying Records
 
-Each record item can be modified using the `modifyRecord` method:
+Add computed fields or transform data by overriding the `modifyRecord()` method:
 
 ```php
 class UserController extends AbstractBackendController
 {
     public function modifyRecord(array &$record): void
     {
+        // Add computed field
         $record['fullName'] = $record['first_name'] . ' ' . $record['last_name'];
+
+        // Format date
+        $record['formatted_date'] = date('Y-m-d', $record['crdate']);
     }
 }
 ```
 
-Add new filter options
+### Custom Filters
+
+Add custom filter options by modifying the query builder:
 
 ```php
 class UserController extends AbstractBackendController
 {
     public function modifyQueryBuilder(): void
     {
-        if (isset($body['register_date']) && $body['register_date']) {
-            $registerDate = new DateTime($body['register_date']);
-            $this->additionalConstraints[] = $this->queryBuilder->expr()->gte('register_date', $registerDate->getTimestamp());
+        $body = $this->request->getParsedBody();
+
+        // Add custom date filter
+        if (!empty($body['register_date'])) {
+            $registerDate = new \DateTime($body['register_date']);
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->gte(
+                'register_date',
+                $registerDate->getTimestamp()
+            );
+        }
+
+        // Add custom status filter
+        if (!empty($body['status'])) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq(
+                'status',
+                $this->queryBuilder->createNamedParameter($body['status'])
+            );
         }
     }
 }
 ```
 
-### Default columns
+### Column Configuration
 
-To change the default columns, you can override the `modifyTableConfiguration` method:
+#### Configure Default Columns
+
+Set which columns appear by default and in what order:
 
 ```php
-<?php
-
 class NewsController extends AbstractBackendController
 {
     public function modifyTableConfiguration(): void
     {
-        $this->tableConfiguration['columns']['fal_media']['defaultPosition'] = 2;
-        $this->tableConfiguration['columns']['author']['defaultPosition'] = 3;
-        $this->tableConfiguration['columns']['sitemap_changefreq']['defaultPosition'] = 4;
-        $this->tableConfiguration['columns']['sys_language_uid']['defaultPosition'] = 5;
-        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 6;
+        $this->tableConfiguration['your-table-name']['columns']['fal_media']['defaultPosition'] = 2;
+        $this->tableConfiguration['your-table-name']['columns']['author']['defaultPosition'] = 3;
+        $this->tableConfiguration['your-table-name']['columns']['sitemap_changefreq']['defaultPosition'] = 4;
+        $this->tableConfiguration['your-table-name']['columns']['sys_language_uid']['defaultPosition'] = 5;
+        $this->tableConfiguration['your-table-name']['columns']['workspace-status']['defaultPosition'] = 6;
     }
 }
 ```
 
-### Custom Columns
+#### Enable Inline Editing
 
-To add custom columns, you can override the `modifyTableConfiguration` method:
+Make specific columns editable inline by assigning a partial:
 
 ```php
-<?php
-
 class UserController extends AbstractBackendController
 {
     public function modifyTableConfiguration(): void
     {
-        // make title field inline editiable
-        $this->tableConfiguration['columns']['title']['partial'] = 'TextInlineEdit';
+        // Enable inline editing for title field
+        $this->tableConfiguration['your-table-name']['columns']['title']['partial'] = 'TextInlineEdit';
+
+        // Enable inline editing for description
+        $this->tableConfiguration['your-table-name']['columns']['description']['partial'] = 'TextInlineEdit';
     }
 }
 ```
 
-### View Action
+### Custom Actions
 
-The view button is automatically displayed if [TCEMAIN.preview](https://docs.typo3.org/permalink/t3tsref:pagetcemain-preview) is configured for this table.
+#### Adding View/Preview Actions
 
-To manually add a view action, you can override the `url` property of records:
+The view button is automatically displayed if [TCEMAIN.preview](https://docs.typo3.org/permalink/t3tsref:pagetcemain-preview) is configured for your table.
+
+To manually add view URLs:
 
 ```php
-
 class UserController extends AbstractBackendController
 {
     protected function modifyPaginatedRecords(): void
@@ -208,14 +284,25 @@ class UserController extends AbstractBackendController
         parent::modifyPaginatedRecords();
 
         foreach ($this->records as &$record) {
-            $record['url'] = 'https://example.com/view/' . $record['uid'];
+            // Add custom frontend URL
+            $record['url'] = 'https://example.com/user/' . $record['uid'];
         }
     }
 }
 ```
 
-## Development and Contribution
+## Contributing
 
-For easy development, you can use the provided ddev setup. Simply run `ddev start` and open the URL in your browser.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 
-After a `composer install`, you can run `ddev init-typo3` to setup a TYPO3 installation with example data. Login with `admin` / `Passw0rd!` and `editor` / `Passw0rd!`.
+## License
+
+This extension is licensed under [GPL-2.0-or-later](LICENSE).
+
+## Credits
+
+Developed and maintained by [XIMA Media GmbH](https://www.xima.de).
+
+---
+
+**Found this extension helpful?** Please star ⭐ the repository!
