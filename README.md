@@ -31,8 +31,8 @@ This extension provides a powerful abstract controller for creating advanced rec
     - [Custom Filters](#custom-filters)
     - [Column Configuration](#column-configuration)
     - [Custom Actions](#custom-actions)
-- [Contributing](#contributing)
 - [Documentation](#documentation)
+- [Contributing](#contributing)
 
 ## Why Use This Extension?
 
@@ -66,13 +66,6 @@ Building custom backend modules for listing and managing records typically requi
 ```bash
 composer require xima/xima-typo3-recordlist
 ```
-
-## Documentation
-
-- 📋 [Changelog](CHANGELOG.md) - See what's new in each version
-- 🔄 [Migration Guide](MIGRATION.md) - Upgrading from 13.x to 14.x
-- 📁 [Example Controllers](Classes/Controller/Example) - Working implementation examples
-- 🛠️ [Contributing Guide](CONTRIBUTING.md) - Development setup and contribution guidelines
 
 ## Quick Start
 
@@ -290,6 +283,13 @@ class UserController extends AbstractBackendController
     }
 }
 ```
+
+## Documentation
+
+- 📋 [Changelog](CHANGELOG.md) - See what's new in each version
+- 🔄 [Migration Guide](MIGRATION.md) - Upgrading from 13.x to 14.x
+- 📁 [Example Controllers](Classes/Controller/Example) - Working implementation examples
+
 
 ## Contributing
 
