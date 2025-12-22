@@ -236,6 +236,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getAccessibleChildPages(): array
     {
         $pageUid = $this->getRecordPid();
+        if ($pageUid === 0) {
+            return [['uid' => 0]];
+        }
+
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
         $result = $qb->select('uid', 'title')
             ->from('pages')
