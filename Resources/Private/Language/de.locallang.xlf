@@ -135,6 +135,18 @@
 				<source />
 				<target>Abbrechen</target>
 			</trans-unit>
+			 <trans-unit id="table.th.sortDescending">
+				 <source />
+				 <target>Absteigend sortieren</target>
+			 </trans-unit>
+			 <trans-unit id="table.th.sortAscending">
+				 <source />
+				 <target>Aufsteigend sortieren</target>
+			 </trans-unit>
+			 <trans-unit id="table.th.editFieldOfRecords">
+				 <source />
+				 <target>Das '%s'-Feld der aufgelisteten Einträge bearbeiten</target>
+			 </trans-unit>
 			<trans-unit id="modal.delete.title">
 				<source />
 				<target>Datei löschen</target>

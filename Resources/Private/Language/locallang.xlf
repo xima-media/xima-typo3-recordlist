@@ -102,6 +102,15 @@
 			<trans-unit id="table.button.cancel">
 				<source>Cancel</source>
 			</trans-unit>
+			<trans-unit id="table.th.sortDescending">
+				<source>Sort descending</source>
+			</trans-unit>
+			<trans-unit id="table.th.sortAscending">
+				<source>Sort ascending</source>
+			</trans-unit>
+			<trans-unit id="table.th.editFieldOfRecords">
+				<source>Edit the '%s' field of the listed records</source>
+			</trans-unit>
 			<trans-unit id="modal.delete.title">
 				<source>Delete file</source>
 			</trans-unit>
