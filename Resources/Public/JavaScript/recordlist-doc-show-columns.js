@@ -101,7 +101,7 @@ export default class RecordlistDocShowColumns {
       }
     })
 
-    UserSettings.update('activeColumns', activeColumns.join(',')).then(r => {
+    UserSettings.update(TYPO3.settings.XimaTypo3Recordlist.currentTable + '.activeColumns', activeColumns.join(',')).then(r => {
       window.location.reload()
     })
 

@@ -120,6 +120,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // module: get name + settings
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $this->getModuleName());
+        $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'currentTable', $this->getTableName());
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-order-links.js')
@@ -302,6 +303,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $moduleData = $this->getModuleData();
         $body = $this->request->getParsedBody();
+        $tableName = $this->getTableName();
 
         if ($this->request->getMethod() === 'POST') {
             unset($body['__referrer'], $body['__trustedProperties'], $body['is_download']);
@@ -313,11 +315,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 unset($moduleData['settings']['language'], $moduleData['settings']['onlyOfflineRecords'], $moduleData['settings']['onlyReadyToPublish']);
             }
 
-            $moduleData['search'] = $body;
+            $moduleData[$tableName . '.search'] = $body;
             $this->getBackendAuthentication()->pushModuleData($this->getModuleName(), $moduleData);
-        } elseif (!empty($moduleData['search'])) {
+        } elseif (!empty($moduleData[$tableName . '.search'])) {
             // fake request body from moduleData
-            $this->request = $this->request->withParsedBody($moduleData['search']);
+            $this->request = $this->request->withParsedBody($moduleData[$tableName . '.search']);
         }
 
         // add requested language to module settings
@@ -493,12 +495,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $table = $this->request->getQueryParams()['table'] ?? $this->request->getParsedBody()['table'] ?? '';
         if (in_array($table, $this->getTableNames(), true)) {
             // persist selected table in module data
-            $this->addToModuleDataSettings(['table' => $table]);
+            $this->addToModuleDataSettings(['currentTable' => $table]);
             return $table;
         }
 
         // read from module data
-        $moduleDataTable = $this->getModuleDataSetting('table');
+        $moduleDataTable = $this->getModuleDataSetting('currentTable');
         if (is_string($moduleDataTable) && in_array($moduleDataTable, $this->getTableNames(), true)) {
             return $moduleDataTable;
         }
@@ -781,13 +783,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             // demand: readyToPublish (2/2)
-            if ($this->getModuleDataSetting('onlyReadyToPublish') && (!is_array($vRecord) || $record['t3ver_stage'] !== -10)) {
+            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish') && (!is_array($vRecord) || $record['t3ver_stage'] !== -10)) {
                 $record = null;
                 continue;
             }
 
             // demand: offline records (2/2)
-            if ($this->getModuleDataSetting('onlyOfflineRecords') && !is_array($vRecord)) {
+            if ($this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords') && !is_array($vRecord)) {
                 $record = null;
                 continue;
             }
@@ -831,7 +833,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $tableName = $this->getTableName();
         $defaultColumn = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? '';
-        $languageColumn = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
+        $languageColumn = $GLOBALS['TCA'][$tableName]['ctrl']['languageField'] ?? '';
 
         $columns = [];
         foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
@@ -931,7 +933,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         ksort($columns);
 
-        $this->tableConfiguration = [
+        $this->tableConfiguration[$tableName] = [
             'columns' => $columns,
             'groupActions' => [
                 'Translate',
@@ -959,18 +961,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function processTableConfiguration(): void
     {
         $body = $this->request->getParsedBody();
+        $tableName = $this->getTableName();
 
-        $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting('activeColumns') ?? ''));
+        $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting($tableName . '.activeColumns') ?? ''));
         if (!count($activeColumns)) {
             $defaultColumns = array_filter(
-                $this->tableConfiguration['columns'],
+                $this->tableConfiguration[$tableName]['columns'],
                 static fn ($column) => isset($column['defaultPosition']) && $column['defaultPosition'] > 0
             );
             uasort($defaultColumns, static fn ($a, $b) => $a['defaultPosition'] <=> $b['defaultPosition']);
             $activeColumns = array_keys($defaultColumns);
         }
 
-        foreach ($this->tableConfiguration['columns'] as $columnName => &$column) {
+        foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => &$column) {
             // translate label
             if (!isset($column['label'])) {
                 $column['label'] = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName]['label'] ?? '';
@@ -995,13 +998,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // sort active columns to top
         $sortedColumns = [];
         foreach ($activeColumns as $activeColumn) {
-            $sortedColumns[] = $this->tableConfiguration['columns'][$activeColumn];
+            $sortedColumns[] = $this->tableConfiguration[$tableName]['columns'][$activeColumn];
         }
-        $sortedColumns = array_merge($sortedColumns, array_diff_key($this->tableConfiguration['columns'], array_flip($activeColumns)));
+        $sortedColumns = array_merge($sortedColumns, array_diff_key($this->tableConfiguration[$tableName]['columns'], array_flip($activeColumns)));
 
-        $this->tableConfiguration['columns'] = $sortedColumns;
-        $this->tableConfiguration['columnCount'] = count($activeColumns) + (isset($this->tableConfiguration['groupActions']) || isset($this->tableConfiguration['actions']) ? 1 : 0);
-        $this->moduleTemplate->assign('tableConfiguration', $this->tableConfiguration);
+        $this->tableConfiguration[$tableName]['columns'] = $sortedColumns;
+        $this->tableConfiguration[$tableName]['columnCount'] = count($activeColumns) + (isset($this->tableConfiguration[$tableName]['groupActions']) || isset($this->tableConfiguration[$tableName]['actions']) ? 1 : 0);
+        $this->moduleTemplate->assign('tableConfiguration', $this->tableConfiguration[$tableName]);
     }
 
     protected function initPaginator(): void
@@ -1132,7 +1135,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addSysFileReferences(): void
     {
-        foreach ($this->tableConfiguration['columns'] as $column) {
+        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
             if ($column['partial'] !== 'SysFileReferences') {
                 continue;
             }
@@ -1149,7 +1152,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addSysFiles(): void
     {
-        foreach ($this->tableConfiguration['columns'] as $column) {
+        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
             if ($column['partial'] !== 'SysFile') {
                 continue;
             }
@@ -1210,7 +1213,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addSysCategories(): void
     {
-        foreach ($this->tableConfiguration['columns'] as $column) {
+        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
             if (($column['partial'] ?? '') !== 'Category') {
                 continue;
             }
@@ -1348,7 +1351,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-download-button.js')
-                ->instance($this->getTableName(), $this->tableConfiguration['columns'])
+                ->instance($this->getTableName(), $this->tableConfiguration[$this->getTableName()]['columns'])
         );
 
         $url = $this->backendUriBuilder->buildUriFromRoutePath($this->request->getAttribute('module')->getPath());
@@ -1372,7 +1375,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addSearchButtonToNewModuleTemplate(): void
     {
-        $isSearchButtonActive = (string)$this->getModuleDataSetting('isSearchButtonActive');
+        $isSearchButtonActive = (string)$this->getModuleDataSetting($this->getTableName() . '.isSearchButtonActive');
         $searchClass = $isSearchButtonActive ? 'active' : '';
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
