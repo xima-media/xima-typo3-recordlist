@@ -62,3 +62,11 @@ main.recordlist ul.pagination input.form-control {
 .recordlist table.table tr[data-state="deleted"] td {
     background-color: color-mix(in srgb, var(--typo3-badge-danger-bg) 15%, transparent) !important;
 }
+
+.recordlist table .dropdown-static {
+    position: relative;
+}
+
+.recordlist table .dropdown-static .dropdown-menu {
+    top: 24px;
+}
