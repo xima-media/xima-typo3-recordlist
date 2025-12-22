@@ -316,7 +316,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if (isset($body['reset'])) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
-                unset($moduleData['settings']['language'], $moduleData['settings']['onlyOfflineRecords'], $moduleData['settings']['onlyReadyToPublish']);
+                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
