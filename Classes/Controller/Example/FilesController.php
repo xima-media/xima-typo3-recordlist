@@ -22,11 +22,11 @@ class FilesController extends AbstractBackendController
 
     public function modifyTableConfiguration(): void
     {
-        $this->tableConfiguration['columns']['title']['defaultPosition'] = 2;
-        $this->tableConfiguration['columns']['alternative']['defaultPosition'] = 3;
-        $this->tableConfiguration['columns']['description']['defaultPosition'] = 4;
+        $this->tableConfiguration['sys_file_metadata']['columns']['title']['defaultPosition'] = 2;
+        $this->tableConfiguration['sys_file_metadata']['columns']['alternative']['defaultPosition'] = 3;
+        $this->tableConfiguration['sys_file_metadata']['columns']['description']['defaultPosition'] = 4;
 
-        $this->tableConfiguration['groupActions'] = [
+        $this->tableConfiguration['sys_file_metadata']['groupActions'] = [
             'View',
             'Edit',
             'DeleteFile',

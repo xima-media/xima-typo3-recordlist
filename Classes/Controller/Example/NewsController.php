@@ -22,12 +22,12 @@ class NewsController extends AbstractBackendController
 
     public function modifyTableConfiguration(): void
     {
-        $this->tableConfiguration['columns']['author']['partial'] = 'TextInlineEdit';
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['author']['partial'] = 'TextInlineEdit';
 
-        $this->tableConfiguration['columns']['fal_media']['defaultPosition'] = 2;
-        $this->tableConfiguration['columns']['author']['defaultPosition'] = 3;
-        $this->tableConfiguration['columns']['sitemap_changefreq']['defaultPosition'] = 4;
-        $this->tableConfiguration['columns']['sys_language_uid']['defaultPosition'] = 5;
-        $this->tableConfiguration['columns']['workspace-status']['defaultPosition'] = 6;
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['fal_media']['defaultPosition'] = 2;
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['author']['defaultPosition'] = 3;
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['sitemap_changefreq']['defaultPosition'] = 4;
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['sys_language_uid']['defaultPosition'] = 5;
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['workspace-status']['defaultPosition'] = 6;
     }
 }
