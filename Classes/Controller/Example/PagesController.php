@@ -13,9 +13,9 @@ class PagesController extends AbstractBackendController
         return 1;
     }
 
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'pages';
+        return ['pages'];
     }
 
     public function modifyQueryBuilder(): void

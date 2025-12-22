@@ -483,6 +483,29 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $this->getCurrentPid() === $this->getAccessiblePids()[0] ? $this->getAccessiblePids() : [$this->getCurrentPid()];
     }
 
+    protected function getTableName(): string
+    {
+        if (count($this->getTableNames()) === 0) {
+            return $this->getTableNames()[0];
+        }
+
+        // read from request
+        $table = $this->request->getQueryParams()['table'] ?? $this->request->getParsedBody()['table'] ?? '';
+        if (in_array($table, $this->getTableNames(), true)) {
+            // persist selected table in module data
+            $this->addToModuleDataSettings(['table' => $table]);
+            return $table;
+        }
+
+        // read from module data
+        $moduleDataTable = $this->getModuleDataSetting('table');
+        if (is_string($moduleDataTable) && in_array($moduleDataTable, $this->getTableNames(), true)) {
+            return $moduleDataTable;
+        }
+
+        return $this->getTableNames()[0];
+    }
+
     protected function createQueryBuilder(): void
     {
         $tableName = $this->getTableName();
@@ -1277,6 +1300,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // page selection menu
         $this->addPidSelectionToModuleTemplate();
+
+        // table selection menu
+        $this->addTableSelectionToModuleTemplate();
     }
 
     protected function addNewButtonToModuleTemplate(): void
@@ -1448,5 +1474,29 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getTypo3Version(): int
     {
         return GeneralUtility::makeInstance(Typo3Version::class)->getMajorVersion();
+    }
+
+    protected function addTableSelectionToModuleTemplate(): void
+    {
+        $tableNames = $this->getTableNames();
+        if (count($tableNames) > 1) {
+            $tableMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
+            $tableMenu->setIdentifier('tableSelector');
+            $tableMenu->setLabel('');
+            foreach ($tableNames as $tableName) {
+                $menuItem = $tableMenu
+                    ->makeMenuItem()
+                    ->setTitle($this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']))
+                    ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
+                        $this->getModuleName(),
+                        ['id' => $this->getCurrentPid(), 'language' => $this->getActiveLanguage() ?? 0, 'table' => $tableName]
+                    ));
+                if ($this->getTableName() === $tableName) {
+                    $menuItem->setActive(true);
+                }
+                $tableMenu->addMenuItem($menuItem);
+            }
+            $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($tableMenu);
+        }
     }
 }

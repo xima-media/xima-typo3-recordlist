@@ -11,8 +11,8 @@ class FeUsersController extends AbstractBackendController
         return 19;
     }
 
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'fe_users';
+        return ['fe_users', 'fe_groups'];
     }
 }

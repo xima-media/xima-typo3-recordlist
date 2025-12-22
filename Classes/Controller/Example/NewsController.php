@@ -15,9 +15,9 @@ class NewsController extends AbstractBackendController
         return 15;
     }
 
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'tx_news_domain_model_news';
+        return ['tx_news_domain_model_news'];
     }
 
     public function modifyTableConfiguration(): void

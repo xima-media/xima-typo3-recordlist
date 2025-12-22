@@ -6,9 +6,9 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 
 class FilesController extends AbstractBackendController
 {
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'sys_file_metadata';
+        return ['sys_file_metadata'];
     }
 
     public function getRecordPid(): int
