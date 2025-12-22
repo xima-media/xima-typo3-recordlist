@@ -25,7 +25,7 @@ class UserController extends AbstractBackendController
 Settings are now prefixed with table name using dot notation:
 
 ```diff
-  $settings = $this->getModuleData()['settings'] ?? [];
+$settings = $this->getModuleData()['settings'] ?? [];
 - $offlineRecords = $settings['onlyOfflineRecords'] ?? false;
 + $offlineRecords = $settings[$this->getTableName() . '.onlyOfflineRecords'] ?? false;
 ```
@@ -46,16 +46,16 @@ The `{table}` variable contains the current table name and is automatically avai
 When storing settings in `modifyQueryBuilder()`, prefix with table name:
 
 ```diff
-  protected function modifyQueryBuilder(): void
-  {
-      $body = $this->request->getParsedBody();
-      if (isset($body['custom_filter'])) {
+protected function modifyQueryBuilder(): void
+{
+    $body = $this->request->getParsedBody();
+    if (isset($body['custom_filter'])) {
 -         $this->addToModuleDataSettings(['customFilter' => $body['custom_filter']]);
 +         $this->addToModuleDataSettings([
 +             $this->getTableName() . '.customFilter' => $body['custom_filter']
 +         ]);
-      }
-  }
+    }
+}
 ```
 
 ### TableConfiguration
