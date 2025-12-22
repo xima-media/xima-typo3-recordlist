@@ -153,6 +153,9 @@
 			<trans-unit id="showColumns.placeholder">
 				<source>Enter search term</source>
 			</trans-unit>
+			<trans-unit id="showColumns.openSelectionOptions">
+				<source>Open selection options</source>
+			</trans-unit>
 			<trans-unit id="showColumns.checkAll">
 				<source>Check all</source>
 			</trans-unit>

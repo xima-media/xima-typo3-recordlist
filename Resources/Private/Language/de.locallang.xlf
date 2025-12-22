@@ -203,6 +203,10 @@
 				<source />
 				<target>Suchbegriff eingeben</target>
 			</trans-unit>
+			<trans-unit id="showColumns.openSelectionOptions">
+				<source />
+				<target>Auswahloptionen öffnen</target>
+			</trans-unit>
 			<trans-unit id="showColumns.checkAll">
 				<source />
 				<target>Alle auswählen</target>
