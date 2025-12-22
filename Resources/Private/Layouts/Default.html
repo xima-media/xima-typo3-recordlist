@@ -41,7 +41,8 @@
 
                 <div class="row">
                     <div class="col-12">
-                        <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:settings.isSearchButtonActive, else:'hidden')}">
+                        <f:variable name="isSearchActive" value="{settings.{table}.isSearchButtonActive}" />
+                        <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:isSearchActive, else:'hidden')}">
 
                             <f:form.hidden name="order_field" value="{order_field}" />
                             <f:form.hidden name="order_direction" value="{order_direction}" />

@@ -147,7 +147,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // build view
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->moduleTemplate->assign('settings', $this->getModuleData()['settings'] ?? []);
+        $this->moduleTemplate->assign('settings', $this->getModuleDataSettingsForView());
         $this->moduleTemplate->assign('moduleName', $this->getModuleName());
         $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
         $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
@@ -333,12 +333,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // demand: offline records (1/2)
         if (isset($body['is_offline']) && !isset($body['reset'])) {
-            $this->addToModuleDataSettings(['onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
+            $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
         // demand: readyToPublish (1/2)
         if (isset($body['is_ready_to_publish']) && !isset($body['reset'])) {
-            $this->addToModuleDataSettings(['onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
+            $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
         }
     }
 
@@ -1501,5 +1501,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($tableMenu);
         }
+    }
+
+    protected function getModuleDataSettingsForView(): array
+    {
+        $settings = $this->getModuleData()['settings'] ?? [];
+        // replace "." keys with array (cannot be accessed directly in Fluid)
+        foreach ($settings as $key => $value) {
+            if (str_starts_with((string)$key, $this->getTableName() . '.')) {
+                $newKey = substr((string)$key, strlen($this->getTableName() . '.'));
+                $settings[$this->getTableName()][$newKey] = $value;
+                unset($settings[$key]);
+            }
+        }
+        return $settings;
     }
 }
