@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [14.x] - Multiple Tables Support
+## [14.x] - Multiple Tables Support & Row Selection
 
 ### Features
 
@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 - **New Example Controllers**: Added `BeUsersController` demonstrating multiple related tables (be_users, be_groups, sys_filemounts)
 - **Root Page Support**: Added handling for root-level pages (pageUid = 0)
 - **Fluid Template Helper**: Settings are automatically transformed into nested arrays for easier Fluid template access
+- **Row Selection**: Checkbox, row click, and keyboard shortcuts (Shift+Click, Ctrl/Alt+Click) for selecting records
+- **Batch Field Editing**: Edit specific fields across multiple records from column header dropdown
+- **Multi-Selection Controls**: Check All, Uncheck All, and Toggle Selection buttons in checkbox column header
 
 ### Breaking Changes
 

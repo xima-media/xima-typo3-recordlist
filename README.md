@@ -55,6 +55,8 @@ Building custom backend modules for listing and managing records typically requi
 - **Workspace integration** for content approval workflows
 - **Pagination** for handling large datasets
 - **View record** button linking to frontend preview
+- **Row selection** with checkbox, row click, and keyboard shortcuts (Shift+Click, Ctrl/Alt+Click)
+- **Batch field editing** from column headers for selected or all records
 
 ## Requirements
 

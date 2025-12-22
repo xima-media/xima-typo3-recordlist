@@ -51,14 +51,22 @@ main.recordlist ul.pagination input.form-control {
     gap: 6px;
 }
 
-.recordlist table.table tr[data-state="new"] td {
+.recordlist table.table tr[data-state="new"]:not(.active) td {
     background-color: color-mix(in srgb, var(--typo3-badge-success-bg) 15%, transparent) !important;
 }
 
-.recordlist table.table tr[data-state="modified"] td {
+.recordlist table.table tr[data-state="modified"]:not(.active) td {
     background-color: color-mix(in srgb, var(--typo3-badge-warning-bg) 15%, transparent) !important;
 }
 
-.recordlist table.table tr[data-state="deleted"] td {
+.recordlist table.table tr[data-state="deleted"]:not(.active) td {
     background-color: color-mix(in srgb, var(--typo3-badge-danger-bg) 15%, transparent) !important;
+}
+
+.recordlist table .dropdown-static {
+    position: relative;
+}
+
+.recordlist table .dropdown-static .dropdown-menu {
+    top: 24px;
 }

@@ -4,16 +4,89 @@
             <f:translate key="{colConfig.label}">{colConfig.label}</f:translate>
         </f:then>
         <f:else>
-            <a
-                href="#"
-                data-order-field="{colConfig.columnName}"
-                data-order-direction="{f:if(condition:'{order_direction}===\'DESC\'', then: 'ASC', else:'DESC')}">
-                {colConfig.label}
-            </a>
+            <div class="dropdown dropdown-static">
+                <button class="dropdown-toggle dropdown-toggle-link">
+                    {colConfig.label}
+                    <f:if condition="{order_field}==={colConfig.columnName}">
+                        <div class="text-primary">
+                            <core:icon
+                                identifier="actions-sort-amount-{f:if(condition:'{order_direction}===\'DESC\'', then: 'down', else:'up')}"
+                                size="small" />
+                        </div>
+                    </f:if>
+                </button>
+                <ul class="dropdown-menu" style="">
+                    <li>
+                        <a
+                            data-order-field="{colConfig.columnName}"
+                            data-order-direction="ASC"
+                            class="dropdown-item"
+                            href="#"
+                            title="Sort ascending"
+                            aria-label="Sort ascending">
+                            <span class="dropdown-item-columns">
+                                <span class="dropdown-item-column dropdown-item-column-icon text-primary">
+                                    <f:if condition="{order_field}==={colConfig.columnName} && {order_direction}==='ASC'">
+                                        <core:icon identifier="actions-dot" size="small" />
+                                    </f:if>
+                                </span>
+                                <span class="dropdown-item-column dropdown-item-column-title">
+                                    <f:translate key="LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.sort.ascending">
+                                        Sort ascending
+                                    </f:translate>
+                                </span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            data-order-field="{colConfig.columnName}"
+                            data-order-direction="DESC"
+                            class="dropdown-item"
+                            href="#"
+                            title="Sort descending"
+                            aria-label="Sort descending">
+                            <span class="dropdown-item-columns">
+                                <span class="dropdown-item-column dropdown-item-column-icon text-primary">
+                                    <f:if condition="{order_field}==={colConfig.columnName} && {order_direction}==='DESC'">
+                                        <core:icon identifier="actions-dot" size="small" />
+                                    </f:if>
+                                </span>
+                                <span class="dropdown-item-column dropdown-item-column-title">
+                                    <f:translate key="LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.sort.descending">
+                                        Sort descending
+                                    </f:translate>
+                                </span>
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider" aria-hidden="true">
+                    </li>
+                    <li>
+                        <f:variable
+                            name="editFieldOfRecordslabel"
+                            value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.th.editFieldOfRecords', arguments: {0: colConfig.label})}" />
+                        <button
+                            type="button"
+                            class="dropdown-item t3js-record-edit-multiple"
+                            title="{editFieldOfRecordslabel}"
+                            aria-label="{editFieldOfRecordslabel}"
+                            data-table="{table}"
+                            data-return-url="{f:uri.action()}"
+                            data-columns-only="[&quot;{colConfig.columnName}&quot;]">
+                            <span class="dropdown-item-columns">
+                                <span class="dropdown-item-column dropdown-item-column-icon">
+                                    <core:icon identifier="actions-document-open" size="small" />
+                                </span>
+                                <span class="dropdown-item-column dropdown-item-column-title">
+                                    {editFieldOfRecordslabel}
+                                </span>
+                            </span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
         </f:else>
-    </f:if>
-    <f:if condition="{order_field}==={colConfig.columnName}">
-        <core:icon
-            identifier="actions-caret-{f:if(condition:'{order_direction}===\'DESC\'', then: 'down', else:'up')}" size="small" />
     </f:if>
 </th>
