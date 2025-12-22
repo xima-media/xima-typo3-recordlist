@@ -36,9 +36,17 @@ export default class RecordlistOrderLinks {
     const direction = link.getAttribute("data-order-direction") ?? "";
     const fieldInput = document.querySelector("input[name=\"order_field\"]");
     const directionInput = document.querySelector("input[name=\"order_direction\"]");
+
+    // Set the hidden inputs and submit the form
     fieldInput.value = field;
     directionInput.value = direction;
     fieldInput.closest("form").submit();
+
+    // Close the dropdown menu
+    const dropdown = link.closest(".dropdown-menu");
+    if (dropdown) {
+      dropdown.classList.remove("show");
+    }
   }
 }
 
