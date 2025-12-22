@@ -491,7 +491,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getTableName(): string
     {
-        if (count($this->getTableNames()) === 0) {
+        if (count($this->getTableNames()) === 1) {
             return $this->getTableNames()[0];
         }
 
