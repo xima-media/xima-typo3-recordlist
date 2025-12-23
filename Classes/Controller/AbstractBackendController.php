@@ -251,7 +251,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
-        $result = $qb->select('uid', 'title')
+        $pages = $qb->select('uid', 'title')
             ->from('pages')
             ->where(
                 $qb->expr()->or(
@@ -259,13 +259,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $qb->expr()->eq('pid', $qb->createNamedParameter($pageUid, Connection::PARAM_INT))
                 )
             )
-            ->executeQuery();
-
-        if (!$result instanceof Result) {
-            return [];
-        }
-
-        $pages = $result->fetchAllAssociative();
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $accessiblePages = [];
         foreach ($pages as $page) {
@@ -338,10 +333,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // add requested language to module settings
         $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
-        if (isset($requestedLanguage) && is_string($requestedLanguage) && array_key_exists(
-            (int)$requestedLanguage,
-            $this->getLanguages()
-        )) {
+        if ($requestedLanguage && array_key_exists((int)$requestedLanguage, $this->getLanguages())) {
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
