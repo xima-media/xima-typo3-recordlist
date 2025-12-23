@@ -639,8 +639,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $tableName = $this->getTableName();
         $defaultSortby = $GLOBALS['TCA'][$tableName]['ctrl']['default_sortby'] ?? '';
         $defaultOrderings = GeneralUtility::trimExplode(',', $defaultSortby, true);
-        foreach ($defaultOrderings as $odering) {
-            $instruction = GeneralUtility::trimExplode(' ', $odering, true);
+        foreach ($defaultOrderings as $ordering) {
+            $instruction = GeneralUtility::trimExplode(' ', $ordering, true);
             $orderInstructions[] = [
                 'field' => $instruction[0],
                 'direction' => $instruction[1] ?? 'ASC',
@@ -691,9 +691,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->andWhere(...$this->additionalConstraints)
             ->addGroupBy('t1.uid');
 
-        $langugeField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
-        if ($langugeField) {
-            $this->queryBuilder->addOrderBy('t1.' . $langugeField, 'ASC');
+        $languageField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
+        if ($languageField) {
+            $this->queryBuilder->addOrderBy('t1.' . $languageField, 'ASC');
         }
     }
 

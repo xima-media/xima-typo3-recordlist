@@ -39,11 +39,11 @@ class CategoryTreeManipulation implements MiddlewareInterface
             // manually check the selected categories from overrideValues
             $response = $handler->handle($request);
             $treeData = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
-            foreach ($treeData as &$teeItem) {
-                if (!in_array((int)$teeItem['identifier'], $overrideValues, true)) {
+            foreach ($treeData as &$treeItem) {
+                if (!in_array((int)$treeItem['identifier'], $overrideValues, true)) {
                     continue;
                 }
-                $teeItem['checked'] = true;
+                $treeItem['checked'] = true;
             }
             return new JsonResponse($treeData);
         } catch (\Exception) {
