@@ -89,7 +89,7 @@ export default class RecordlistDownloadButton {
 
         modal.addEventListener('typo3-modal-hidden', () => {
             downloadSettingFields.querySelector('input[name="is_download"]').value = 0
-        })
+        }, {once: true})
     }
 
     toggleFormatOptions(modal, selectedFormat) {
