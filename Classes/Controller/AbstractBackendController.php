@@ -70,6 +70,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'quote' => '"',
             ],
         ],
+        'json' => [
+            'options' => [],
+            'defaults' => [],
+        ],
     ];
 
     protected ModuleTemplate $moduleTemplate;
@@ -179,14 +183,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->modifyAllRecords();
         $this->moduleTemplate->assign('recordCount', count($this->records));
 
-        if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
-            return $this->downloadRecords();
-        }
-
-        // set columns, actions and group actions
+        // set columns, actions and group actions (needed for download to know which columns are active)
         $this->initTableConfiguration();
         $this->modifyTableConfiguration();
         $this->processTableConfiguration();
+
+        if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
+            return $this->downloadRecords();
+        }
 
         // init pager -> modifies all records!
         $this->initPaginator();
@@ -816,19 +820,49 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function downloadRecords(): ResponseInterface
     {
-        $format = $this->request->getParsedBody()['format'] ?? 'csv';
-        $filename = ($this->request->getParsedBody()['filename'] ?? $this->getTableName()) ?: $this->getTableName();
+        $body = $this->request->getParsedBody();
+        $format = $body['format'] ?? 'csv';
+        $filename = ($body['filename'] ?? $this->getTableName()) ?: $this->getTableName();
+        $csvDelimiter = $body['csv']['delimiter'] ?? ',';
+        $csvQuote = $body['csv']['quote'] ?? '"';
+        $allColumns = $body['allColumns'] ?? '0';
 
-        $csvDelimiter = $this->request->getParsedBody()['csv']['delimiter'] ?? ',';
-        $csvQuote = $this->request->getParsedBody()['csv']['quote'] ?? '"';
-        $csvColumns = $this->request->getParsedBody()['allColumns'] ?? true;
-        $headerRow = array_keys($this->records[0]);
+        // Check if specific records are selected via checkboxes
+        $selectedRecords = $this->getSelectedRecords();
+        $recordsToDownload = $selectedRecords ?: $this->records;
+
+        if (empty($recordsToDownload)) {
+            return $this->responseFactory->createResponse(204);
+        }
+
+        // Determine which columns to include
+        $columnsToInclude = $this->getColumnsForDownload($allColumns === '1');
 
         // Create result
+        if ($format === 'json') {
+            $jsonData = [];
+            foreach ($recordsToDownload as $record) {
+                $rowData = [];
+                foreach ($columnsToInclude as $columnName) {
+                    $rowData[$columnName] = $record[$columnName] ?? '';
+                }
+                $jsonData[] = $rowData;
+            }
+            $response = $this->responseFactory->createResponse()
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Content-Disposition', 'attachment; filename=' . $filename . '.json');
+            $response->getBody()->write(json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            return $response;
+        }
+
         $result = [];
-        $result[] = CsvUtility::csvValues($headerRow, $csvDelimiter, $csvQuote);
-        foreach ($this->records as $record) {
-            $result[] = CsvUtility::csvValues($record, $csvDelimiter, $csvQuote);
+        $result[] = CsvUtility::csvValues($columnsToInclude, $csvDelimiter, $csvQuote);
+        foreach ($recordsToDownload as $record) {
+            $rowData = [];
+            foreach ($columnsToInclude as $columnName) {
+                $rowData[] = $record[$columnName] ?? '';
+            }
+            $result[] = CsvUtility::csvValues($rowData, $csvDelimiter, $csvQuote);
         }
 
         $response = $this->responseFactory->createResponse()
@@ -837,6 +871,71 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $response->getBody()->write(implode(CRLF, $result));
 
         return $response;
+    }
+
+    /**
+     * Get columns to include in download
+     * @param bool $allColumns If true, include all columns. If false, only include active/visible columns
+     * @return array List of column names to include
+     */
+    protected function getColumnsForDownload(bool $allColumns): array
+    {
+        if ($allColumns) {
+            // Return all available columns from the first record
+            return !empty($this->records) ? array_keys($this->records[0]) : [];
+        }
+
+        // Return only active/visible columns from table configuration
+        $tableName = $this->getTableName();
+        $activeColumns = ['uid']; // Always include 'uid' column
+
+        if (isset($this->tableConfiguration[$tableName]['columns'])) {
+            foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => $columnConfig) {
+                if ($columnConfig['active'] ?? false) {
+                    $activeColumns[] = $columnConfig['columnName'];
+                }
+            }
+        }
+
+        // Fallback to all columns if no active columns found
+        return !empty($activeColumns) ? $activeColumns : (!empty($this->records) ? array_keys($this->records[0]) : []);
+    }
+
+    /**
+     * Get selected records from checkbox selections (CBC parameter)
+     * Returns empty array if no records are selected
+     */
+    protected function getSelectedRecords(): array
+    {
+        $body = $this->request->getParsedBody();
+        $cbc = $body['CBC'] ?? [];
+
+        if (empty($cbc)) {
+            return [];
+        }
+
+        $tableName = $this->getTableName();
+        $selectedUids = [];
+
+        // Parse CBC array to extract UIDs for the current table
+        // Format: CBC[tablename|uid] = 1
+        foreach ($cbc as $key => $value) {
+            if ($value === '1') {
+                $parts = explode('|', $key);
+                if (count($parts) === 2 && $parts[0] === $tableName) {
+                    $selectedUids[] = (int)$parts[1];
+                }
+            }
+        }
+
+        if (empty($selectedUids)) {
+            return [];
+        }
+
+        // Filter records to only include selected UIDs
+        return array_values(array_filter($this->records, function ($record) use ($selectedUids) {
+            return in_array((int)$record['uid'], $selectedUids, true);
+        }));
     }
 
     protected function initTableConfiguration(): void
