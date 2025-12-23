@@ -102,10 +102,10 @@
 			<trans-unit id="table.button.cancel">
 				<source>Cancel</source>
 			</trans-unit>
-			<trans-unit id="table.th.sortDescending">
+			<trans-unit id="table.sort.descending">
 				<source>Sort descending</source>
 			</trans-unit>
-			<trans-unit id="table.th.sortAscending">
+			<trans-unit id="table.sort.ascending">
 				<source>Sort ascending</source>
 			</trans-unit>
 			<trans-unit id="table.th.editFieldOfRecords">

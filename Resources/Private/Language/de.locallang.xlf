@@ -135,11 +135,11 @@
 				<source />
 				<target>Abbrechen</target>
 			</trans-unit>
-			 <trans-unit id="table.th.sortDescending">
+			 <trans-unit id="table.sort.descending">
 				 <source />
 				 <target>Absteigend sortieren</target>
 			 </trans-unit>
-			 <trans-unit id="table.th.sortAscending">
+			 <trans-unit id="table.sort.ascending">
 				 <source />
 				 <target>Aufsteigend sortieren</target>
 			 </trans-unit>
