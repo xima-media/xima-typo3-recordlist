@@ -76,11 +76,31 @@ export default class RecordlistDownloadButton {
                         downloadSettingFields.querySelector(`input[name="${e.currentTarget.name}"]`).checked = e.currentTarget.checked
                     })
                 })
+
+                // Handle format selector change to toggle format options
+                const formatSelector = modal.querySelector('.t3js-record-download-format-selector')
+                if (formatSelector) {
+                    formatSelector.addEventListener('change', (e) => {
+                        this.toggleFormatOptions(modal, e.currentTarget.value)
+                    })
+                }
             }
         })
 
         modal.addEventListener('typo3-modal-hidden', () => {
             downloadSettingFields.querySelector('input[name="is_download"]').value = 0
+        })
+    }
+
+    toggleFormatOptions(modal, selectedFormat) {
+        const formatOptions = modal.querySelectorAll('.t3js-record-download-format-option')
+        formatOptions.forEach(option => {
+            const formatName = option.dataset.formatname
+            if (formatName === selectedFormat) {
+                option.classList.remove('hide')
+            } else {
+                option.classList.add('hide')
+            }
         })
     }
 }

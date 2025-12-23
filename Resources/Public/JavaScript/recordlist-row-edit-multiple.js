@@ -1,10 +1,10 @@
 /**
- * RecordlistRowEditMultiple
- * Handles multiple record editing from column header buttons
- * - Edits specific field of selected rows (if any are selected)
- * - Edits specific field of all visible rows (if none are selected)
- * Based on TYPO3 core's recordlist.js
- */
+* RecordlistRowEditMultiple
+* Handles multiple record editing from column header buttons
+* - Edits specific field of selected rows (if any are selected)
+* - Edits specific field of all visible rows (if none are selected)
+* Based on TYPO3 core's recordlist.js
+*/
 export default class RecordlistRowEditMultiple {
   constructor() {
     this.selectors = {
@@ -22,8 +22,8 @@ export default class RecordlistRowEditMultiple {
   }
 
   /**
-   * Register listener for edit multiple button clicks
-   */
+  * Register listener for edit multiple button clicks
+  */
   registerEditMultipleListener() {
     document.addEventListener('click', (event) => {
       const button = event.target.closest(this.selectors.editMultipleButton);
@@ -34,8 +34,8 @@ export default class RecordlistRowEditMultiple {
   }
 
   /**
-   * Handle edit multiple button click
-   */
+  * Handle edit multiple button click
+  */
   onEditMultiple(event, button) {
     event.preventDefault();
 
@@ -85,9 +85,9 @@ export default class RecordlistRowEditMultiple {
   }
 
   /**
-   * Collect UIDs of records to edit
-   * Returns selected records if any are checked, otherwise all visible records
-   */
+  * Collect UIDs of records to edit
+  * Returns selected records if any are checked, otherwise all visible records
+  */
   collectUids(tableName) {
     const uids = [];
 
@@ -121,8 +121,8 @@ export default class RecordlistRowEditMultiple {
   }
 
   /**
-   * Build the FormEngine edit URL
-   */
+  * Build the FormEngine edit URL
+  */
   buildEditUrl(tableName, uids, columnsOnly, returnUrl) {
     // Get current module name
     const currentModule = top.TYPO3?.ModuleMenu?.App?.getCurrentModule?.() || '';
@@ -152,9 +152,9 @@ export default class RecordlistRowEditMultiple {
   }
 
   /**
-   * Get properly encoded return URL
-   * Falls back to current list frame location if not specified
-   */
+  * Get properly encoded return URL
+  * Falls back to current list frame location if not specified
+  */
   getReturnUrl(returnUrl) {
     if (!returnUrl) {
       // Fall back to current location

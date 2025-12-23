@@ -4,6 +4,9 @@ namespace Xima\XimaTypo3Recordlist\Controller;
 
 use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Result;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
@@ -70,10 +73,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'quote' => '"',
             ],
         ],
-        'json' => [
-            'options' => [],
-            'defaults' => [],
-        ],
+        'json' => [],
+        'xlsx' => [],
     ];
 
     protected ModuleTemplate $moduleTemplate;
@@ -843,7 +844,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $jsonData = [];
             foreach ($recordsToDownload as $record) {
                 $rowData = [];
-                foreach ($columnsToInclude as $columnName) {
+                foreach ($columnsToInclude as $columnName => $columnLabel) {
                     $rowData[$columnName] = $record[$columnName] ?? '';
                 }
                 $jsonData[] = $rowData;
@@ -855,11 +856,62 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return $response;
         }
 
+        // XLSX export
+        if ($format === 'xlsx') {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Set column headers
+            $columnIndex = 1;
+            foreach ($columnsToInclude as $columnName => $columnLabel) {
+                $cellCoordinate = Coordinate::stringFromColumnIndex($columnIndex) . '1';
+                $sheet->setCellValue($cellCoordinate, $columnLabel);
+                $columnIndex++;
+            }
+
+            // Make header row bold
+            $sheet->getStyle('1:1')->getFont()->setBold(true);
+
+            // Add data rows
+            $rowIndex = 2;
+            foreach ($recordsToDownload as $record) {
+                $columnIndex = 1;
+                foreach ($columnsToInclude as $columnName => $columnLabel) {
+                    $cellCoordinate = Coordinate::stringFromColumnIndex($columnIndex) . $rowIndex;
+                    $sheet->setCellValue($cellCoordinate, $record[$columnName] ?? '');
+                    $columnIndex++;
+                }
+                $rowIndex++;
+            }
+
+            // Set auto-width for all columns
+            $totalColumns = count($columnsToInclude);
+            for ($col = 1; $col <= $totalColumns; $col++) {
+                $columnLetter = Coordinate::stringFromColumnIndex($col);
+                $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            }
+
+            // Freeze header row
+            $sheet->freezePane('A2');
+
+            // Create writer and generate output
+            $writer = new Xlsx($spreadsheet);
+            ob_start();
+            $writer->save('php://output');
+            $xlsxContent = ob_get_clean();
+
+            $response = $this->responseFactory->createResponse()
+                ->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                ->withHeader('Content-Disposition', 'attachment; filename=' . $filename . '.xlsx');
+            $response->getBody()->write($xlsxContent);
+            return $response;
+        }
+
         $result = [];
-        $result[] = CsvUtility::csvValues($columnsToInclude, $csvDelimiter, $csvQuote);
+        $result[] = CsvUtility::csvValues(array_keys($columnsToInclude), $csvDelimiter, $csvQuote);
         foreach ($recordsToDownload as $record) {
             $rowData = [];
-            foreach ($columnsToInclude as $columnName) {
+            foreach ($columnsToInclude as $columnName => $columnLabel) {
                 $rowData[] = $record[$columnName] ?? '';
             }
             $result[] = CsvUtility::csvValues($rowData, $csvDelimiter, $csvQuote);
@@ -880,25 +932,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     protected function getColumnsForDownload(bool $allColumns): array
     {
-        if ($allColumns) {
-            // Return all available columns from the first record
-            return !empty($this->records) ? array_keys($this->records[0]) : [];
-        }
-
-        // Return only active/visible columns from table configuration
         $tableName = $this->getTableName();
-        $activeColumns = ['uid']; // Always include 'uid' column
+        $activeColumns = ['uid' => 'UID']; // Always include 'uid' column
 
         if (isset($this->tableConfiguration[$tableName]['columns'])) {
             foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => $columnConfig) {
-                if ($columnConfig['active'] ?? false) {
-                    $activeColumns[] = $columnConfig['columnName'];
+                if ($allColumns || ($columnConfig['active'] ?? false)) {
+                    $activeColumns[$columnConfig['columnName']] = $columnConfig['label'] ?? $columnConfig['columnName'];
                 }
             }
         }
 
-        // Fallback to all columns if no active columns found
-        return !empty($activeColumns) ? $activeColumns : (!empty($this->records) ? array_keys($this->records[0]) : []);
+        return $activeColumns;
     }
 
     /**
