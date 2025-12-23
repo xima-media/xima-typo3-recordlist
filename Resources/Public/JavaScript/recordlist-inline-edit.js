@@ -67,12 +67,13 @@ class RecordlistInlineEdit {
         const span = e.currentTarget
         setTimeout(() => {
             if (this.saveClick) {
+                this.saveClick = false;
                 return;
             }
             e.preventDefault();
             span.innerText = span.dataset.originalValue;
             span.closest('.text-inline-edit').classList.remove('changed');
-        }, 200);
+        }, 300);
     }
 
     async postSave(span) {
