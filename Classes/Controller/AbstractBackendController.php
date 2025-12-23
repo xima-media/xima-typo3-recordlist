@@ -552,6 +552,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         if (!empty($body['filter'])) {
             foreach ($body['filter'] as $field => $data) {
+                // Validate field name against TCA
+                if ($field !== 'uid' && !isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$field])) {
+                    continue;
+                }
                 if (!isset($data['value']) || $data['value'] === '') {
                     continue;
                 }

@@ -161,6 +161,11 @@ class AjaxController
             return $this->responseFactory->createResponse(403, 'No permissions to edit record');
         }
 
+        // Validate column name against TCA to prevent modification of arbitrary fields
+        if (!isset($GLOBALS['TCA'][$table]['columns'][$column])) {
+            return $this->responseFactory->createResponse(400, 'Invalid column name');
+        }
+
         // access check #2
         $record = BackendUtility::getRecord($table, $uid);
         if (!$record) {
