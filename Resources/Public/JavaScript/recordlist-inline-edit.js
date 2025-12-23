@@ -111,7 +111,6 @@ class RecordlistInlineEdit {
             })
             this.saveClick = false;
         }).catch((error) => {
-            console.log(error);
             Notification.error('Error', 'An error occurred while saving the data');
         })
     }

@@ -743,7 +743,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $record['state'] = 'new';
                 }
 
-                // newly deleted recrod
+                // newly deleted record
                 if ($record['t3ver_state'] === 2) {
                     $record['state'] = 'deleted';
                 }

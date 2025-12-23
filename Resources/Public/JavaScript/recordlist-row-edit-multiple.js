@@ -51,7 +51,6 @@ export default class RecordlistRowEditMultiple {
     }
 
     if (!tableName) {
-      console.error('RecordlistRowEditMultiple: No table name found');
       return;
     }
 
@@ -66,14 +65,13 @@ export default class RecordlistRowEditMultiple {
         columnsOnly = JSON.parse(columnsOnlyData);
       }
     } catch (e) {
-      console.error('RecordlistRowEditMultiple: Failed to parse columnsOnly', e);
+      // Failed to parse columnsOnly, use empty array
     }
 
     // Collect UIDs of records to edit
     const uids = this.collectUids(tableName);
 
     if (uids.length === 0) {
-      console.warn('RecordlistRowEditMultiple: No records found to edit');
       return;
     }
 
