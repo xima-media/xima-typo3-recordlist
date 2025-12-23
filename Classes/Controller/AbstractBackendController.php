@@ -855,10 +855,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
                 $jsonData[] = $rowData;
             }
+            $json = json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            if ($json === false) {
+                throw new \RuntimeException('JSON encoding failed: ' . json_last_error_msg());
+            }
             $response = $this->responseFactory->createResponse()
                 ->withHeader('Content-Type', 'application/json')
                 ->withHeader('Content-Disposition', 'attachment; filename=' . $filename . '.json');
-            $response->getBody()->write(json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            $response->getBody()->write($json);
             return $response;
         }
 
@@ -903,8 +907,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
             // Create writer and generate output
             $writer = new Xlsx($spreadsheet);
             ob_start();
-            $writer->save('php://output');
-            $xlsxContent = ob_get_clean();
+            try {
+                $writer->save('php://output');
+                $xlsxContent = ob_get_clean();
+                if ($xlsxContent === false) {
+                    throw new \RuntimeException('Failed to generate XLSX content');
+                }
+            } catch (\Exception $e) {
+                ob_end_clean();
+                throw $e;
+            }
 
             $response = $this->responseFactory->createResponse()
                 ->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
