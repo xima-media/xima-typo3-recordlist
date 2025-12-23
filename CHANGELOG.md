@@ -12,8 +12,10 @@ All notable changes to this project will be documented in this file.
 - **Root Page Support**: Added handling for root-level pages (pageUid = 0)
 - **Fluid Template Helper**: Settings are automatically transformed into nested arrays for easier Fluid template access
 - **Row Selection**: Checkbox, row click, and keyboard shortcuts (Shift+Click, Ctrl/Alt+Click) for selecting records
+- **Improved Sorting UI**: Dropdown menu for sorting in table headers with improved positioning
 - **Batch Field Editing**: Edit specific fields across multiple records from column header dropdown
 - **Multi-Selection Controls**: Check All, Uncheck All, and Toggle Selection buttons in checkbox column header
+- **Export Functionality**: Download selected records and fields in new formats (XLSX, JSON)
 
 ### Breaking Changes
 
