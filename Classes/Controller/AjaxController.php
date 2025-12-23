@@ -124,12 +124,12 @@ class AjaxController
             return $this->responseFactory->createResponse(501, 'File not found');
         }
 
-        $isAllowedToDelete = false;
         try {
             $file = $this->resourceFactory->getFileObject($sysFileUid);
             $storage = $file->getStorage();
-            $isAllowedToDelete = $storage?->checkFileActionPermission('delete', $file) ?? false;
+            $isAllowedToDelete = $storage->checkFileActionPermission('delete', $file) ?? false;
         } catch (\Exception) {
+            return $this->responseFactory->createResponse(501, 'File not found');
         }
 
         if (!$isAllowedToDelete) {
@@ -137,7 +137,7 @@ class AjaxController
         }
 
         try {
-            $storage?->deleteFile($file);
+            $storage->deleteFile($file);
         } catch (\Exception) {
             return $this->responseFactory->createResponse(501, 'Error while deleting file');
         }
