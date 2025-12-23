@@ -51,9 +51,10 @@ use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
     public const WORKSPACE_ID = 0;
-
+    protected const ITEMS_PER_PAGE = 100;
+    protected const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
+    protected const VERSION_STATE_DELETED = 2;
     protected const TEMPLATE_NAME = 'Default';
-
     protected const DOWNLOAD_FORMATS = [
         'csv' => [
             'options' => [
@@ -744,12 +745,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
 
                 // newly deleted record
-                if ($record['t3ver_state'] === 2) {
+                if ($record['t3ver_state'] === self::VERSION_STATE_DELETED) {
                     $record['state'] = 'deleted';
                 }
 
                 // stage "Ready to publish"
-                if ($record['t3ver_stage'] === -10) {
+                if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
                     $workspaceStatus['level'] = 'success';
                     $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
                     $record['editable'] = $this->isWorkspaceAdmin();
@@ -783,8 +784,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                                     'sys_file_reference',
                                     $reference->getUid()
                                 );
-                                $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === 2;
-                                $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === -10;
+                                $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === self::VERSION_STATE_DELETED;
+                                $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
                                 if ($isDeleted || $isModified) {
                                     $referencesToPublish[] = [
                                         'liveId' => $referenceOverlay['t3ver_oid'] ?: $referenceOverlay['uid'],
@@ -1184,7 +1185,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $body = (array)$this->request->getParsedBody();
         $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
 
-        $this->paginator = new EditableArrayPaginator($this->records, $currentPage, 100);
+        $this->paginator = new EditableArrayPaginator($this->records, $currentPage, self::ITEMS_PER_PAGE);
 
         $items = [];
         foreach ($this->paginator->getPaginatedItems() as &$item) {
