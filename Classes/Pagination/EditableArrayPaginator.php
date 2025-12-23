@@ -6,12 +6,9 @@ use TYPO3\CMS\Core\Pagination\AbstractPaginator;
 
 class EditableArrayPaginator extends AbstractPaginator
 {
-    private $items;
+    private array $items;
 
-    /**
-     * @var array
-     */
-    private $paginatedItems = [];
+    private array $paginatedItems = [];
 
     public function __construct(
         array $items,
@@ -33,7 +30,7 @@ class EditableArrayPaginator extends AbstractPaginator
         return $this->paginatedItems;
     }
 
-    public function setPaginatedItems($items)
+    public function setPaginatedItems(array $items): void
     {
         $this->paginatedItems = $items;
     }
