@@ -7,7 +7,6 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Backend\View\BackendViewFactory;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -18,11 +17,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class AjaxController
 {
-
     public function __construct(
         private readonly ResponseFactoryInterface $responseFactory,
-        private readonly ResourceFactory $resourceFactory,
-        protected BackendViewFactory $backendViewFactory,
+        private readonly ResourceFactory $resourceFactory
     ) {
     }
 

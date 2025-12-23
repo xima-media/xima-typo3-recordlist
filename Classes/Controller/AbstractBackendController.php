@@ -31,7 +31,6 @@ use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
-use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
@@ -99,7 +98,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
         protected UriBuilder $backendUriBuilder,
-        protected FlashMessageService $flashMessageService,
         protected ContainerInterface $container,
         protected ModuleTemplateFactory $moduleTemplateFactory,
         protected ResourceFactory $resourceFactory,
