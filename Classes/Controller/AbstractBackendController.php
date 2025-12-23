@@ -536,13 +536,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $body = $this->request->getParsedBody();
         if (isset($body['search_field']) && $body['search_field']) {
             $searchInput = $body['search_field'];
+            $escapedSearchInput = addcslashes($searchInput, '%_');
             $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? '';
             $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
             $searchConstraints = [];
             foreach ($searchFieldArray as $fieldName) {
                 $searchConstraints[] = $this->queryBuilder->expr()->like(
                     't1.' . $fieldName,
-                    $this->queryBuilder->createNamedParameter('%' . $searchInput . '%')
+                    $this->queryBuilder->createNamedParameter('%' . $escapedSearchInput . '%')
                 );
             }
             $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
@@ -590,11 +591,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ),
                     'like' => $this->additionalConstraints[] = $this->queryBuilder->expr()->like(
                         't1.' . $field,
-                        $this->queryBuilder->createNamedParameter('%' . $data['value'] . '%')
+                        $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
                     ),
                     'notLike' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notLike(
                         't1.' . $field,
-                        $this->queryBuilder->createNamedParameter('%' . $data['value'] . '%')
+                        $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
                     ),
                     'in' => $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
                         't1.' . $field,
@@ -824,6 +825,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $body = $this->request->getParsedBody();
         $format = $body['format'] ?? 'csv';
         $filename = ($body['filename'] ?? $this->getTableName()) ?: $this->getTableName();
+        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', basename($filename));
         $csvDelimiter = $body['csv']['delimiter'] ?? ',';
         $csvQuote = $body['csv']['quote'] ?? '"';
         $allColumns = $body['allColumns'] ?? '0';
