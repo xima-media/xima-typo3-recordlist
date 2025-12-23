@@ -18,26 +18,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class AjaxController
 {
-    protected const DOWNLOAD_FORMATS = [
-        'csv' => [
-            'options' => [
-                'delimiter' => [
-                    'comma' => ',',
-                    'semicolon' => ';',
-                    'pipe' => '|',
-                ],
-                'quote' => [
-                    'doublequote' => '"',
-                    'singlequote' => '\'',
-                    'space' => ' ',
-                ],
-            ],
-            'defaults' => [
-                'delimiter' => ',',
-                'quote' => '"',
-            ],
-        ],
-    ];
 
     public function __construct(
         private readonly ResponseFactoryInterface $responseFactory,
@@ -207,24 +187,5 @@ class AjaxController
         $dataHandler->process_datamap();
 
         return $this->responseFactory->createResponse(200);
-    }
-
-    public function downloadSettings(ServerRequestInterface $request): ResponseInterface
-    {
-        $downloadArguments = $request->getQueryParams();
-
-        $view = $this->backendViewFactory->create($request);
-        $view->assignMultiple([
-            'table' => 'fwef',
-            'downloadArguments' => $downloadArguments,
-            'formats' => array_keys(self::DOWNLOAD_FORMATS),
-            'formatOptions' => self::DOWNLOAD_FORMATS,
-        ]);
-
-        $response = $this->responseFactory->createResponse()
-            ->withHeader('Content-Type', 'text/html; charset=utf-8');
-
-        $response->getBody()->write($view->render('RecordDownloadSettings'));
-        return $response;
     }
 }
