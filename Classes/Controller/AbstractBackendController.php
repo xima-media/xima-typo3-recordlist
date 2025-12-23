@@ -951,7 +951,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getColumnsForDownload(bool $allColumns): array
     {
         $tableName = $this->getTableName();
-        $activeColumns = ['uid' => 'UID']; // Always include 'uid' column
+        $activeColumns = ['uid' => 'Uid']; // Always include 'uid' column
 
         if (isset($this->tableConfiguration[$tableName]['columns'])) {
             foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => $columnConfig) {
