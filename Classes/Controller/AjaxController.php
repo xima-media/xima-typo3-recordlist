@@ -42,14 +42,14 @@ class AjaxController
     {
         $moduleName = array_key_first($postBody);
 
-        $moduleData = $GLOBALS['BE_USER']->getModuleData($moduleName) ?? [];
+        $moduleData = $this->getBackendAuthentication()->getModuleData($moduleName) ?? [];
         $moduleData['settings'] ??= [];
 
         foreach ($postBody[$moduleName] ?? [] as $setting => $value) {
             $moduleData['settings'][$setting] = $value;
         }
 
-        $GLOBALS['BE_USER']->pushModuleData($moduleName, $moduleData);
+        $this->getBackendAuthentication()->pushModuleData($moduleName, $moduleData);
     }
 
     /**
@@ -62,7 +62,7 @@ class AjaxController
         $uid = $body['uid'] ?? '';
 
         // access check #1
-        if (!$GLOBALS['BE_USER']->check('tables_modify', $table)) {
+        if (!$this->getBackendAuthentication()->check('tables_modify', $table)) {
             return $this->responseFactory->createResponse(403, 'No permissions to delete records');
         }
 
@@ -73,7 +73,7 @@ class AjaxController
         }
         $access = BackendUtility::readPageAccess(
             $record['pid'],
-            $GLOBALS['BE_USER']->getPagePermsClause(Permission::CONTENT_EDIT)
+            $this->getBackendAuthentication()->getPagePermsClause(Permission::CONTENT_EDIT)
         ) ?: [];
         if (empty($access)) {
             return $this->responseFactory->createResponse(403, 'No permissions to delete record');
@@ -113,7 +113,7 @@ class AjaxController
 
         if (!$sysFileUid) {
             // FAL record not found, try to delete sys_file_metadata record
-            if ($GLOBALS['BE_USER']->check('tables_modify', 'sys_file_metadata')) {
+            if ($this->getBackendAuthentication()->check('tables_modify', 'sys_file_metadata')) {
                 $cmd['sys_file_metadata'][$sysFileMetaDataUid]['delete'] = 1;
                 $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
                 $dataHandler->start([], $cmd);
@@ -154,7 +154,7 @@ class AjaxController
         $newValue = $body['newValue'] ?? '';
 
         // access check #1
-        if (!$GLOBALS['BE_USER']->check('tables_modify', $table)) {
+        if (!$this->getBackendAuthentication()->check('tables_modify', $table)) {
             return $this->responseFactory->createResponse(403, 'No permissions to edit record');
         }
 
@@ -171,7 +171,7 @@ class AjaxController
         if ($record['pid'] !== 0) {
             $access = BackendUtility::readPageAccess(
                 $record['pid'],
-                $GLOBALS['BE_USER']->getPagePermsClause(Permission::CONTENT_EDIT)
+                $this->getBackendAuthentication()->getPagePermsClause(Permission::CONTENT_EDIT)
             ) ?: [];
             if (empty($access)) {
                 return $this->responseFactory->createResponse(403, 'No permissions to edit record');
