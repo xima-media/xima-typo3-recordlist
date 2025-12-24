@@ -20,7 +20,6 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
     {
         /**
          * @var Route $route
-         * @phpstan-ignore-next-line
          */
         $route = $request->getAttribute('route');
         $identifier = $route->getOption('_identifier');

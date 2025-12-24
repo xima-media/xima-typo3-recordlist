@@ -17,7 +17,6 @@ class CategoryTreeManipulation implements MiddlewareInterface
          * Make sure it is the ajax request for fetching tree data
          *
          * @var Route $route
-         * @phpstan-ignore-next-line
          */
         $route = $request->getAttribute('route');
         if ($route->getOption('_identifier') !== 'ajax_record_tree_data') {
