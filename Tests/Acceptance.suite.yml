@@ -1,0 +1,17 @@
+actor: AcceptanceTester
+modules:
+  enabled:
+    - WebDriver
+    - Asserts
+    - \Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\Helper\Backend
+    - \Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\Helper\RecordList
+  config:
+    WebDriver:
+      url: 'https://xima-typo3-recordlist.ddev.site'
+      browser: chrome
+      host: hub
+      port: 4444
+step_decorators:
+  - \Codeception\Step\ConditionalAssertion
+  - \Codeception\Step\TryTo
+  - \Codeception\Step\Retry

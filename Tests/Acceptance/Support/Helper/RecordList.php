@@ -1,0 +1,140 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\Helper;
+
+use Codeception\Module;
+use Codeception\Module\WebDriver;
+
+class RecordList extends Module
+{
+    protected function getWebDriver(): WebDriver
+    {
+        return $this->getModule('WebDriver');
+    }
+
+    public function openModule(string $moduleIdentifier): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('//a[@data-moduleroute-identifier="' . $moduleIdentifier . '"]');
+        $I->switchToContentFrame();
+        $I->waitForElementVisible('.recordlist-table', 10);
+    }
+
+    public function searchFor(string $searchTerm): void
+    {
+        $I = $this->getWebDriver();
+        $I->fillField('input[name="search_field"]', $searchTerm);
+        $I->click('button[type="submit"]');
+        $I->wait(1);
+    }
+
+    public function applyFilter(string $fieldName, string $value, string $operator = 'eq'): void
+    {
+        $I = $this->getWebDriver();
+        $I->fillField('input[name="filter[' . $fieldName . '][value]"]', $value);
+        if ($operator !== 'eq') {
+            $I->selectOption('select[name="filter[' . $fieldName . '][expr]"]', $operator);
+        }
+        $I->click('button[type="submit"]');
+        $I->wait(1);
+    }
+
+    public function sortBy(string $columnName, string $direction = 'ASC'): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('//th[@data-column="' . $columnName . '"]//a');
+        $I->wait(1);
+    }
+
+    public function goToPage(int $pageNumber): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('//button[@data-page="' . $pageNumber . '"]');
+        $I->wait(1);
+    }
+
+    public function inlineEdit(int $uid, string $fieldName, string $newValue): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('//tr[@data-uid="' . $uid . '"]//input[@data-field="' . $fieldName . '"]');
+        $I->fillField('//tr[@data-uid="' . $uid . '"]//input[@data-field="' . $fieldName . '"]', $newValue);
+        $I->pressKey('//tr[@data-uid="' . $uid . '"]//input[@data-field="' . $fieldName . '"]', \Facebook\WebDriver\WebDriverKeys::ENTER);
+        $I->wait(1);
+    }
+
+    public function deleteRecord(int $uid): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="delete"]');
+        $I->waitForElement('.modal', 5);
+        $I->click('.modal button.btn-danger');
+        $I->wait(1);
+    }
+
+    public function exportRecords(string $format = 'csv', array $options = []): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('.recordlist-download-button');
+        $I->waitForElement('.download-modal', 5);
+        $I->selectOption('select[name="format"]', $format);
+
+        if ($format === 'csv' && isset($options['delimiter'])) {
+            $I->selectOption('select[name="csv[delimiter]"]', $options['delimiter']);
+        }
+
+        $I->click('.download-modal button[type="submit"]');
+    }
+
+    public function publishRecord(int $uid): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="publish"]');
+        $I->waitForElement('.modal', 5);
+        $I->click('.modal button.btn-success');
+        $I->wait(2);
+    }
+
+    public function markReadyToPublish(int $uid): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="ready-to-publish"]');
+        $I->wait(1);
+    }
+
+    public function switchTable(string $tableName): void
+    {
+        $I = $this->getWebDriver();
+        $I->selectOption('.table-selector', $tableName);
+        $I->wait(1);
+    }
+
+    public function toggleColumn(string $columnName): void
+    {
+        $I = $this->getWebDriver();
+        $I->click('.showColumnsButton');
+        $I->waitForElement('.column-settings-modal', 5);
+        $I->checkOption('input[name="columns[' . $columnName . ']"]');
+        $I->click('.column-settings-modal button[type="submit"]');
+        $I->wait(1);
+    }
+
+    public function seeRecordInTable(int $uid): void
+    {
+        $I = $this->getWebDriver();
+        $I->seeElement('//tr[@data-uid="' . $uid . '"]');
+    }
+
+    public function dontSeeRecordInTable(int $uid): void
+    {
+        $I = $this->getWebDriver();
+        $I->dontSeeElement('//tr[@data-uid="' . $uid . '"]');
+    }
+
+    public function seeRecordFieldValue(int $uid, string $fieldName, string $expectedValue): void
+    {
+        $I = $this->getWebDriver();
+        $I->see($expectedValue, '//tr[@data-uid="' . $uid . '"]//td[@data-field="' . $fieldName . '"]');
+    }
+}

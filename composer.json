@@ -23,6 +23,9 @@
 	"require-dev": {
 		"armin/editorconfig-cli": "^2.1",
 		"bk2k/bootstrap-package": "^16.0",
+		"codeception/codeception": "^5.1",
+		"codeception/module-asserts": "^3.0",
+		"codeception/module-webdriver": "^4.0",
 		"ergebnis/composer-normalize": "^2.45",
 		"friendsofphp/php-cs-fixer": "^3.12",
 		"georgringer/news": "^14.0",
@@ -34,7 +37,9 @@
 		"typo3/cms-filelist": "^13.4 || ^14.0",
 		"typo3/cms-lowlevel": "^13.4 || ^14.0",
 		"typo3/cms-setup": "^13.4 || ^14.0",
-		"typo3/cms-workspaces": "^13.4 || ^14.0"
+		"typo3/cms-workspaces": "^13.4 || ^14.0",
+		"typo3/testing-framework": "^9.0",
+		"codeception/module-phpbrowser": "*"
 	},
 	"suggest": {
 		"typo3/cms-workspaces": "For workspace integration",
@@ -43,6 +48,11 @@
 	"autoload": {
 		"psr-4": {
 			"Xima\\XimaTypo3Recordlist\\": "Classes"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Xima\\XimaTypo3Recordlist\\Tests\\": "Tests/"
 		}
 	},
 	"config": {
@@ -98,6 +108,10 @@
 			"@typoscript:lint",
 			"@yaml:lint"
 		],
+		"test:acceptance": "vendor/bin/codecept run Acceptance",
+		"test:acceptance:beusers": "vendor/bin/codecept run Acceptance Backend/BeUsers",
+		"test:acceptance:debug": "vendor/bin/codecept run Acceptance --debug",
+		"test:acceptance:news": "vendor/bin/codecept run Acceptance Backend/News",
 		"typoscript:lint": "typoscript-lint",
 		"yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint"
 	}
