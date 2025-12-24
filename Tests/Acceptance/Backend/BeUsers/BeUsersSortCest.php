@@ -18,7 +18,9 @@ class BeUsersSortCest
     {
         $I->wantTo('sort backend users by username ascending');
 
-        $I->click('//thead//th//a[contains(text(), "Username")]');
+        $I->click('//thead//th[contains(., "Username")]//button');
+        $I->wait(0.5);
+        $I->click('a[data-order-direction="ASC"]');
         $I->wait(1);
 
         $I->seeElement('main.recordlist');
@@ -28,19 +30,9 @@ class BeUsersSortCest
     {
         $I->wantTo('sort backend users by username descending');
 
-        $I->click('//thead//th//a[contains(text(), "Username")]');
-        $I->wait(1);
-        $I->click('//thead//th//a[contains(text(), "Username")]');
-        $I->wait(1);
-
-        $I->seeElement('main.recordlist');
-    }
-
-    public function sortByUid(AcceptanceTester $I): void
-    {
-        $I->wantTo('sort backend users by UID');
-
-        $I->click('//thead//th[1]//a');
+        $I->click('//thead//th[contains(., "Username")]//button');
+        $I->wait(0.5);
+        $I->click('a[data-order-direction="DESC"]');
         $I->wait(1);
 
         $I->seeElement('main.recordlist');

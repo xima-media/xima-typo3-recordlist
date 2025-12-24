@@ -45,7 +45,10 @@ class RecordList extends Module
     public function sortBy(string $columnName, string $direction = 'ASC'): void
     {
         $I = $this->getWebDriver();
-        $I->click('//thead//th//a[contains(text(), "' . $columnName . '")]');
+        $I->click('//thead//th[contains(., "' . $columnName . '")]//button');
+        $I->wait(0.5);
+        $sortDir = strtoupper($direction);
+        $I->click('a[data-order-direction="' . $sortDir . '"]');
         $I->wait(1);
     }
 

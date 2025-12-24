@@ -36,7 +36,6 @@ class BeUsersDeleteCest
         $I->dontSeeElement('//tr[@data-uid="' . $uid . '"]');
     }
 
-
     public function deleteCancelled(AcceptanceTester $I): void
     {
         $I->wantTo('cancel record deletion');
@@ -68,6 +67,6 @@ class BeUsersDeleteCest
     protected function getFirstRecordUid(AcceptanceTester $I): int
     {
         $uid = $I->grabAttributeFrom('//tr[@data-uid]', 'data-uid');
-        return (int) $uid;
+        return (int)$uid;
     }
 }

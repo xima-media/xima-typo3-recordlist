@@ -70,6 +70,6 @@ class NewsEditCest
     protected function getFirstRecordUid(AcceptanceTester $I): int
     {
         $uid = $I->grabAttributeFrom('//tr[@data-uid]', 'data-uid');
-        return (int) $uid;
+        return (int)$uid;
     }
 }

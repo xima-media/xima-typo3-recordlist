@@ -1,4 +1,6 @@
-<?php  //[STAMP] f8ac1c8ea3ee07d8889a779d8e42b80c
+<?php
+
+//[STAMP] f8ac1c8ea3ee07d8889a779d8e42b80c
 // phpcs:ignoreFile
 namespace Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\_generated;
 
@@ -11,6 +13,4 @@ trait FunctionalTesterActions
      * @return \Codeception\Scenario
      */
     abstract protected function getScenario();
-
-    
 }
