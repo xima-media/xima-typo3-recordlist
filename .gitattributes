@@ -9,6 +9,7 @@
 /phpstan.neon                          export-ignore
 /phpstan-baseline.neon                 export-ignore
 /renovate.json                         export-ignore
+/config/system/additional.php          export-ignore
 /Classes/Controller/Example            export-ignore
 /Configuration/Backend/Modules.php     export-ignore
 /Configuration/page.tsconfig           export-ignore
