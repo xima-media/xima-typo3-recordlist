@@ -10,7 +10,7 @@ class NewsFilterCest
 {
     public function _before(AcceptanceTester $I): void
     {
-        $I->loginAsEditor();
+        $I->loginAsAdmin();
         $this->navigateToModule($I, 'example_news');
     }
 
@@ -33,7 +33,7 @@ class NewsFilterCest
         $I->click('button[type="submit"]');
         $I->wait(1);
 
-        $I->seeElement('.recordlist-table');
+        $I->seeElement('main.recordlist');
     }
 
     public function filterByAuthor(AcceptanceTester $I): void
@@ -44,15 +44,15 @@ class NewsFilterCest
         $I->click('button[type="submit"]');
         $I->wait(1);
 
-        $I->seeElement('.recordlist-table');
+        $I->seeElement('main.recordlist');
     }
 
     protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
     {
         $I->switchToMainFrame();
-        $I->click('//a[@data-moduleroute-identifier="' . $moduleIdentifier . '"]');
+        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
         $I->wait(1);
         $I->switchToContentFrame();
-        $I->waitForElement('.recordlist-table', 10);
+        $I->waitForElement('main.recordlist', 10);
     }
 }

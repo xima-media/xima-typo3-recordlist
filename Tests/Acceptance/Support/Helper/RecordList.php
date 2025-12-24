@@ -17,9 +17,9 @@ class RecordList extends Module
     public function openModule(string $moduleIdentifier): void
     {
         $I = $this->getWebDriver();
-        $I->click('//a[@data-moduleroute-identifier="' . $moduleIdentifier . '"]');
+        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
         $I->switchToContentFrame();
-        $I->waitForElementVisible('.recordlist-table', 10);
+        $I->waitForElementVisible('main.recordlist', 10);
     }
 
     public function searchFor(string $searchTerm): void
@@ -67,10 +67,16 @@ class RecordList extends Module
     public function deleteRecord(int $uid): void
     {
         $I = $this->getWebDriver();
-        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="delete"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@data-delete2]');
+
+        // Modal opens in main frame
+        $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
-        $I->click('.modal button.btn-danger');
+        $I->click('.modal button.btn-warning');
         $I->wait(1);
+
+        // Switch back to content frame
+        $I->switchToIFrame('list_frame');
     }
 
     public function exportRecords(string $format = 'csv', array $options = []): void

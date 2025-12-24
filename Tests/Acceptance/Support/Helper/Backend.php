@@ -17,7 +17,7 @@ class Backend extends Module
     public function switchToContentFrame(): void
     {
         $I = $this->getWebDriver();
-        $I->switchToIFrame('typo3-contentIframe');
+        $I->switchToIFrame('list_frame');
     }
 
     public function switchToMainFrame(): void
@@ -38,7 +38,7 @@ class Backend extends Module
     {
         $I = $this->getWebDriver();
         $this->switchToMainFrame();
-        $I->click('//a[@data-moduleroute-identifier="' . $moduleIdentifier . '"]');
+        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
         $I->wait(1);
         $this->switchToContentFrame();
     }

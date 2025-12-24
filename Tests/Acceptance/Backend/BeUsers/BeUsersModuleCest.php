@@ -10,7 +10,7 @@ class BeUsersModuleCest
 {
     public function _before(AcceptanceTester $I): void
     {
-        $I->loginAsEditor();
+        $I->loginAsAdmin();
     }
 
     public function moduleLoadsSuccessfully(AcceptanceTester $I): void
@@ -18,11 +18,11 @@ class BeUsersModuleCest
         $I->wantTo('verify that the BeUsers module loads successfully');
 
         $I->switchToMainFrame();
-        $I->click('//a[@data-moduleroute-identifier="example_beusers"]');
+        $I->click('//a[@data-modulemenu-identifier="example_beusers"]');
         $I->wait(1);
 
         $I->switchToContentFrame();
-        $I->waitForElement('.recordlist-table', 10);
+        $I->waitForElement('main.recordlist', 10);
         $I->see('Backend Users');
     }
 
@@ -37,11 +37,11 @@ class BeUsersModuleCest
 
         $I->selectOption('.table-selector', 'be_groups');
         $I->wait(1);
-        $I->seeElement('.recordlist-table');
+        $I->seeElement('main.recordlist');
 
         $I->selectOption('.table-selector', 'sys_filemounts');
         $I->wait(1);
-        $I->seeElement('.recordlist-table');
+        $I->seeElement('main.recordlist');
     }
 
     public function tableHeadersAreDisplayed(AcceptanceTester $I): void
@@ -57,9 +57,9 @@ class BeUsersModuleCest
     protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
     {
         $I->switchToMainFrame();
-        $I->click('//a[@data-moduleroute-identifier="' . $moduleIdentifier . '"]');
+        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
         $I->wait(1);
         $I->switchToContentFrame();
-        $I->waitForElement('.recordlist-table', 10);
+        $I->waitForElement('main.recordlist', 10);
     }
 }

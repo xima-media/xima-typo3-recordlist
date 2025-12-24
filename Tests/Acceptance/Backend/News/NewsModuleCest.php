@@ -10,7 +10,7 @@ class NewsModuleCest
 {
     public function _before(AcceptanceTester $I): void
     {
-        $I->loginAsEditor();
+        $I->loginAsAdmin();
     }
 
     public function moduleLoadsSuccessfully(AcceptanceTester $I): void
@@ -18,11 +18,11 @@ class NewsModuleCest
         $I->wantTo('verify that the News module loads successfully');
 
         $I->switchToMainFrame();
-        $I->click('//a[@data-moduleroute-identifier="example_news"]');
+        $I->click('//a[@data-modulemenu-identifier="example_news"]');
         $I->wait(1);
 
         $I->switchToContentFrame();
-        $I->waitForElement('.recordlist-table', 10);
+        $I->waitForElement('main.recordlist', 10);
         $I->see('News');
     }
 
@@ -49,9 +49,9 @@ class NewsModuleCest
     protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
     {
         $I->switchToMainFrame();
-        $I->click('//a[@data-moduleroute-identifier="' . $moduleIdentifier . '"]');
+        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
         $I->wait(1);
         $I->switchToContentFrame();
-        $I->waitForElement('.recordlist-table', 10);
+        $I->waitForElement('main.recordlist', 10);
     }
 }

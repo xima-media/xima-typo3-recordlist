@@ -10,7 +10,7 @@ class BeUsersDeleteCest
 {
     public function _before(AcceptanceTester $I): void
     {
-        $I->loginAsEditor();
+        $I->loginAsAdmin();
         $this->navigateToModule($I, 'example_beusers');
     }
 
@@ -20,12 +20,17 @@ class BeUsersDeleteCest
 
         $uid = $this->getFirstRecordUid($I);
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="delete"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@data-delete2]');
+
+        // Modal opens in main frame
+        $I->switchToMainFrame();
         $I->waitForElement('.modal', 5);
         $I->see('Are you sure');
-        $I->click('.modal button.btn-danger');
+        $I->click('.modal button.btn-warning');
         $I->wait(1);
 
+        // Switch back to content frame to verify deletion
+        $I->switchToContentFrame();
         $I->dontSeeElement('//tr[@data-uid="' . $uid . '"]');
     }
 
@@ -35,21 +40,26 @@ class BeUsersDeleteCest
 
         $uid = $this->getFirstRecordUid($I);
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="delete"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@data-delete2]');
+
+        // Modal opens in main frame
+        $I->switchToMainFrame();
         $I->waitForElement('.modal', 5);
         $I->click('.modal button.btn-secondary');
         $I->wait(1);
 
+        // Switch back to content frame to verify record still exists
+        $I->switchToContentFrame();
         $I->seeElement('//tr[@data-uid="' . $uid . '"]');
     }
 
     protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
     {
         $I->switchToMainFrame();
-        $I->click('//a[@data-moduleroute-identifier="' . $moduleIdentifier . '"]');
+        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
         $I->wait(1);
         $I->switchToContentFrame();
-        $I->waitForElement('.recordlist-table', 10);
+        $I->waitForElement('main.recordlist', 10);
     }
 
     protected function getFirstRecordUid(AcceptanceTester $I): int

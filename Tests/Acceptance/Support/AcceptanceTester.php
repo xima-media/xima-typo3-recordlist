@@ -25,20 +25,31 @@ class AcceptanceTester extends \Codeception\Actor
 {
     use AcceptanceTesterActions;
 
+    public function loginAsAdmin(): void
+    {
+        $I = $this;
+        $I->amOnPage('/typo3');
+        $I->waitForElement('#t3-username', 10);
+        $I->fillField('#t3-username', 'admin');
+        $I->fillField('#t3-password', 'Passw0rd!');
+        $I->click('#t3-login-submit-section > button');
+        $I->waitForElement('.scaffold-header', 10);
+    }
+
     public function loginAsEditor(): void
     {
         $I = $this;
         $I->amOnPage('/typo3');
         $I->waitForElement('#t3-username', 10);
         $I->fillField('#t3-username', 'editor');
-        $I->fillField('#t3-password', 'password');
+        $I->fillField('#t3-password', 'Passw0rd!');
         $I->click('#t3-login-submit-section > button');
-        $I->waitForElement('.topbar-header', 10);
+        $I->waitForElement('.scaffold-header', 10);
     }
 
     public function switchToContentFrame(): void
     {
-        $this->switchToIFrame('typo3-contentIframe');
+        $this->switchToIFrame('list_frame');
     }
 
     public function switchToMainFrame(): void
