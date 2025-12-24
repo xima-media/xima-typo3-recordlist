@@ -41,6 +41,9 @@ class AjaxController
     protected function updateUserSettings(array $postBody): void
     {
         $moduleName = array_key_first($postBody);
+        if ($moduleName === null) {
+            return;
+        }
 
         $moduleData = $this->getBackendAuthentication()->getModuleData($moduleName) ?? [];
         $moduleData['settings'] ??= [];
