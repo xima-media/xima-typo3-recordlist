@@ -39,7 +39,8 @@
 		"typo3/cms-setup": "^13.4 || ^14.0",
 		"typo3/cms-workspaces": "^13.4 || ^14.0",
 		"typo3/testing-framework": "^9.0",
-		"codeception/module-phpbrowser": "*"
+		"codeception/module-phpbrowser": "*",
+		"codeception/module-db": "^3.2"
 	},
 	"suggest": {
 		"typo3/cms-workspaces": "For workspace integration",

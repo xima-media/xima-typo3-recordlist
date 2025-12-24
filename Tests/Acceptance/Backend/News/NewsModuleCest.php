@@ -32,9 +32,8 @@ class NewsModuleCest
 
         $this->navigateToModule($I, 'example_news');
 
-        $I->see('Title');
-        $I->see('Author');
         $I->seeElement('//thead//th');
+        $I->seeElement('//tr[@data-uid]');
     }
 
     public function recordsFromCorrectPidAreShown(AcceptanceTester $I): void

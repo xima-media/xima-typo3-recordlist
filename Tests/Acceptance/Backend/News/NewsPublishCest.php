@@ -20,7 +20,7 @@ class NewsPublishCest
 
         $uid = $this->getFirstRecordUid($I);
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
         $I->waitForElement('.module-docheader', 5);
 
         $I->fillField('input[data-formengine-input-name="data[tx_news_domain_model_news][' . $uid . '][title]"]', 'Modified Title');
@@ -39,6 +39,8 @@ class NewsPublishCest
     {
         $I->wantTo('filter to show only records ready to publish');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="is_ready_to_publish"]', 5);
         $I->checkOption('input[name="is_ready_to_publish"]');
         $I->click('button[type="submit"]');
         $I->wait(1);

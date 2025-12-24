@@ -3,6 +3,7 @@ modules:
   enabled:
     - WebDriver
     - Asserts
+    - Db
     - \Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\Helper\Backend
     - \Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\Helper\RecordList
   config:
@@ -11,6 +12,12 @@ modules:
       browser: chrome
       host: hub
       port: 4444
+    Db:
+      dsn: 'mysql:host=db;dbname=db'
+      user: 'db'
+      password: 'db'
+      populate: false
+      cleanup: false
 step_decorators:
   - \Codeception\Step\ConditionalAssertion
   - \Codeception\Step\TryTo

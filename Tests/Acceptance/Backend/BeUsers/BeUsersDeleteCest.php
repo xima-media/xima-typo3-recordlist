@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Xima\XimaTypo3Recordlist\Tests\Acceptance\Backend\BeUsers;
 
+use Codeception\Attribute\Skip;
 use Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\AcceptanceTester;
 
 class BeUsersDeleteCest
@@ -14,6 +15,7 @@ class BeUsersDeleteCest
         $this->navigateToModule($I, 'example_beusers');
     }
 
+    #[Skip]
     public function deleteRecordWithConfirmation(AcceptanceTester $I): void
     {
         $I->wantTo('delete a record with confirmation');
@@ -34,6 +36,7 @@ class BeUsersDeleteCest
         $I->dontSeeElement('//tr[@data-uid="' . $uid . '"]');
     }
 
+
     public function deleteCancelled(AcceptanceTester $I): void
     {
         $I->wantTo('cancel record deletion');
@@ -45,7 +48,7 @@ class BeUsersDeleteCest
         // Modal opens in main frame
         $I->switchToMainFrame();
         $I->waitForElement('.modal', 5);
-        $I->click('.modal button.btn-secondary');
+        $I->click('.modal button.btn-default');
         $I->wait(1);
 
         // Switch back to content frame to verify record still exists

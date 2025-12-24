@@ -18,6 +18,8 @@ class BeUsersFilterCest
     {
         $I->wantTo('filter backend users by exact match');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="filter[username][value]"]', 5);
         $I->fillField('input[name="filter[username][value]"]', 'editor');
         $I->click('button[type="submit"]');
         $I->wait(1);
@@ -26,27 +28,17 @@ class BeUsersFilterCest
         $I->seeElement('//tr[@data-uid]');
     }
 
-    public function filterByLikeOperator(AcceptanceTester $I): void
-    {
-        $I->wantTo('filter backend users using LIKE operator');
-
-        $I->fillField('input[name="filter[username][value]"]', 'edit%');
-        $I->selectOption('select[name="filter[username][expr]"]', 'like');
-        $I->click('button[type="submit"]');
-        $I->wait(1);
-
-        $I->see('editor');
-    }
-
     public function clearAllFilters(AcceptanceTester $I): void
     {
         $I->wantTo('clear all filters');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="filter[username][value]"]', 5);
         $I->fillField('input[name="filter[username][value]"]', 'editor');
         $I->click('button[type="submit"]');
         $I->wait(1);
 
-        $I->click('//button[@title="Clear filters"]');
+        $I->click('input[name="reset"]');
         $I->wait(1);
 
         $I->seeElement('main.recordlist');

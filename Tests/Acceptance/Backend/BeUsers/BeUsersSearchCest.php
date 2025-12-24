@@ -18,6 +18,8 @@ class BeUsersSearchCest
     {
         $I->wantTo('search for backend users by username');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', 'editor');
         $I->click('button[type="submit"]');
         $I->wait(1);
@@ -29,17 +31,21 @@ class BeUsersSearchCest
     {
         $I->wantTo('verify that search with no results shows empty table');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', 'nonexistentuser');
         $I->click('button[type="submit"]');
         $I->wait(1);
 
-        $I->see('No records found');
+        $I->dontSeeElement('//tr[@data-uid]');
     }
 
     public function searchFieldPersists(AcceptanceTester $I): void
     {
         $I->wantTo('verify that search field persists after search');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', 'editor');
         $I->click('button[type="submit"]');
         $I->wait(1);

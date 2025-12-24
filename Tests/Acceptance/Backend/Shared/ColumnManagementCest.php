@@ -19,9 +19,11 @@ class ColumnManagementCest
         $I->wantTo('verify that show columns modal opens');
 
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
 
-        $I->see('Manage Columns');
+        $I->seeElement('.modal');
+        $I->switchToContentFrame();
     }
 
     public function toggleColumnVisibility(AcceptanceTester $I): void
@@ -29,12 +31,14 @@ class ColumnManagementCest
         $I->wantTo('toggle column visibility');
 
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
 
         $I->checkOption('input[name="columns[email]"]');
-        $I->click('.column-settings-modal button[type="submit"]');
+        $I->click('.modal button.btn-primary');
         $I->wait(1);
 
+        $I->switchToContentFrame();
         $I->see('Email', '//thead//th');
     }
 
@@ -43,11 +47,13 @@ class ColumnManagementCest
         $I->wantTo('verify that column settings persist across page reload');
 
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
         $I->checkOption('input[name="columns[email]"]');
-        $I->click('.column-settings-modal button[type="submit"]');
+        $I->click('.modal button.btn-primary');
         $I->wait(1);
 
+        $I->switchToContentFrame();
         $I->reload();
         $I->waitForElement('main.recordlist', 10);
 
@@ -59,9 +65,13 @@ class ColumnManagementCest
         $I->wantTo('verify that active columns are sorted to top');
 
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
 
         $I->seeElement('input[name="columns[username]"][checked]');
+        $I->click('.modal .btn-close');
+        $I->wait(1);
+        $I->switchToContentFrame();
     }
 
     public function exportRespectsColumnVisibility(AcceptanceTester $I): void
@@ -69,17 +79,24 @@ class ColumnManagementCest
         $I->wantTo('verify that export respects column visibility');
 
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
         $I->uncheckOption('input[name="columns[username]"]');
-        $I->click('.column-settings-modal button[type="submit"]');
+        $I->click('.modal button.btn-primary');
         $I->wait(1);
 
+        $I->switchToContentFrame();
         $I->click('.recordlist-download-button');
-        $I->waitForElement('.download-modal', 5);
-        $I->selectOption('select[name="format"]', 'csv');
-        $I->click('.download-modal button[type="submit"]');
 
+        // Modal opens in main frame
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
+        $I->selectOption('select[name="format"]', 'csv');
+        $I->click('.modal button.btn-primary');
         $I->wait(2);
+
+        // Switch back to content frame
+        $I->switchToContentFrame();
     }
 
     protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void

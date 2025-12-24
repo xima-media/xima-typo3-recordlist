@@ -23,7 +23,7 @@ class BeUsersModuleCest
 
         $I->switchToContentFrame();
         $I->waitForElement('main.recordlist', 10);
-        $I->see('Backend Users');
+        $I->see('BeUsers');
     }
 
     public function allTablesAreAccessible(AcceptanceTester $I): void

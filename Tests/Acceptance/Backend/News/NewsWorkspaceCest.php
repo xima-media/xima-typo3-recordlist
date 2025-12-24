@@ -19,9 +19,12 @@ class NewsWorkspaceCest
         $I->wantTo('verify that workspace status column is available');
 
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
         $I->seeElement('input[name="columns[workspace-status]"]');
-        $I->click('.column-settings-modal button.btn-close');
+        $I->click('.modal .btn-close');
+        $I->wait(1);
+        $I->switchToContentFrame();
     }
 
     public function workspaceRecordsShowStatusBadge(AcceptanceTester $I): void
@@ -29,18 +32,22 @@ class NewsWorkspaceCest
         $I->wantTo('verify that workspace records show status badge');
 
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
         $I->checkOption('input[name="columns[workspace-status]"]');
-        $I->click('.column-settings-modal button[type="submit"]');
+        $I->click('.modal button.btn-primary');
         $I->wait(1);
 
-        $I->seeElement('//th[@data-column="workspace-status"]');
+        $I->switchToContentFrame();
+        $I->seeElement('//thead//th[contains(text(), "Workspace")]');
     }
 
     public function filterOfflineRecords(AcceptanceTester $I): void
     {
         $I->wantTo('filter to show only offline records');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="is_offline"]', 5);
         $I->checkOption('input[name="is_offline"]');
         $I->click('button[type="submit"]');
         $I->wait(1);

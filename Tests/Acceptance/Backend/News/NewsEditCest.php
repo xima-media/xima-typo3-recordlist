@@ -34,7 +34,7 @@ class NewsEditCest
 
         $uid = $this->getFirstRecordUid($I);
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
         $I->waitForElement('.module-docheader', 5);
 
         $I->see('Edit');
@@ -46,7 +46,7 @@ class NewsEditCest
 
         $uid = $this->getFirstRecordUid($I);
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
         $I->waitForElement('.module-docheader', 5);
 
         $I->fillField('input[data-formengine-input-name="data[tx_news_domain_model_news][' . $uid . '][title]"]', 'Workspace Modified Title');

@@ -25,18 +25,19 @@ class RecordList extends Module
     public function searchFor(string $searchTerm): void
     {
         $I = $this->getWebDriver();
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', $searchTerm);
         $I->click('button[type="submit"]');
         $I->wait(1);
     }
 
-    public function applyFilter(string $fieldName, string $value, string $operator = 'eq'): void
+    public function applyFilter(string $fieldName, string $value): void
     {
         $I = $this->getWebDriver();
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="filter[' . $fieldName . '][value]"]', 5);
         $I->fillField('input[name="filter[' . $fieldName . '][value]"]', $value);
-        if ($operator !== 'eq') {
-            $I->selectOption('select[name="filter[' . $fieldName . '][expr]"]', $operator);
-        }
         $I->click('button[type="submit"]');
         $I->wait(1);
     }
@@ -44,7 +45,7 @@ class RecordList extends Module
     public function sortBy(string $columnName, string $direction = 'ASC'): void
     {
         $I = $this->getWebDriver();
-        $I->click('//th[@data-column="' . $columnName . '"]//a');
+        $I->click('//thead//th//a[contains(text(), "' . $columnName . '")]');
         $I->wait(1);
     }
 
@@ -83,14 +84,21 @@ class RecordList extends Module
     {
         $I = $this->getWebDriver();
         $I->click('.recordlist-download-button');
-        $I->waitForElement('.download-modal', 5);
+
+        // Modal opens in main frame
+        $I->switchToIFrame();
+        $I->waitForElement('.modal', 5);
         $I->selectOption('select[name="format"]', $format);
 
         if ($format === 'csv' && isset($options['delimiter'])) {
             $I->selectOption('select[name="csv[delimiter]"]', $options['delimiter']);
         }
 
-        $I->click('.download-modal button[type="submit"]');
+        $I->click('.modal button.btn-primary');
+        $I->wait(2);
+
+        // Switch back to content frame
+        $I->switchToIFrame('list_frame');
     }
 
     public function publishRecord(int $uid): void
@@ -120,10 +128,12 @@ class RecordList extends Module
     {
         $I = $this->getWebDriver();
         $I->click('.showColumnsButton');
-        $I->waitForElement('.column-settings-modal', 5);
+        $I->switchToIFrame();
+        $I->waitForElement('.modal', 5);
         $I->checkOption('input[name="columns[' . $columnName . ']"]');
-        $I->click('.column-settings-modal button[type="submit"]');
+        $I->click('.modal button.btn-primary');
         $I->wait(1);
+        $I->switchToIFrame('list_frame');
     }
 
     public function seeRecordInTable(int $uid): void

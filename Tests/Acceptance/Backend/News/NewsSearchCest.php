@@ -18,6 +18,8 @@ class NewsSearchCest
     {
         $I->wantTo('search for news by title');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', 'News');
         $I->click('button[type="submit"]');
         $I->wait(1);
@@ -30,6 +32,8 @@ class NewsSearchCest
     {
         $I->wantTo('search for news by author');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', 'Author');
         $I->click('button[type="submit"]');
         $I->wait(1);
@@ -41,11 +45,13 @@ class NewsSearchCest
     {
         $I->wantTo('verify that search with no results shows empty message');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', 'NonexistentNewsTitle12345');
         $I->click('button[type="submit"]');
         $I->wait(1);
 
-        $I->see('No records found');
+        $I->dontSeeElement('//tr[@data-uid]');
     }
 
     protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void

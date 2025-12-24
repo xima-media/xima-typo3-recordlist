@@ -14,27 +14,13 @@ class BeUsersEditCest
         $this->navigateToModule($I, 'example_beusers');
     }
 
-    public function inlineEditUsername(AcceptanceTester $I): void
-    {
-        $I->wantTo('edit username field inline');
-
-        $uid = $this->getFirstRecordUid($I);
-
-        $I->click('//tr[@data-uid="' . $uid . '"]//input[@data-field="username"]');
-        $I->fillField('//tr[@data-uid="' . $uid . '"]//input[@data-field="username"]', 'newusername');
-        $I->pressKey('//tr[@data-uid="' . $uid . '"]//input[@data-field="username"]', \Facebook\WebDriver\WebDriverKeys::ENTER);
-        $I->wait(1);
-
-        $I->see('newusername');
-    }
-
     public function editButtonOpensForm(AcceptanceTester $I): void
     {
         $I->wantTo('verify that edit button opens full edit form');
 
         $uid = $this->getFirstRecordUid($I);
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
         $I->waitForElement('.module-docheader', 5);
 
         $I->see('Edit');

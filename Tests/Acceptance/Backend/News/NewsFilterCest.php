@@ -18,6 +18,8 @@ class NewsFilterCest
     {
         $I->wantTo('filter news by English language');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('select[name="language"]', 5);
         $I->selectOption('select[name="language"]', '0');
         $I->click('button[type="submit"]');
         $I->wait(1);
@@ -29,6 +31,8 @@ class NewsFilterCest
     {
         $I->wantTo('filter news by German language');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('select[name="language"]', 5);
         $I->selectOption('select[name="language"]', '1');
         $I->click('button[type="submit"]');
         $I->wait(1);
@@ -40,6 +44,8 @@ class NewsFilterCest
     {
         $I->wantTo('filter news by author');
 
+        $I->click('.toggleSearchButton');
+        $I->waitForElementVisible('input[name="filter[author][value]"]', 5);
         $I->fillField('input[name="filter[author][value]"]', 'Author');
         $I->click('button[type="submit"]');
         $I->wait(1);
