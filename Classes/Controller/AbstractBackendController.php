@@ -757,7 +757,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                                 $this::WORKSPACE_ID
                             );
                             foreach ($references ?? [] as $reference) {
-                                if ($reference->getProperty('t3ver_stage') !== -10) {
+                                if ($reference->getProperty('t3ver_stage') !== self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
                                     continue;
                                 }
                                 $referencesToPublish[] = [
@@ -794,7 +794,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             // demand: readyToPublish (2/2)
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish') && (!is_array($vRecord) || $record['t3ver_stage'] !== -10)) {
+            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish') && (!is_array($vRecord) || $record['t3ver_stage'] !== self::WORKSPACE_STAGE_READY_TO_PUBLISH)) {
                 $record = null;
                 continue;
             }
