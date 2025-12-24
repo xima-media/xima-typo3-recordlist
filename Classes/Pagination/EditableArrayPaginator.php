@@ -23,7 +23,7 @@ class EditableArrayPaginator extends AbstractPaginator
     }
 
     /**
-     * @return iterable|array
+     * @return array
      */
     public function getPaginatedItems(): iterable
     {
