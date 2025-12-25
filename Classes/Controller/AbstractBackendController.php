@@ -534,7 +534,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         if (isset($body['search_field']) && $body['search_field']) {
             $searchInput = $body['search_field'];
             $escapedSearchInput = addcslashes($searchInput, '%_');
-            $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? '';
+            $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'];
             $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
             $searchConstraints = [];
             foreach ($searchFieldArray as $fieldName) {
