@@ -20,6 +20,15 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
                     ],
                 ],
             ],
+            'LOG' => [
+                'writerConfiguration' => [
+                    \TYPO3\CMS\Core\Log\LogLevel::DEBUG => [
+                        \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
+                            'logFile' => '/var/www/html/var/log/typo3_debug.log',
+                        ],
+                    ],
+                ],
+            ],
             // This GFX configuration allows processing by installed ImageMagick 6
             'GFX' => [
                 'processor' => 'ImageMagick',
