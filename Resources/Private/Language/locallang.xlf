@@ -204,6 +204,9 @@
 			<trans-unit id="pagination.of">
 				<source>of %1$d</source>
 			</trans-unit>
+			<trans-unit id="pagination.itemsPerPage">
+				<source>Items per page</source>
+			</trans-unit>
 			<trans-unit id="workspace.readyToPublish.modal.title">
 				<source>Publish record</source>
 			</trans-unit>

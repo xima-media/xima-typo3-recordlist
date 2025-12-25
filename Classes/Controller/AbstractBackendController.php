@@ -50,7 +50,7 @@ use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
     public const WORKSPACE_ID = 0;
-    protected const ITEMS_PER_PAGE = 100;
+    protected const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100, 200, 500];
     protected const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
     protected const VERSION_STATE_DELETED = 2;
     protected const TEMPLATE_NAME = 'Default';
@@ -168,6 +168,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
         $this->moduleTemplate->assign('table', $this->getTableName());
         $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
+        $this->moduleTemplate->assign('itemsPerPageOptions', array_combine(self::ITEMS_PER_PAGE_OPTIONS, self::ITEMS_PER_PAGE_OPTIONS));
 
         // build and execute query
         $this->createQueryBuilder();
@@ -321,7 +322,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if (isset($body['reset'])) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
-                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish']);
+                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
@@ -337,14 +338,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
-        // demand: offline records (1/2)
+        // demand: offline records (1/3)
         if (isset($body['is_offline']) && !isset($body['reset'])) {
             $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        // demand: readyToPublish (1/2)
+        // demand: readyToPublish (1/3)
         if (isset($body['is_ready_to_publish']) && !isset($body['reset'])) {
             $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
+        }
+
+        // demand: items per page (3/3)
+        if (isset($body['items_per_page']) && MathUtility::canBeInterpretedAsInteger($body['items_per_page'])) {
+            $this->addToModuleDataSettings([$this->getTableName() . '.itemsPerPage' => (int)$body['items_per_page']]);
         }
     }
 
@@ -620,6 +626,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getActiveLanguage(): int
     {
         return $this->getModuleDataSetting('language') ?? -1;
+    }
+
+    protected function validateItemsPerPage(mixed $value): int
+    {
+        return in_array((int)$value, $this::ITEMS_PER_PAGE_OPTIONS, true) ? (int)$value : 0;
     }
 
     protected function getModuleDataSetting(string $setting): mixed
@@ -1174,8 +1185,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $body = (array)$this->request->getParsedBody();
         $currentPage = isset($body['current_page']) && $body['current_page'] ? (int)$body['current_page'] : 1;
+        $itemsPerPage = $this->getModuleDataSetting($this->getTableName() . '.itemsPerPage') ?? $this::ITEMS_PER_PAGE_OPTIONS[0];
 
-        $this->paginator = new EditableArrayPaginator($this->records, $currentPage, self::ITEMS_PER_PAGE);
+        $this->paginator = new EditableArrayPaginator($this->records, $currentPage, $itemsPerPage);
 
         $items = [];
         foreach ($this->paginator->getPaginatedItems() as &$item) {

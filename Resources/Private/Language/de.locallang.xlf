@@ -271,6 +271,10 @@
 				<source>of %1$d</source>
 				<target>von %1$d</target>
 			</trans-unit>
+			<trans-unit id="pagination.itemsPerPage">
+				<source>Items per page</source>
+				<target>Einträge pro Seite</target>
+			</trans-unit>
 			<trans-unit id="workspace.readyToPublish.modal.title">
 				<source />
 				<target>Datensatz veröffentlichen</target>
