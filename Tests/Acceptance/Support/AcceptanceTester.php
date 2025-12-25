@@ -37,17 +37,6 @@ class AcceptanceTester extends \Codeception\Actor
         $I->waitForElement('.scaffold-header', 10);
     }
 
-    public function loginAsEditor(): void
-    {
-        $I = $this;
-        $I->amOnPage('/typo3');
-        $I->waitForElement('#t3-username', 10);
-        $I->fillField('#t3-username', 'editor');
-        $I->fillField('#t3-password', 'Passw0rd!');
-        $I->click('#t3-login-submit-section > button');
-        $I->waitForElement('.scaffold-header', 10);
-    }
-
     public function openModule(string $moduleIdentifier): void
     {
         $I = $this;
@@ -67,16 +56,6 @@ class AcceptanceTester extends \Codeception\Actor
         $I->wait(1);
     }
 
-    public function applyFilter(string $fieldName, string $value): void
-    {
-        $I = $this;
-        $I->click('.toggleSearchButton');
-        $I->waitForElementVisible('input[name="filter[' . $fieldName . '][value]"]', 5);
-        $I->fillField('input[name="filter[' . $fieldName . '][value]"]', $value);
-        $I->click('button[type="submit"]');
-        $I->wait(1);
-    }
-
     public function sortBy(string $columnName, string $direction = 'ASC'): void
     {
         $I = $this;
@@ -84,15 +63,6 @@ class AcceptanceTester extends \Codeception\Actor
         $I->wait(0.5);
         $sortDir = strtoupper($direction);
         $I->click('a[data-order-direction="' . $sortDir . '"]');
-        $I->wait(1);
-    }
-
-    public function inlineEdit(int $uid, string $fieldName, string $newValue): void
-    {
-        $I = $this;
-        $I->click('//tr[@data-uid="' . $uid . '"]//input[@data-field="' . $fieldName . '"]');
-        $I->fillField('//tr[@data-uid="' . $uid . '"]//input[@data-field="' . $fieldName . '"]', $newValue);
-        $I->pressKey('//tr[@data-uid="' . $uid . '"]//input[@data-field="' . $fieldName . '"]', \Facebook\WebDriver\WebDriverKeys::ENTER);
         $I->wait(1);
     }
 
