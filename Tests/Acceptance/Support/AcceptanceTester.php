@@ -62,7 +62,7 @@ class AcceptanceTester extends \Codeception\Actor
         $I->click('//thead//th[contains(., "' . $columnName . '")]//button');
         $I->wait(0.5);
         $sortDir = strtoupper($direction);
-        $I->click('a[data-order-direction="' . $sortDir . '"]');
+        $I->executeJS('document.querySelector(\'th .dropdown-menu.show a[data-order-direction="' . $sortDir . '"]\').click();');
         $I->wait(1);
     }
 
