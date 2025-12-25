@@ -170,10 +170,11 @@ class AcceptanceTester extends \Codeception\Actor
         $I->click('.showColumnsButton');
         $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
-        $I->checkOption('input[name="columns[' . $columnName . ']"]');
+        // Use JavaScript to click the checkbox since it might be intercepted by styled elements
+        $I->executeJS("document.querySelector('input#select-column-$columnName').click();");
         $I->click('.modal button.btn-primary');
         $I->wait(1);
-        $I->switchToIFrame('list_frame');
+        $I->switchToContentFrame();
     }
 
     public function seeRecordInTable(int $uid): void
