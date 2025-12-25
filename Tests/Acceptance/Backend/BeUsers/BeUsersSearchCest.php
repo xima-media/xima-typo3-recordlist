@@ -11,18 +11,14 @@ class BeUsersSearchCest
     public function _before(AcceptanceTester $I): void
     {
         $I->loginAsAdmin();
-        $this->navigateToModule($I, 'example_beusers');
+        $I->openModule('example_beusers');
     }
 
     public function searchByUsername(AcceptanceTester $I): void
     {
         $I->wantTo('search for backend users by username');
 
-        $I->click('.toggleSearchButton');
-        $I->waitForElementVisible('input[name="search_field"]', 5);
-        $I->fillField('input[name="search_field"]', 'editor');
-        $I->click('button[type="submit"]');
-        $I->wait(1);
+        $I->searchFor('editor');
 
         $I->see('editor');
     }
@@ -31,11 +27,7 @@ class BeUsersSearchCest
     {
         $I->wantTo('verify that search with no results shows empty table');
 
-        $I->click('.toggleSearchButton');
-        $I->waitForElementVisible('input[name="search_field"]', 5);
-        $I->fillField('input[name="search_field"]', 'nonexistentuser');
-        $I->click('button[type="submit"]');
-        $I->wait(1);
+        $I->searchFor('nonexistentuser');
 
         $I->dontSeeElement('//tr[@data-uid]');
     }
@@ -44,21 +36,8 @@ class BeUsersSearchCest
     {
         $I->wantTo('verify that search field persists after search');
 
-        $I->click('.toggleSearchButton');
-        $I->waitForElementVisible('input[name="search_field"]', 5);
-        $I->fillField('input[name="search_field"]', 'editor');
-        $I->click('button[type="submit"]');
-        $I->wait(1);
+        $I->searchFor('editor');
 
         $I->seeInField('input[name="search_field"]', 'editor');
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
     }
 }

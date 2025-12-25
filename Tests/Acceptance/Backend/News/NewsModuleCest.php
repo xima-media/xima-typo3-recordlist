@@ -17,12 +17,7 @@ class NewsModuleCest
     {
         $I->wantTo('verify that the News module loads successfully');
 
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="example_news"]');
-        $I->wait(1);
-
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
+        $I->openModule('example_news');
         $I->see('News');
     }
 
@@ -30,7 +25,7 @@ class NewsModuleCest
     {
         $I->wantTo('verify that default columns are displayed');
 
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
 
         $I->seeElement('//thead//th');
         $I->seeElement('//tr[@data-uid]');
@@ -40,17 +35,8 @@ class NewsModuleCest
     {
         $I->wantTo('verify that records from PID 15 are displayed');
 
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
 
         $I->seeElement('//tr[@data-uid]');
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
     }
 }

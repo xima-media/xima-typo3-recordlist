@@ -11,14 +11,14 @@ class NewsPublishCest
     public function _before(AcceptanceTester $I): void
     {
         $I->loginAsAdmin();
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
     }
 
     public function markRecordAsReadyToPublish(AcceptanceTester $I): void
     {
         $I->wantTo('mark a news record as ready to publish');
 
-        $uid = $this->getFirstRecordUid($I);
+        $uid = $I->getFirstRecordUid();
 
         $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
         $I->waitForElement('.module-docheader', 5);
@@ -27,10 +27,9 @@ class NewsPublishCest
         $I->click('button[name="_savedok"]');
         $I->wait(2);
 
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="ready-to-publish"]');
-        $I->wait(2);
+        $I->markReadyToPublish($uid);
 
         $I->see('Waiting for Review');
     }
@@ -46,20 +45,5 @@ class NewsPublishCest
         $I->wait(1);
 
         $I->seeElement('main.recordlist');
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
-    }
-
-    protected function getFirstRecordUid(AcceptanceTester $I): int
-    {
-        $uid = $I->grabAttributeFrom('//tr[@data-uid]', 'data-uid');
-        return (int)$uid;
     }
 }

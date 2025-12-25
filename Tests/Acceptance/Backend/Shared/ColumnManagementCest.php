@@ -11,7 +11,8 @@ class ColumnManagementCest
     public function _before(AcceptanceTester $I): void
     {
         $I->loginAsAdmin();
-        $this->navigateToModule($I, 'example_beusers');
+        $I->switchToMainFrame();
+        $I->openModule('example_beusers');
     }
 
     public function showColumnsModalOpens(AcceptanceTester $I): void
@@ -30,15 +31,8 @@ class ColumnManagementCest
     {
         $I->wantTo('toggle column visibility');
 
-        $I->click('.showColumnsButton');
-        $I->switchToMainFrame();
-        $I->waitForElement('.modal', 5);
+        $I->toggleColumn('email');
 
-        $I->checkOption('input[name="columns[email]"]');
-        $I->click('.modal button.btn-primary');
-        $I->wait(1);
-
-        $I->switchToContentFrame();
         $I->see('Email', '//thead//th');
     }
 
@@ -46,14 +40,8 @@ class ColumnManagementCest
     {
         $I->wantTo('verify that column settings persist across page reload');
 
-        $I->click('.showColumnsButton');
-        $I->switchToMainFrame();
-        $I->waitForElement('.modal', 5);
-        $I->checkOption('input[name="columns[email]"]');
-        $I->click('.modal button.btn-primary');
-        $I->wait(1);
+        $I->toggleColumn('email');
 
-        $I->switchToContentFrame();
         $I->reload();
         $I->waitForElement('main.recordlist', 10);
 
@@ -79,32 +67,13 @@ class ColumnManagementCest
         $I->wantTo('verify that export respects column visibility');
 
         $I->click('.showColumnsButton');
-        $I->switchToMainFrame();
+        $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
         $I->uncheckOption('input[name="columns[username]"]');
         $I->click('.modal button.btn-primary');
         $I->wait(1);
 
-        $I->switchToContentFrame();
-        $I->click('.recordlist-download-button');
-
-        // Modal opens in main frame
-        $I->switchToMainFrame();
-        $I->waitForElement('.modal', 5);
-        $I->selectOption('select[name="format"]', 'csv');
-        $I->click('.modal button.btn-primary');
-        $I->wait(2);
-
-        // Switch back to content frame
-        $I->switchToContentFrame();
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
+        $I->switchToIFrame('list_frame');
+        $I->exportRecords('csv');
     }
 }

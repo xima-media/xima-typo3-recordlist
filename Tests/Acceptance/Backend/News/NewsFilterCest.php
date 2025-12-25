@@ -11,7 +11,7 @@ class NewsFilterCest
     public function _before(AcceptanceTester $I): void
     {
         $I->loginAsAdmin();
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
     }
 
     public function filterByLanguageEnglish(AcceptanceTester $I): void
@@ -44,21 +44,8 @@ class NewsFilterCest
     {
         $I->wantTo('filter news by author');
 
-        $I->click('.toggleSearchButton');
-        $I->waitForElementVisible('input[name="filter[author][value]"]', 5);
-        $I->fillField('input[name="filter[author][value]"]', 'Author');
-        $I->click('button[type="submit"]');
-        $I->wait(1);
+        $I->applyFilter('author', 'Author');
 
         $I->seeElement('main.recordlist');
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
     }
 }

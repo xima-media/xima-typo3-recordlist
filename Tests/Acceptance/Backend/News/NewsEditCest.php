@@ -11,19 +11,16 @@ class NewsEditCest
     public function _before(AcceptanceTester $I): void
     {
         $I->loginAsAdmin();
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
     }
 
     public function inlineEditTitle(AcceptanceTester $I): void
     {
         $I->wantTo('edit news title field inline');
 
-        $uid = $this->getFirstRecordUid($I);
+        $uid = $I->getFirstRecordUid();
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//input[@data-field="title"]');
-        $I->fillField('//tr[@data-uid="' . $uid . '"]//input[@data-field="title"]', 'Modified News Title');
-        $I->pressKey('//tr[@data-uid="' . $uid . '"]//input[@data-field="title"]', \Facebook\WebDriver\WebDriverKeys::ENTER);
-        $I->wait(1);
+        $I->inlineEdit($uid, 'title', 'Modified News Title');
 
         $I->see('Modified News Title');
     }
@@ -32,7 +29,7 @@ class NewsEditCest
     {
         $I->wantTo('verify that edit button opens full edit form');
 
-        $uid = $this->getFirstRecordUid($I);
+        $uid = $I->getFirstRecordUid();
 
         $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
         $I->waitForElement('.module-docheader', 5);
@@ -44,7 +41,7 @@ class NewsEditCest
     {
         $I->wantTo('verify that workspace version is created on edit');
 
-        $uid = $this->getFirstRecordUid($I);
+        $uid = $I->getFirstRecordUid();
 
         $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
         $I->waitForElement('.module-docheader', 5);
@@ -53,23 +50,8 @@ class NewsEditCest
         $I->click('button[name="_savedok"]');
         $I->wait(2);
 
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
 
         $I->see('Workspace Modified Title');
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
-    }
-
-    protected function getFirstRecordUid(AcceptanceTester $I): int
-    {
-        $uid = $I->grabAttributeFrom('//tr[@data-uid]', 'data-uid');
-        return (int)$uid;
     }
 }

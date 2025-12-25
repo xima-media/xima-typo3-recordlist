@@ -12,7 +12,8 @@ class PaginationCest
     public function _before(AcceptanceTester $I): void
     {
         $I->loginAsAdmin();
-        $this->navigateToModule($I, 'example_beusers');
+        $I->switchToMainFrame();
+        $I->openModule('example_beusers');
     }
 
     #[Skip('Not enough records in fixture to trigger pagination')]
@@ -52,8 +53,7 @@ class PaginationCest
     {
         $I->wantTo('jump to a specific page number');
 
-        $I->click('//button[@data-page="2"]');
-        $I->wait(1);
+        $I->goToPage(2);
 
         $I->see('2', '.pagination .active');
     }
@@ -73,14 +73,5 @@ class PaginationCest
         $I->wait(1);
 
         $I->seeInField('input[name="search_field"]', 'editor');
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
     }
 }

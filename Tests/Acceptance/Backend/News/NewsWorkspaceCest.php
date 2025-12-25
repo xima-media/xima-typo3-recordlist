@@ -11,7 +11,7 @@ class NewsWorkspaceCest
     public function _before(AcceptanceTester $I): void
     {
         $I->loginAsAdmin();
-        $this->navigateToModule($I, 'example_news');
+        $I->openModule('example_news');
     }
 
     public function workspaceColumnIsAvailable(AcceptanceTester $I): void
@@ -53,14 +53,5 @@ class NewsWorkspaceCest
         $I->wait(1);
 
         $I->seeElement('main.recordlist');
-    }
-
-    protected function navigateToModule(AcceptanceTester $I, string $moduleIdentifier): void
-    {
-        $I->switchToMainFrame();
-        $I->click('//a[@data-modulemenu-identifier="' . $moduleIdentifier . '"]');
-        $I->wait(1);
-        $I->switchToContentFrame();
-        $I->waitForElement('main.recordlist', 10);
     }
 }
