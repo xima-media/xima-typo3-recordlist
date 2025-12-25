@@ -135,4 +135,39 @@ class NewsFilterCest
             }
         }
     }
+
+    public function filterByCategory(AcceptanceTester $I): void
+    {
+        $I->wantTo('filter news by category using different expression types');
+        $I->selectOption('select[name="items_per_page"]', '500');
+        $I->wait(1);
+
+        $testCases = [
+            ['expr' => 'in', 'description' => 'contains category 18'],
+            ['expr' => 'notIn', 'description' => 'does not contain category 18'],
+        ];
+
+        foreach ($testCases as $testCase) {
+            $this->ensureSearchFormIsOpen($I);
+
+            // Wait for the category tree element to be visible
+            $I->waitForElementVisible('.svg-tree-element', 10);
+            $I->wait(2); // Wait for tree to fully load
+
+            // Set the category filter value and expression type directly via JavaScript
+            $I->executeJS('document.querySelector(\'input[name="filter[categories][value]"]\').value = "18";');
+            $I->selectOption('select[name="filter[categories][expr]"]', $testCase['expr']);
+
+            $this->submitSearchFormAndSwitchToResults($I);
+
+            // Verify we have filtered records
+            $recordCount = $I->grabMultiple('//tr[@data-uid]', 'data-uid');
+            $I->assertGreaterThan(0, count($recordCount), 'Should have filtered records with ' . $testCase['description']);
+
+            // Verify all records are present
+            foreach ($recordCount as $uid) {
+                $I->seeElement('//tr[@data-uid="' . $uid . '"]');
+            }
+        }
+    }
 }
