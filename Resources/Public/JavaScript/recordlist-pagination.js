@@ -8,6 +8,10 @@ export default class RecordlistPagination {
       link.addEventListener("click", this.onPaginationLinkClick.bind(this));
     });
 
+    document.querySelectorAll("a[data-action=\"pagination-jump\"]").forEach(link => {
+      link.addEventListener("click", this.onPaginationJump.bind(this));
+    });
+
     document.querySelectorAll("input[name=\"current_page\"]").forEach(input => {
       input.addEventListener("keypress", this.onPaginationInputKeypress.bind(this));
     });
@@ -18,9 +22,11 @@ export default class RecordlistPagination {
   }
 
   updateAndSubmitPaginationInput(nextPage) {
-    const paginationInput = document.querySelector("tr + tr input[name=\"current_page\"]");
-    paginationInput.value = nextPage;
-    paginationInput.closest("form")?.submit();
+    const paginationInputs = document.querySelectorAll("input[name=\"current_page\"]");
+    paginationInputs.forEach(input => {
+      input.value = nextPage;
+    });
+    paginationInputs[0]?.closest("form")?.submit();
   }
 
   onPaginationLinkClick(e) {
@@ -28,6 +34,13 @@ export default class RecordlistPagination {
     const link = e.currentTarget;
     const nextPage = link.getAttribute("data-nextpage") ?? "";
     this.updateAndSubmitPaginationInput(nextPage);
+  }
+
+  onPaginationJump(e) {
+    e.preventDefault();
+    const paginationInput = document.querySelector("input[name=\"current_page\"]");
+    const currentPage = paginationInput?.value ?? "1";
+    this.updateAndSubmitPaginationInput(currentPage);
   }
 
   onPaginationInputKeypress(e) {

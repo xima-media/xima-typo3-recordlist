@@ -87,13 +87,6 @@ class AcceptanceTester extends \Codeception\Actor
         $I->wait(1);
     }
 
-    public function goToPage(int $pageNumber): void
-    {
-        $I = $this;
-        $I->click('//button[@data-page="' . $pageNumber . '"]');
-        $I->wait(1);
-    }
-
     public function inlineEdit(int $uid, string $fieldName, string $newValue): void
     {
         $I = $this;

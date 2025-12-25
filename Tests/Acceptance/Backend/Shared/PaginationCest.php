@@ -26,7 +26,7 @@ class PaginationCest
     {
         $I->wantTo('navigate to the next page');
 
-        $I->click('.pagination .next');
+        $I->click('.pagination .page-link[title="Next"]');
         $I->wait(1);
 
         $I->seeElement('main.recordlist');
@@ -36,9 +36,9 @@ class PaginationCest
     {
         $I->wantTo('navigate to the previous page');
 
-        $I->click('.pagination .next');
+        $I->click('.pagination .page-link[title="Next"]');
         $I->wait(1);
-        $I->click('.pagination .previous');
+        $I->click('.pagination .page-link[title="Previous"]');
         $I->wait(1);
 
         $I->seeElement('main.recordlist');
@@ -48,20 +48,68 @@ class PaginationCest
     {
         $I->wantTo('jump to a specific page number');
 
-        $I->goToPage(2);
+        $I->fillField('.pagination .paginator-input', '2');
+        $I->click('.pagination a[data-action="pagination-jump"]');
+        $I->wait(1);
 
-        $I->see('2', '.pagination .active');
+        $I->see('2', '.pagination .paginator-input');
     }
 
     public function paginationPersistsFilters(AcceptanceTester $I): void
     {
         $I->wantTo('verify that pagination persists filters');
 
-        $I->searchFor('News');
+        $I->searchFor('E');
 
-        $I->click('.pagination .next');
+        $I->click('.pagination .page-link[title="Next"]');
         $I->wait(1);
 
-        $I->seeInField('input[name="search_field"]', 'News');
+        $I->seeInField('input[name="search_field"]', 'E');
+    }
+
+    public function itemsPerPageDropdownIsVisible(AcceptanceTester $I): void
+    {
+        $I->wantTo('verify that items per page dropdown is visible');
+
+        $I->seeElement('select[name="items_per_page"]');
+    }
+
+    public function changeItemsPerPage(AcceptanceTester $I): void
+    {
+        $I->wantTo('change items per page value');
+
+        $I->selectOption('select[name="items_per_page"]', '50');
+        $I->click('.pagination a[data-action="pagination-jump"]');
+
+        $I->seeOptionIsSelected('select[name="items_per_page"]', '50');
+    }
+
+    public function itemsPerPagePersistsAcrossRequests(AcceptanceTester $I): void
+    {
+        $I->wantTo('verify that items per page setting persists across requests');
+
+        $I->selectOption('select[name="items_per_page"]', '50');
+        $I->wait(1);
+
+        $I->reloadPage();
+        $I->switchToContentFrame();
+
+        $I->seeOptionIsSelected('select[name="items_per_page"]', '50');
+    }
+
+    public function itemsPerPageResetsWithResetButton(AcceptanceTester $I): void
+    {
+        $I->wantTo('verify that items per page resets when reset button is clicked');
+
+        $I->selectOption('select[name="items_per_page"]', '200');
+        $I->wait(1);
+
+        $I->click('.toggleSearchButton');
+        $I->wait(0.5);
+
+        $I->click('input[name="reset"]');
+        $I->wait(1);
+
+        $I->seeOptionIsSelected('select[name="items_per_page"]', '25');
     }
 }
