@@ -158,7 +158,9 @@ class AcceptanceTester extends \Codeception\Actor
     public function switchTable(string $tableName): void
     {
         $I = $this;
-        $I->selectOption('.table-selector', $tableName);
+        $I->click('.btn-group .dropdown-toggle');
+        $I->waitForElementVisible('.dropdown-menu', 2);
+        $I->click('//a[@class="dropdown-item dropdown-item-spaced"][@title="' . $tableName . '"]');
         $I->wait(1);
     }
 
