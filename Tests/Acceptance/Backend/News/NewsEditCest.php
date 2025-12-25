@@ -14,15 +14,25 @@ class NewsEditCest
         $I->openModule('example_news');
     }
 
-    public function inlineEditTitle(AcceptanceTester $I): void
+    private function assertRecordIsModified(AcceptanceTester $I): void
     {
-        $I->wantTo('edit news title field inline');
+        // Verify the record has modified state
+        $I->seeElement('//tr[@data-state="modified"]');
 
-        $uid = $I->getFirstRecordUid();
+        // Verify the title has workspace-state-modified class
+        $I->seeElement('//span[@class="workspace-state-modified"]');
 
-        $I->inlineEdit($uid, 'title', 'Modified News Title');
+        // Verify "Copy" badge is visible for modified records
+        $I->see('Copy', '.badge-warning');
+    }
 
-        $I->see('Modified News Title');
+    private function assertRecordIsDeleted(AcceptanceTester $I): void
+    {
+        // Verify the record is marked as deleted
+        $I->seeElement('//tr[@data-state="deleted"]');
+
+        // Verify the record shows workspace-state-deleted styling
+        $I->seeElement('//span[@class="workspace-state-deleted"]');
     }
 
     public function editButtonOpensForm(AcceptanceTester $I): void
@@ -50,8 +60,68 @@ class NewsEditCest
         $I->click('button[name="_savedok"]');
         $I->wait(2);
 
+        $I->switchToMainFrame();
         $I->openModule('example_news');
 
         $I->see('Workspace Modified Title');
+    }
+
+    public function editedRecordIsMarkedAsModified(AcceptanceTester $I): void
+    {
+        $I->wantTo('verify that edited records are marked with modified state');
+
+        $uid = $I->getFirstRecordUid();
+
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
+        $I->waitForElement('.module-docheader', 5);
+
+        $I->fillField('input[data-formengine-input-name="data[tx_news_domain_model_news][' . $uid . '][title]"]', 'Modified Record State Test');
+        $I->click('button[name="_savedok"]');
+        $I->wait(2);
+
+        $I->switchToMainFrame();
+        $I->openModule('example_news');
+
+        $this->assertRecordIsModified($I);
+    }
+
+    public function deletedRecordIsMarkedInWorkspace(AcceptanceTester $I): void
+    {
+        $I->wantTo('verify that record deletion is marked in workspace (not permanently deleted)');
+
+        $uid = $I->getFirstRecordUid();
+
+        $I->deleteRecord($uid);
+
+        $this->assertRecordIsDeleted($I);
+    }
+
+    public function inlineEditAuthorCreatesWorkspaceVersion(AcceptanceTester $I): void
+    {
+        $I->wantTo('verify that inline editing of author field creates workspace version');
+
+        $uid = $I->getFirstRecordUid();
+
+        // Click the inline editable author field
+        $I->click('//tr[@data-uid="' . $uid . '"]//span[@id="author-' . $uid . '"]');
+        $I->wait(0.5);
+
+        // Clear and type new value
+        $I->executeJS('document.getElementById("author-' . $uid . '").textContent = ""');
+        $I->type('Workspace Author Edit');
+
+        // Click save button
+        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="save"]');
+        $I->wait(1);
+
+        // Reload to see the changes
+        $I->reloadPage();
+        $I->switchToContentFrame();
+
+        // Verify the record is marked as modified
+        $this->assertRecordIsModified($I);
+
+        // Verify the new author value is displayed
+        $I->see('Workspace Author Edit');
     }
 }

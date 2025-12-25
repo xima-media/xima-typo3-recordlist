@@ -51,8 +51,9 @@ class PaginationCest
         $I->fillField('.pagination .paginator-input', '2');
         $I->click('.pagination a[data-action="pagination-jump"]');
         $I->wait(1);
+        $I->switchToContentFrame();
 
-        $I->see('2', '.pagination .paginator-input');
+        $I->seeInField('.pagination .paginator-input', '2');
     }
 
     public function paginationPersistsFilters(AcceptanceTester $I): void
