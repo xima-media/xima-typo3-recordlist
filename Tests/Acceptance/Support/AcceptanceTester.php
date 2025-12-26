@@ -102,15 +102,6 @@ class AcceptanceTester extends \Codeception\Actor
         $I->switchToIFrame('list_frame');
     }
 
-    public function publishRecord(int $uid): void
-    {
-        $I = $this;
-        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="publish"]');
-        $I->waitForElement('.modal', 5);
-        $I->click('.modal button.btn-success');
-        $I->wait(2);
-    }
-
     public function markReadyToPublish(int $uid): void
     {
         $I = $this;
@@ -138,22 +129,6 @@ class AcceptanceTester extends \Codeception\Actor
         $I->click('.modal button.btn-primary');
         $I->wait(1);
         $I->switchToContentFrame();
-    }
-
-    public function seeRecordInTable(int $uid): void
-    {
-        $I = $this;
-        $I->seeElement('//tr[@data-uid="' . $uid . '"]');
-    }
-
-    public function dontSeeRecordInTable(int $uid): void
-    {
-        $this->dontSeeElement('//tr[@data-uid="' . $uid . '"]');
-    }
-
-    public function seeRecordFieldValue(int $uid, string $fieldName, string $expectedValue): void
-    {
-        $this->see($expectedValue, '//tr[@data-uid="' . $uid . '"]//td[@data-field="' . $fieldName . '"]');
     }
 
     public function getFirstRecordUid(): int

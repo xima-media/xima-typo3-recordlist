@@ -22,7 +22,7 @@ class BeUsersDeleteCest
 
         $I->deleteRecord($uid);
 
-        $I->dontSeeRecordInTable($uid);
+        $I->dontSeeElement('//tr[@data-uid="' . $uid . '"]');
     }
 
     public function deleteCancelled(AcceptanceTester $I): void
@@ -41,6 +41,6 @@ class BeUsersDeleteCest
 
         // Switch back to content frame to verify record still exists
         $I->switchToContentFrame();
-        $I->seeRecordInTable($uid);
+        $I->seeElement('//tr[@data-uid="' . $uid . '"]');
     }
 }
