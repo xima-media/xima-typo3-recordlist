@@ -19,6 +19,14 @@
 				<source />
 				<target>Status</target>
 			</trans-unit>
+			<trans-unit id="table.column.uid">
+				<source />
+				<target>ID</target>
+			</trans-unit>
+			<trans-unit id="table.column.pid">
+				<source />
+				<target>Seiten ID</target>
+			</trans-unit>
 			<trans-unit id="table.button.reset">
 				<source />
 				<target>Zurücksetzen</target>

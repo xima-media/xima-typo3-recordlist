@@ -15,6 +15,12 @@
 			<trans-unit id="table.column.status">
 				<source>Status</source>
 			</trans-unit>
+			<trans-unit id="table.column.uid">
+				<source>Unique ID</source>
+			</trans-unit>
+			<trans-unit id="table.column.pid">
+				<source>Page ID</source>
+			</trans-unit>
 			<trans-unit id="table.button.reset">
 				<source>Reset</source>
 			</trans-unit>

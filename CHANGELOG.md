@@ -16,12 +16,20 @@ All notable changes to this project will be documented in this file.
 - **Batch Field Editing**: Edit specific fields across multiple records from column header dropdown
 - **Multi-Selection Controls**: Check All, Uncheck All, and Toggle Selection buttons in checkbox column header
 - **Export Functionality**: Download selected records and fields in new formats (XLSX, JSON)
+- **Independent Icon Column**: Icon column is now a dedicated table column (always visible by default, positioned after checkbox)
+- **Configurable Fixed Columns**: Both checkbox and icon columns can be hidden per table using `showCheckboxColumn` and `showIconColumn` flags
+- **Special Columns**: New automatically-generated UID and PID columns available in column selector (disabled by default)
+- **Language Indentation**: Moved to the icon column with improved CSS targeting
 
 ### Breaking Changes
 
 - `getTableName(): string` method replaced with `getTableNames(): array`
 - Module data settings now use dot notation: `tableName.settingKey` instead of `settingKey`
 - Fluid templates require scoped access: `{settings.{table}.settingKey}` instead of `{settings.settingKey}`
+- **Icon Column Architecture**: Icons are no longer part of column configuration, now appear as independent column after checkbox
+- **Removed Properties**: `icon` and `languageIndent` properties removed from column configuration
+- **Template Structure**: Custom templates overriding `Default.html` must be updated to include new icon column structure
+- **CSS Selectors**: Language indent selector changed from `td[data-language-indent="1"] > *:first-child` to `td.col-icon[data-language-indent="1"]`
 
 ### Migration Guide
 

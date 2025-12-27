@@ -947,7 +947,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getColumnsForDownload(bool $allColumns): array
     {
         $tableName = $this->getTableName();
-        $activeColumns = ['uid' => 'Uid']; // Always include 'uid' column
+        $activeColumns = [];
 
         if (isset($this->tableConfiguration[$tableName]['columns'])) {
             foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => $columnConfig) {
@@ -1094,6 +1094,24 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ],
             ];
         }
+
+        $columns['uid'] = [
+            'columnName' => 'uid',
+            'partial' => 'Uid',
+            'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.uid',
+            'active' => false,
+            'filter' => [],
+            'defaultPosition' => 0,
+        ];
+
+        $columns['pid'] = [
+            'columnName' => 'pid',
+            'partial' => 'Pid',
+            'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.pid',
+            'active' => false,
+            'filter' => [],
+            'defaultPosition' => 0,
+        ];
 
         ksort($columns);
 
