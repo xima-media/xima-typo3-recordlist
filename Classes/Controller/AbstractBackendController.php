@@ -1078,16 +1078,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'columnName' => $columnName,
                 'label' => $config['label'] ?? '',
                 'partial' => $partial,
-                'languageIndent' => false,
-                'icon' => false,
                 'active' => false,
                 'filter' => $filter,
                 'defaultPosition' => 0,
             ];
 
             if ($columnName === $defaultColumn) {
-                $columns[$columnName]['languageIndent'] = true;
-                $columns[$columnName]['icon'] = true;
                 $columns[$columnName]['defaultPosition'] = 1;
             }
         }
@@ -1109,6 +1105,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $this->tableConfiguration[$tableName] = [
             'columns' => $columns,
+            'showCheckboxColumn' => true,
+            'showIconColumn' => true,
             'groupActions' => [
                 'Translate',
                 'TranslateDeepl',
@@ -1177,7 +1175,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $sortedColumns = array_merge($sortedColumns, array_diff_key($this->tableConfiguration[$tableName]['columns'], array_flip($activeColumns)));
 
         $this->tableConfiguration[$tableName]['columns'] = $sortedColumns;
-        $this->tableConfiguration[$tableName]['columnCount'] = count($activeColumns) + (isset($this->tableConfiguration[$tableName]['groupActions']) || isset($this->tableConfiguration[$tableName]['actions']) ? 1 : 0);
+        $this->tableConfiguration[$tableName]['columnCount'] = count($activeColumns) + ($this->tableConfiguration[$tableName]['showCheckboxColumn'] ? 1 : 0) + ($this->tableConfiguration[$tableName]['showIconColumn'] ? 1 : 0) + (isset($this->tableConfiguration[$tableName]['groupActions']) || isset($this->tableConfiguration[$tableName]['actions']) ? 1 : 0);
         $this->moduleTemplate->assign('tableConfiguration', $this->tableConfiguration[$tableName]);
     }
 

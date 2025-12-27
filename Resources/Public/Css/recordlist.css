@@ -30,8 +30,8 @@ span.inline-edit:focus-within {
     overflow: hidden;
 }
 
-.table > tbody > tr:not([data-sys_language_uid="0"]) td[data-language-indent="1"] > *:first-child {
-    margin-left: 16px;
+.table > tbody > tr:not([data-sys_language_uid="0"]) td.col-icon[data-language-indent="1"] {
+    padding-left: 20px; /* 4px default + 16px language indent */
 }
 
 main.recordlist ul.pagination input.form-control {
