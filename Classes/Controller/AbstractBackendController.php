@@ -622,11 +622,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $this->getModuleDataSetting('language') ?? -1;
     }
 
-    protected function validateItemsPerPage(mixed $value): int
-    {
-        return in_array((int)$value, $this::ITEMS_PER_PAGE_OPTIONS, true) ? (int)$value : 0;
-    }
-
     protected function getModuleDataSetting(string $setting): mixed
     {
         return $this->getModuleData()['settings'][$setting] ?? null;
