@@ -93,7 +93,7 @@
 
                 <f:if condition="{records->f:count()}">
                     <main
-                        class="recordlist"
+                        class="recordlist table-fit"
                         data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}"
                         id="workspace-content-wrapper">
 
@@ -134,7 +134,9 @@
                                     data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
 
                                     <f:if condition="{tableConfiguration.showCheckboxColumn}">
-                                        <f:render partial="ColumnCheckbox" arguments="{_all}" />
+                                        <td class="col-checkbox nowrap">
+                                            <f:render partial="Columns/Checkbox" arguments="{_all}" />
+                                        </td>
                                     </f:if>
 
                                     <f:if condition="{tableConfiguration.showIconColumn}">
