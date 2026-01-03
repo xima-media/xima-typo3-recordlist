@@ -140,14 +140,14 @@
                                     </f:if>
 
                                     <f:if condition="{tableConfiguration.showIconColumn}">
-                                        <td class="col-icon nowrap" data-language-indent="1">
+                                        <td class="col-icon nowrap" data-language-indent="{f:if(condition: order_is_custom, then: '0', else: '1')}">
                                             <f:render partial="Columns/Icon" arguments="{_all}" />
                                         </td>
                                     </f:if>
 
                                     <f:for each="{tableConfiguration.columns}" as="colConfig">
                                         <f:if condition="{colConfig.active}">
-                                            <td data-language-indent="{colConfig.languageIndent}">
+                                            <td>
                                                 <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
                                             </td>
                                         </f:if>

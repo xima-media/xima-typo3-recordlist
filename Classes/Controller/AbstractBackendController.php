@@ -337,7 +337,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        // demand: readyToPublish (1/3)
+        // demand: readyToPublish (2/3)
         if (isset($body['is_ready_to_publish']) && !isset($body['reset'])) {
             $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
         }
@@ -634,6 +634,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addOrderConstraint(): void
     {
         $orderInstructions = [];
+        $orderIsCustom = false;
 
         // best case: multiple orderings via default_sortby
         $tableName = $this->getTableName();
@@ -647,7 +648,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ];
         }
 
-        // fallback via sortby or label
+        // fallback via tca sortby or label
         if (empty($orderInstructions)) {
             $fallback = $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? $GLOBALS['TCA'][$tableName]['ctrl']['label'];
             $orderInstructions[] = [
@@ -659,6 +660,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // override tca ordering from module settings (or body request)
         $body = $this->request->getParsedBody();
         if (!empty($body['order_field']) && !empty($body['order_direction'])) {
+            // custom user ordering = not from tca
+            if (!in_array($body['order_field'], array_column($orderInstructions, 'field'), true)) {
+                $orderIsCustom = true;
+            }
+
+            // override with user ordering
             $orderInstructions = [
                 0 => [
                     'field' => $body['order_field'],
@@ -667,6 +674,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ];
         }
 
+        // apply ordering to query builder
         foreach ($orderInstructions as $key => $instruction) {
             if ($key === 0) {
                 $this->queryBuilder->orderBy($instruction['field'], $instruction['direction']);
@@ -674,8 +682,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->queryBuilder->addOrderBy($instruction['field'], $instruction['direction']);
         }
+
+        // assign to view
         $this->moduleTemplate->assign('order_field', $orderInstructions[0]['field']);
         $this->moduleTemplate->assign('order_direction', $orderInstructions[0]['direction']);
+        $this->moduleTemplate->assign('order_is_custom', $orderIsCustom);
     }
 
     protected function addBasicQueryConstraints(): void
