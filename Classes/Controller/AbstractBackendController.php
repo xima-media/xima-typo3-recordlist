@@ -327,8 +327,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         // add requested language to module settings
-        $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
-        if ($requestedLanguage && array_key_exists((int)$requestedLanguage, $this->getLanguages())) {
+        $requestedLanguage = $this->request->getQueryParams()['language'] ?? null;
+        if (MathUtility::canBeInterpretedAsInteger($requestedLanguage) && array_key_exists((int)$requestedLanguage, $this->getLanguages())) {
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
