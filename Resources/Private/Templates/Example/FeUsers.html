@@ -1,0 +1,25 @@
+<f:layout name="Default" />
+
+<f:section name="SearchInputs">
+    <div class="row mb-3">
+        <div class="col-12 col-xl-6">
+            <f:render partial="Filter/SearchField" arguments="{_all}" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 col-xl-6">
+            <f:render
+                partial="Filter/Select" arguments="{
+                    label: 'Country select',
+                    fieldName: 'user_country',
+                    fieldValue: moduleSearch.user_country,
+                    fieldOptions: userCountries,
+                    optionValueField: 'country',
+                    optionLabelField: 'country'
+                }" />
+        </div>
+    </div>
+
+    <f:render partial="FilterSettings" arguments="{_all}" />
+</f:section>
