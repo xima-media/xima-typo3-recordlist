@@ -172,7 +172,10 @@ If you have multiple backend modules, specify a different template name:
 ```php
 class UserController extends AbstractBackendController
 {
-    protected const TEMPLATE_NAME = 'Custom';
+    protected function getTemplateName(): string
+    {
+        return 'Custom';
+    }
 }
 ```
 
