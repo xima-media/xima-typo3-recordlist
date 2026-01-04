@@ -49,7 +49,10 @@ class RecordlistActionHiddenToggle {
       tr.querySelector(`[data-hidden-toggle="${target}"]`).classList.remove('hidden');
       button.classList.add('hidden');
     }).catch(() => {
-      Notification.error('Error', 'Could not update the record');
+      Notification.error(
+        TYPO3.lang['hiddenToggle.error.title'],
+        TYPO3.lang['hiddenToggle.error.message']
+      );
     })
 
   }

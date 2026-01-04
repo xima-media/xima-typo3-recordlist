@@ -343,6 +343,78 @@
 				<source />
 				<target>Alle %d Datensätze konnten nicht aktualisiert werden</target>
 			</trans-unit>
+			<trans-unit id="deleteFile.error.title">
+				<source />
+				<target>Fehler</target>
+			</trans-unit>
+			<trans-unit id="deleteFile.error.message">
+				<source />
+				<target>Beim Löschen der Datei ist ein Fehler aufgetreten</target>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.title">
+				<source />
+				<target>Fehler</target>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.message">
+				<source />
+				<target>Der Datensatz konnte nicht aktualisiert werden</target>
+			</trans-unit>
+			<trans-unit id="download.modal.title">
+				<source />
+				<target>Datensätze herunterladen</target>
+			</trans-unit>
+			<trans-unit id="download.button.close">
+				<source />
+				<target>Schließen</target>
+			</trans-unit>
+			<trans-unit id="download.button.download">
+				<source />
+				<target>Herunterladen</target>
+			</trans-unit>
+			<trans-unit id="filter.category.label">
+				<source />
+				<target>Kategorie filtern</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDelete">
+				<source />
+				<target>Keine Berechtigung zum Löschen von Datensätzen</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.pageNotFound">
+				<source />
+				<target>Seite des Datensatzes nicht gefunden</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteRecord">
+				<source />
+				<target>Keine Berechtigung zum Löschen dieses Datensatzes</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noFileMetadataUid">
+				<source />
+				<target>Keine sys_file_metadata UID angegeben</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.fileNotFound">
+				<source />
+				<target>Datei nicht gefunden</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteFile">
+				<source />
+				<target>Keine Berechtigung zum Löschen der Datei</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.deleteFileFailed">
+				<source />
+				<target>Fehler beim Löschen der Datei</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToEdit">
+				<source />
+				<target>Keine Berechtigung zum Bearbeiten des Datensatzes</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.invalidColumn">
+				<source />
+				<target>Ungültiger Spaltenname</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.recordNotFound">
+				<source />
+				<target>Datensatz nicht gefunden</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

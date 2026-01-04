@@ -52,7 +52,10 @@ class RecordlistActionDeleteFile {
             Notification.success(TYPO3.lang['notification.delete.success.title'], TYPO3.lang['notification.delete.success.message']);
             tr.remove();
         }).catch(() => {
-            Notification.error('Error', 'An error occurred while deleting the file');
+            Notification.error(
+                TYPO3.lang['deleteFile.error.title'],
+                TYPO3.lang['deleteFile.error.message']
+            );
         })
     }
 

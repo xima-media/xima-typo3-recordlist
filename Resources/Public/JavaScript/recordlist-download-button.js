@@ -36,20 +36,20 @@ export default class RecordlistDownloadButton {
 
         const modal = Modal.advanced({
             content: '',
-            title: 'Download records',
+            title: TYPO3.lang['download.modal.title'],
             severity: SeverityEnum.notice,
             size: Modal.sizes.small,
             type: Modal.types.default,
             buttons: [
                 {
-                    text: 'Close',
+                    text: TYPO3.lang['download.button.close'],
                     active: true,
                     btnClass: 'btn-default',
                     name: 'cancel',
                     trigger: () => Modal.dismiss()
                 },
                 {
-                    text: 'Download',
+                    text: TYPO3.lang['download.button.download'],
                     btnClass: 'btn-primary',
                     name: 'download',
                     trigger: () => {
