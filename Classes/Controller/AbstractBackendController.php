@@ -151,18 +151,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // build view
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->moduleTemplate->assign('settings', $this->getModuleDataSettingsForView());
-        $this->moduleTemplate->assign('moduleName', $this->getModuleName());
-        $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
-        $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
-        $this->moduleTemplate->assign('isDirectPublishingAllowed', $this->isDirectPublishingAllowed());
-        $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
-        $this->moduleTemplate->assign('workspaceId', static::WORKSPACE_ID);
-        $this->moduleTemplate->assign('languages', $this->getLanguages());
-        $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
-        $this->moduleTemplate->assign('table', $this->getTableName());
-        $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
-        $this->moduleTemplate->assign('itemsPerPageOptions', array_combine(self::ITEMS_PER_PAGE_OPTIONS, self::ITEMS_PER_PAGE_OPTIONS));
+        $this->assignViewVariables();
 
         // build and execute query
         $this->createQueryBuilder();
@@ -1694,22 +1683,56 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function getModuleDataSettingsForView(): array
+    public static function convertDotNotationToNestedArray($data): array
     {
-        $settings = $this->getModuleData()['settings'] ?? [];
-        // replace "." keys with array (cannot be accessed directly in Fluid)
-        foreach ($settings as $key => $value) {
-            if (str_starts_with((string)$key, $this->getTableName() . '.')) {
-                $newKey = substr((string)$key, strlen($this->getTableName() . '.'));
-                $settings[$this->getTableName()][$newKey] = $value;
-                unset($settings[$key]);
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $value = self::convertDotNotationToNestedArray($value);
+            }
+
+            if (str_contains((string)$key, '.')) {
+                $keys = explode('.', (string)$key);
+                $current = &$result;
+                foreach ($keys as $i => $part) {
+                    if ($i === count($keys) - 1) {
+                        $current[$part] = $value;
+                    } else {
+                        if (!isset($current[$part]) || !is_array($current[$part])) {
+                            $current[$part] = [];
+                        }
+                        $current = &$current[$part];
+                    }
+                }
+            } else {
+                $result[$key] = $value;
             }
         }
-        return $settings;
+
+        return $result;
     }
 
     protected function getTemplateName(): string
     {
         return 'Default';
+    }
+
+    protected function assignViewVariables(): void
+    {
+        $moduleData = self::convertDotNotationToNestedArray($this->getModuleData());
+        $this->moduleTemplate->assign('settings', $moduleData['settings'] ?? []);
+        $this->moduleTemplate->assign('moduleName', $this->getModuleName());
+        $this->moduleTemplate->assign('moduleSearch', $moduleData[$this->getTableName()]['search'] ?? []);
+        $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
+        $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
+        $this->moduleTemplate->assign('isDirectPublishingAllowed', $this->isDirectPublishingAllowed());
+        $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
+        $this->moduleTemplate->assign('workspaceId', $this::WORKSPACE_ID);
+        $this->moduleTemplate->assign('languages', $this->getLanguages());
+        $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
+        $this->moduleTemplate->assign('table', $this->getTableName());
+        $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
+        $this->moduleTemplate->assign('itemsPerPageOptions', array_combine($this::ITEMS_PER_PAGE_OPTIONS, $this::ITEMS_PER_PAGE_OPTIONS));
     }
 }
