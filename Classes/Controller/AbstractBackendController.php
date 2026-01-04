@@ -94,6 +94,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected EditableArrayPaginator $paginator;
 
     public function __construct(
+        protected ConnectionPool $connectionPool,
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
         protected UriBuilder $backendUriBuilder,
@@ -244,7 +245,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return [['uid' => 0]];
         }
 
-        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+        $qb = $this->connectionPool->getQueryBuilderForTable('pages');
         $pages = $qb->select('uid', 'title')
             ->from('pages')
             ->where(
@@ -470,7 +471,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getFullRecordCount(): int
     {
         $tableName = $this->getTableName();
-        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
         $qb->getRestrictions()->removeByType(HiddenRestriction::class);
 
@@ -516,7 +517,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function createQueryBuilder(): void
     {
         $tableName = $this->getTableName();
-        $this->queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
+        $this->queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
         $this->queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
         $this->queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
     }
@@ -553,7 +554,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
                     $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM'] ?? '';
                     $mmMatchFields = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM_match_fields'] ?? [];
-                    $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($mmTable);
+                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
                     $qb->select('uid_foreign')
                         ->from($mmTable)
                         ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'])))
@@ -1243,7 +1244,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($this->getTableName());
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable($this->getTableName());
         $queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
         $translations = $queryBuilder->addSelect($transOrigPointerField)
             ->addSelectLiteral('GROUP_CONCAT(sys_language_uid) as translated_languages')
@@ -1413,7 +1414,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $qb = $this->connectionPool->getQueryBuilderForTable('sys_category');
             $categoryRelations = $qb->select('mm.uid_foreign')
                 ->addSelectLiteral('GROUP_CONCAT(c.uid) as category_uids')
                 ->from('sys_category', 'c')
@@ -1437,7 +1438,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $queryBuilder = $this->connectionPool->getQueryBuilderForTable('sys_category');
             $categories = $queryBuilder->select('uid', 'title')
                 ->from('sys_category')
                 ->where(
