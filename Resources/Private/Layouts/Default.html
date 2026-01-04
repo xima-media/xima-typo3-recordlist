@@ -17,6 +17,9 @@
     <f:render partial="DocHeader" arguments="{docHeader:docHeader}" />
 
     <div class="module-body t3js-module-body">
+
+        <f:render section="BeforeContent" arguments="{_all}" optional="true" />
+
         <f:flashMessages queueIdentifier="{flashMessageQueueIdentifier}" />
 
         <f:render section="Content" arguments="{_all}" optional="true">

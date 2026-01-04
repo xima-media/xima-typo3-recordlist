@@ -15,4 +15,9 @@ class BeUsersController extends AbstractBackendController
     {
         return ['be_users', 'be_groups', 'sys_filemounts'];
     }
+
+    protected function getTemplateName(): string
+    {
+        return 'Example/BeUsers';
+    }
 }
