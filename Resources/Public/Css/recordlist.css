@@ -13,12 +13,20 @@
     gap: 3px;
 }
 
+.text-inline-edit .inline-edit:hover {
+    outline: Highlight auto 1px;
+    outline: -webkit-focus-ring-color auto 1px;
+    outline-offset: 5px;
+}
+
 span.inline-edit {
     margin-right: 5px;
 }
 
 span.inline-edit:focus-within {
     outline-offset: 5px;
+    background-color: #FFF;
+    box-shadow: 0 0 0 4px #FFF;
 }
 
 .recordlist #nprogress {

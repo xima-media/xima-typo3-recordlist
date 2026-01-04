@@ -118,14 +118,15 @@ export default class RecordlistRowSelection {
     const row = event.currentTarget;
     const target = event.target;
 
-    // Ignore clicks on checkboxes, their parent cells, links, buttons, and inputs
+    // Ignore clicks on checkboxes, their parent cells, links, buttons, inputs and inline edits
     if (
       target.matches(this.selectors.checkbox) ||
       target.closest(this.selectors.checkboxCell) ||
       target.tagName === 'A' ||
       target.tagName === 'BUTTON' ||
       target.tagName === 'INPUT' ||
-      target.closest('a, button, input')
+      target.closest('a, button, input') ||
+      target.closest('.text-inline-edit')
     ) {
       return;
     }
