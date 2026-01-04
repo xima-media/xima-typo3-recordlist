@@ -53,7 +53,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100, 200, 500];
     protected const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
     protected const VERSION_STATE_DELETED = 2;
-    protected const TEMPLATE_NAME = 'Default';
     protected const DOWNLOAD_FORMATS = [
         'csv' => [
             'options' => [
@@ -193,7 +192,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->setPaginatorItems();
 
         $this->configureModuleTemplateDocHeader();
-        return $this->moduleTemplate->renderResponse($this::TEMPLATE_NAME);
+        return $this->moduleTemplate->renderResponse($this->getTemplateName());
     }
 
     protected function setSite(): void
@@ -1706,5 +1705,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
         }
         return $settings;
+    }
+
+    protected function getTemplateName(): string
+    {
+        return 'Default';
     }
 }
