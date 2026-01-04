@@ -237,6 +237,27 @@
 			<trans-unit id="workspace.requestChanges.notification.success.description">
 				<source>The change request has been sent successfully.</source>
 			</trans-unit>
+			<trans-unit id="inlineEdit.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.message">
+				<source>An error occurred while saving the data</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.title">
+				<source>Batch Edit</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.saving">
+				<source>Saving %d records...</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.success">
+				<source>Successfully updated %d records</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.partialSuccess">
+				<source>Updated %d records, %d failed</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.allFailed">
+				<source>Failed to update all %d records</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

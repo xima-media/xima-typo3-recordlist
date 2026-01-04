@@ -315,6 +315,34 @@
 				<source />
 				<target>Die Anfrage für Änderungen wurde erfolgreich übermittelt</target>
 			</trans-unit>
+			<trans-unit id="inlineEdit.error.title">
+				<source />
+				<target>Fehler</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.message">
+				<source />
+				<target>Beim Speichern der Daten ist ein Fehler aufgetreten</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.title">
+				<source />
+				<target>Mehrfachbearbeitung</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.saving">
+				<source />
+				<target>Speichere %d Datensätze...</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.success">
+				<source />
+				<target>%d Datensätze erfolgreich aktualisiert</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.partialSuccess">
+				<source />
+				<target>%d Datensätze aktualisiert, %d fehlgeschlagen</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.allFailed">
+				<source />
+				<target>Alle %d Datensätze konnten nicht aktualisiert werden</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>
