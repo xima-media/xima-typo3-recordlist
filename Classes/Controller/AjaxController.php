@@ -14,6 +14,7 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class AjaxController
 {
@@ -66,20 +67,29 @@ class AjaxController
 
         // access check #1
         if (!$this->getBackendAuthentication()->check('tables_modify', $table)) {
-            return $this->responseFactory->createResponse(403, 'No permissions to delete records');
+            return $this->responseFactory->createResponse(
+                403,
+                LocalizationUtility::translate('ajax.error.noPermissionsToDelete', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         // access check #2
         $record = BackendUtility::getRecord($table, $uid);
         if (!$record) {
-            return $this->responseFactory->createResponse(501, 'Page of record not found');
+            return $this->responseFactory->createResponse(
+                501,
+                LocalizationUtility::translate('ajax.error.pageNotFound', 'xima_typo3_recordlist') ?? ''
+            );
         }
         $access = BackendUtility::readPageAccess(
             $record['pid'],
             $this->getBackendAuthentication()->getPagePermsClause(Permission::CONTENT_EDIT)
         ) ?: [];
         if (empty($access)) {
-            return $this->responseFactory->createResponse(403, 'No permissions to delete record');
+            return $this->responseFactory->createResponse(
+                403,
+                LocalizationUtility::translate('ajax.error.noPermissionsToDeleteRecord', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         $cmd[$table][$uid]['delete'] = 1;
@@ -104,7 +114,10 @@ class AjaxController
         $sysFileMetaDataUid = $body['uid'] ?? '';
 
         if (!$sysFileMetaDataUid) {
-            return $this->responseFactory->createResponse(501, 'No sys_file_metadata UID provided');
+            return $this->responseFactory->createResponse(
+                501,
+                LocalizationUtility::translate('ajax.error.noFileMetadataUid', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_file_metadata');
@@ -124,7 +137,10 @@ class AjaxController
 
                 return $this->responseFactory->createResponse();
             }
-            return $this->responseFactory->createResponse(501, 'File not found');
+            return $this->responseFactory->createResponse(
+                501,
+                LocalizationUtility::translate('ajax.error.fileNotFound', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         try {
@@ -132,17 +148,26 @@ class AjaxController
             $storage = $file->getStorage();
             $isAllowedToDelete = $storage->checkFileActionPermission('delete', $file) ?? false;
         } catch (\Exception) {
-            return $this->responseFactory->createResponse(501, 'File not found');
+            return $this->responseFactory->createResponse(
+                501,
+                LocalizationUtility::translate('ajax.error.fileNotFound', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         if (!$isAllowedToDelete) {
-            return $this->responseFactory->createResponse(403, 'No permissions to delete file');
+            return $this->responseFactory->createResponse(
+                403,
+                LocalizationUtility::translate('ajax.error.noPermissionsToDeleteFile', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         try {
             $storage->deleteFile($file);
         } catch (\Exception) {
-            return $this->responseFactory->createResponse(501, 'Error while deleting file');
+            return $this->responseFactory->createResponse(
+                501,
+                LocalizationUtility::translate('ajax.error.deleteFileFailed', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         return $this->responseFactory->createResponse();
@@ -158,18 +183,27 @@ class AjaxController
 
         // access check #1
         if (!$this->getBackendAuthentication()->check('tables_modify', $table)) {
-            return $this->responseFactory->createResponse(403, 'No permissions to edit record');
+            return $this->responseFactory->createResponse(
+                403,
+                LocalizationUtility::translate('ajax.error.noPermissionsToEdit', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         // Validate column name against TCA to prevent modification of arbitrary fields
         if (!isset($GLOBALS['TCA'][$table]['columns'][$column])) {
-            return $this->responseFactory->createResponse(400, 'Invalid column name');
+            return $this->responseFactory->createResponse(
+                400,
+                LocalizationUtility::translate('ajax.error.invalidColumn', 'xima_typo3_recordlist') ?? ''
+            );
         }
 
         // access check #2
         $record = BackendUtility::getRecord($table, $uid);
         if (!$record) {
-            return $this->responseFactory->createResponse(501, 'Record not found');
+            return $this->responseFactory->createResponse(
+                501,
+                LocalizationUtility::translate('ajax.error.recordNotFound', 'xima_typo3_recordlist') ?? ''
+            );
         }
         if ($record['pid'] !== 0) {
             $access = BackendUtility::readPageAccess(
@@ -177,7 +211,10 @@ class AjaxController
                 $this->getBackendAuthentication()->getPagePermsClause(Permission::CONTENT_EDIT)
             ) ?: [];
             if (empty($access)) {
-                return $this->responseFactory->createResponse(403, 'No permissions to edit record');
+                return $this->responseFactory->createResponse(
+                    403,
+                    LocalizationUtility::translate('ajax.error.noPermissionsToEdit', 'xima_typo3_recordlist') ?? ''
+                );
             }
         }
 

@@ -22,4 +22,9 @@ class BeUsersController extends AbstractBackendController
         $this->tableConfiguration['be_users']['columns']['realName']['defaultPosition'] = 2;
         $this->tableConfiguration['be_users']['columns']['email']['defaultPosition'] = 3;
     }
+
+    protected function getTemplateName(): string
+    {
+        return 'Example/BeUsers';
+    }
 }

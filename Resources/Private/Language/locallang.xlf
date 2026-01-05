@@ -15,6 +15,12 @@
 			<trans-unit id="table.column.status">
 				<source>Status</source>
 			</trans-unit>
+			<trans-unit id="table.column.uid">
+				<source>Unique ID</source>
+			</trans-unit>
+			<trans-unit id="table.column.pid">
+				<source>Page ID</source>
+			</trans-unit>
 			<trans-unit id="table.button.reset">
 				<source>Reset</source>
 			</trans-unit>
@@ -230,6 +236,81 @@
 			</trans-unit>
 			<trans-unit id="workspace.requestChanges.notification.success.description">
 				<source>The change request has been sent successfully.</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.message">
+				<source>An error occurred while saving the data</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.title">
+				<source>Batch Edit</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.saving">
+				<source>Saving %d records...</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.success">
+				<source>Successfully updated %d records</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.partialSuccess">
+				<source>Updated %d records, %d failed</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.allFailed">
+				<source>Failed to update all %d records</source>
+			</trans-unit>
+			<trans-unit id="deleteFile.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="deleteFile.error.message">
+				<source>An error occurred while deleting the file</source>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.message">
+				<source>Could not update the record</source>
+			</trans-unit>
+			<trans-unit id="download.modal.title">
+				<source>Download records</source>
+			</trans-unit>
+			<trans-unit id="download.button.close">
+				<source>Close</source>
+			</trans-unit>
+			<trans-unit id="download.button.download">
+				<source>Download</source>
+			</trans-unit>
+			<trans-unit id="filter.category.label">
+				<source>Filter category</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDelete">
+				<source>No permissions to delete records</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.pageNotFound">
+				<source>Page of record not found</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteRecord">
+				<source>No permissions to delete record</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noFileMetadataUid">
+				<source>No sys_file_metadata UID provided</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.fileNotFound">
+				<source>File not found</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteFile">
+				<source>No permissions to delete file</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.deleteFileFailed">
+				<source>Error while deleting file</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToEdit">
+				<source>No permissions to edit record</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.invalidColumn">
+				<source>Invalid column name</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.recordNotFound">
+				<source>Record not found</source>
 			</trans-unit>
 		</body>
 	</file>

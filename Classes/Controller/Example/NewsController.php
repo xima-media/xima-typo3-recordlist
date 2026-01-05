@@ -6,8 +6,6 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 
 class NewsController extends AbstractBackendController
 {
-    protected const TEMPLATE_NAME = 'Example/News';
-
     public const WORKSPACE_ID = 1;
 
     public function getRecordPid(): int

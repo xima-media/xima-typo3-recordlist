@@ -1,0 +1,25 @@
+<f:layout name="Default" />
+
+<f:section name="SearchInputs">
+    <div class="row mb-3">
+        <div class="col-12 col-xl-6">
+            <f:render partial="Filter/SearchField" arguments="{_all}" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 col-xl-6">
+            <f:render
+                partial="Filter/Select" arguments="{
+                    label: '{f:translate(key: \'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_feusers_module.xlf:filter.country.label\')}',
+                    fieldName: 'user_country',
+                    fieldValue: moduleSearch.user_country,
+                    fieldOptions: userCountries,
+                    optionValueField: 'country',
+                    optionLabelField: 'country'
+                }" />
+        </div>
+    </div>
+
+    <f:render partial="FilterSettings" arguments="{_all}" />
+</f:section>

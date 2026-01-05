@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
-	<file source-language="en" datatype="plaintext" original="messages" date="2015-06-23T11:36:30Z">
+	<file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2015-06-23T11:36:30Z">
 		<body>
 			<trans-unit id="mlang_labels_tablabel" resname="mlang_labels_tablabel">
-				<source>Manage fe_users</source>
+				<source>Manage sys_category</source>
+				<target>Kategorien verwalten</target>
 			</trans-unit>
 			<trans-unit id="mlang_labels_tabdescr" resname="mlang_labels_tabdescr">
-				<source>Example FeUsers Management</source>
+				<source>Example Category Management</source>
+				<target>Beispiel Kategorieverwaltung</target>
 			</trans-unit>
 			<trans-unit id="mlang_tabs_tab" resname="mlang_tabs_tab">
-				<source>FeUsers</source>
-			</trans-unit>
-			<trans-unit id="filter.country.label">
-				<source>Country select</source>
+				<source>SysCategory</source>
+				<target>Kategorien</target>
 			</trans-unit>
 		</body>
 	</file>

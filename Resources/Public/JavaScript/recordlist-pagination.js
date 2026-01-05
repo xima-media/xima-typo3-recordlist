@@ -56,7 +56,6 @@ export default class RecordlistPagination {
   }
 
   onItemsPerPageChange(e) {
-    e.preventDefault();
     const select = e.currentTarget;
     document.querySelectorAll("select[name=\"items_per_page\"]").forEach(otherSelect => {
       otherSelect.value = select.value;

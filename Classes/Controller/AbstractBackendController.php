@@ -53,7 +53,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100, 200, 500];
     protected const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
     protected const VERSION_STATE_DELETED = 2;
-    protected const TEMPLATE_NAME = 'Default';
     protected const DOWNLOAD_FORMATS = [
         'csv' => [
             'options' => [
@@ -95,6 +94,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected EditableArrayPaginator $paginator;
 
     public function __construct(
+        protected ConnectionPool $connectionPool,
         protected IconFactory $iconFactory,
         protected PageRenderer $pageRenderer,
         protected UriBuilder $backendUriBuilder,
@@ -141,12 +141,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-new-record.js')
         );
-        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-row-selection.js')
-        );
-        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-row-edit-multiple.js')
-        );
 
         $this->setLanguages();
 
@@ -157,18 +151,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // build view
         $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-        $this->moduleTemplate->assign('settings', $this->getModuleDataSettingsForView());
-        $this->moduleTemplate->assign('moduleName', $this->getModuleName());
-        $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
-        $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
-        $this->moduleTemplate->assign('isDirectPublishingAllowed', $this->isDirectPublishingAllowed());
-        $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
-        $this->moduleTemplate->assign('workspaceId', static::WORKSPACE_ID);
-        $this->moduleTemplate->assign('languages', $this->getLanguages());
-        $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
-        $this->moduleTemplate->assign('table', $this->getTableName());
-        $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
-        $this->moduleTemplate->assign('itemsPerPageOptions', array_combine(self::ITEMS_PER_PAGE_OPTIONS, self::ITEMS_PER_PAGE_OPTIONS));
+        $this->assignViewVariables();
 
         // build and execute query
         $this->createQueryBuilder();
@@ -199,7 +182,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->setPaginatorItems();
 
         $this->configureModuleTemplateDocHeader();
-        return $this->moduleTemplate->renderResponse($this::TEMPLATE_NAME);
+        return $this->moduleTemplate->renderResponse($this->getTemplateName());
     }
 
     protected function setSite(): void
@@ -251,7 +234,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return [['uid' => 0]];
         }
 
-        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('pages');
+        $qb = $this->connectionPool->getQueryBuilderForTable('pages');
         $pages = $qb->select('uid', 'title')
             ->from('pages')
             ->where(
@@ -333,8 +316,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         // add requested language to module settings
-        $requestedLanguage = $this->request->getQueryParams()['language'] ?? false;
-        if ($requestedLanguage && array_key_exists((int)$requestedLanguage, $this->getLanguages())) {
+        $requestedLanguage = $this->request->getQueryParams()['language'] ?? null;
+        if (MathUtility::canBeInterpretedAsInteger($requestedLanguage) && array_key_exists((int)$requestedLanguage, $this->getLanguages())) {
             $this->addToModuleDataSettings(['language' => (int)$requestedLanguage]);
         }
 
@@ -343,7 +326,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        // demand: readyToPublish (1/3)
+        // demand: readyToPublish (2/3)
         if (isset($body['is_ready_to_publish']) && !isset($body['reset'])) {
             $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
         }
@@ -477,7 +460,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getFullRecordCount(): int
     {
         $tableName = $this->getTableName();
-        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
+        $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
         $qb->getRestrictions()->removeByType(HiddenRestriction::class);
 
@@ -523,7 +506,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function createQueryBuilder(): void
     {
         $tableName = $this->getTableName();
-        $this->queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($tableName);
+        $this->queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
         $this->queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
         $this->queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
     }
@@ -560,7 +543,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
                     $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM'] ?? '';
                     $mmMatchFields = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM_match_fields'] ?? [];
-                    $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($mmTable);
+                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
                     $qb->select('uid_foreign')
                         ->from($mmTable)
                         ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'])))
@@ -628,11 +611,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $this->getModuleDataSetting('language') ?? -1;
     }
 
-    protected function validateItemsPerPage(mixed $value): int
-    {
-        return in_array((int)$value, $this::ITEMS_PER_PAGE_OPTIONS, true) ? (int)$value : 0;
-    }
-
     protected function getModuleDataSetting(string $setting): mixed
     {
         return $this->getModuleData()['settings'][$setting] ?? null;
@@ -645,6 +623,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addOrderConstraint(): void
     {
         $orderInstructions = [];
+        $orderIsCustom = false;
 
         // best case: multiple orderings via default_sortby
         $tableName = $this->getTableName();
@@ -658,7 +637,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ];
         }
 
-        // fallback via sortby or label
+        // fallback via tca sortby or label
         if (empty($orderInstructions)) {
             $fallback = $GLOBALS['TCA'][$tableName]['ctrl']['sortby'] ?? $GLOBALS['TCA'][$tableName]['ctrl']['label'];
             $orderInstructions[] = [
@@ -670,6 +649,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // override tca ordering from module settings (or body request)
         $body = $this->request->getParsedBody();
         if (!empty($body['order_field']) && !empty($body['order_direction'])) {
+            // custom user ordering = not from tca
+            if (!in_array($body['order_field'], array_column($orderInstructions, 'field'), true)) {
+                $orderIsCustom = true;
+            }
+
+            // override with user ordering
             $orderInstructions = [
                 0 => [
                     'field' => $body['order_field'],
@@ -678,6 +663,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ];
         }
 
+        // apply ordering to query builder
         foreach ($orderInstructions as $key => $instruction) {
             if ($key === 0) {
                 $this->queryBuilder->orderBy($instruction['field'], $instruction['direction']);
@@ -685,8 +671,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $this->queryBuilder->addOrderBy($instruction['field'], $instruction['direction']);
         }
+
+        // assign to view
         $this->moduleTemplate->assign('order_field', $orderInstructions[0]['field']);
         $this->moduleTemplate->assign('order_direction', $orderInstructions[0]['direction']);
+        $this->moduleTemplate->assign('order_is_custom', $orderIsCustom);
     }
 
     protected function addBasicQueryConstraints(): void
@@ -953,7 +942,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getColumnsForDownload(bool $allColumns): array
     {
         $tableName = $this->getTableName();
-        $activeColumns = ['uid' => 'Uid']; // Always include 'uid' column
+        $activeColumns = [];
 
         if (isset($this->tableConfiguration[$tableName]['columns'])) {
             foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => $columnConfig) {
@@ -1078,16 +1067,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'columnName' => $columnName,
                 'label' => $config['label'] ?? '',
                 'partial' => $partial,
-                'languageIndent' => false,
-                'icon' => false,
                 'active' => false,
                 'filter' => $filter,
                 'defaultPosition' => 0,
             ];
 
             if ($columnName === $defaultColumn) {
-                $columns[$columnName]['languageIndent'] = true;
-                $columns[$columnName]['icon'] = true;
                 $columns[$columnName]['defaultPosition'] = 1;
             }
         }
@@ -1105,10 +1090,30 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ];
         }
 
+        $columns['uid'] = [
+            'columnName' => 'uid',
+            'partial' => 'Uid',
+            'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.uid',
+            'active' => false,
+            'filter' => [],
+            'defaultPosition' => 0,
+        ];
+
+        $columns['pid'] = [
+            'columnName' => 'pid',
+            'partial' => 'Pid',
+            'label' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.pid',
+            'active' => false,
+            'filter' => [],
+            'defaultPosition' => 0,
+        ];
+
         ksort($columns);
 
         $this->tableConfiguration[$tableName] = [
             'columns' => $columns,
+            'showCheckboxColumn' => true,
+            'showIconColumn' => true,
             'groupActions' => [
                 'Translate',
                 'TranslateDeepl',
@@ -1177,7 +1182,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $sortedColumns = array_merge($sortedColumns, array_diff_key($this->tableConfiguration[$tableName]['columns'], array_flip($activeColumns)));
 
         $this->tableConfiguration[$tableName]['columns'] = $sortedColumns;
-        $this->tableConfiguration[$tableName]['columnCount'] = count($activeColumns) + (isset($this->tableConfiguration[$tableName]['groupActions']) || isset($this->tableConfiguration[$tableName]['actions']) ? 1 : 0);
+        $this->tableConfiguration[$tableName]['columnCount'] = count($activeColumns) + ($this->tableConfiguration[$tableName]['showCheckboxColumn'] ? 1 : 0) + ($this->tableConfiguration[$tableName]['showIconColumn'] ? 1 : 0) + (isset($this->tableConfiguration[$tableName]['groupActions']) || isset($this->tableConfiguration[$tableName]['actions']) ? 1 : 0);
         $this->moduleTemplate->assign('tableConfiguration', $this->tableConfiguration[$tableName]);
     }
 
@@ -1228,7 +1233,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($this->getTableName());
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable($this->getTableName());
         $queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
         $translations = $queryBuilder->addSelect($transOrigPointerField)
             ->addSelectLiteral('GROUP_CONCAT(sys_language_uid) as translated_languages')
@@ -1398,7 +1403,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $qb = $this->connectionPool->getQueryBuilderForTable('sys_category');
             $categoryRelations = $qb->select('mm.uid_foreign')
                 ->addSelectLiteral('GROUP_CONCAT(c.uid) as category_uids')
                 ->from('sys_category', 'c')
@@ -1422,7 +1427,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+            $queryBuilder = $this->connectionPool->getQueryBuilderForTable('sys_category');
             $categories = $queryBuilder->select('uid', 'title')
                 ->from('sys_category')
                 ->where(
@@ -1678,17 +1683,56 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function getModuleDataSettingsForView(): array
+    public static function convertDotNotationToNestedArray($data): array
     {
-        $settings = $this->getModuleData()['settings'] ?? [];
-        // replace "." keys with array (cannot be accessed directly in Fluid)
-        foreach ($settings as $key => $value) {
-            if (str_starts_with((string)$key, $this->getTableName() . '.')) {
-                $newKey = substr((string)$key, strlen($this->getTableName() . '.'));
-                $settings[$this->getTableName()][$newKey] = $value;
-                unset($settings[$key]);
+        $result = [];
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $value = self::convertDotNotationToNestedArray($value);
+            }
+
+            if (str_contains((string)$key, '.')) {
+                $keys = explode('.', (string)$key);
+                $current = &$result;
+                foreach ($keys as $i => $part) {
+                    if ($i === count($keys) - 1) {
+                        $current[$part] = $value;
+                    } else {
+                        if (!isset($current[$part]) || !is_array($current[$part])) {
+                            $current[$part] = [];
+                        }
+                        $current = &$current[$part];
+                    }
+                }
+            } else {
+                $result[$key] = $value;
             }
         }
-        return $settings;
+
+        return $result;
+    }
+
+    protected function getTemplateName(): string
+    {
+        return 'Default';
+    }
+
+    protected function assignViewVariables(): void
+    {
+        $moduleData = self::convertDotNotationToNestedArray($this->getModuleData());
+        $this->moduleTemplate->assign('settings', $moduleData['settings'] ?? []);
+        $this->moduleTemplate->assign('moduleName', $this->getModuleName());
+        $this->moduleTemplate->assign('moduleSearch', $moduleData[$this->getTableName()]['search'] ?? []);
+        $this->moduleTemplate->assign('storagePids', implode(',', $this->getAccessiblePids()));
+        $this->moduleTemplate->assign('isWorkspaceAdmin', $this->isWorkspaceAdmin());
+        $this->moduleTemplate->assign('isDirectPublishingAllowed', $this->isDirectPublishingAllowed());
+        $this->moduleTemplate->assign('currentPid', $this->getCurrentPid());
+        $this->moduleTemplate->assign('workspaceId', $this::WORKSPACE_ID);
+        $this->moduleTemplate->assign('languages', $this->getLanguages());
+        $this->moduleTemplate->assign('fullRecordCount', $this->getFullRecordCount());
+        $this->moduleTemplate->assign('table', $this->getTableName());
+        $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
+        $this->moduleTemplate->assign('itemsPerPageOptions', array_combine($this::ITEMS_PER_PAGE_OPTIONS, $this::ITEMS_PER_PAGE_OPTIONS));
     }
 }

@@ -172,7 +172,10 @@ If you have multiple backend modules, specify a different template name:
 ```php
 class UserController extends AbstractBackendController
 {
-    protected const TEMPLATE_NAME = 'Custom';
+    protected function getTemplateName(): string
+    {
+        return 'Custom';
+    }
 }
 ```
 
@@ -241,6 +244,55 @@ class NewsController extends AbstractBackendController
         $this->tableConfiguration['your-table-name']['columns']['sitemap_changefreq']['defaultPosition'] = 4;
         $this->tableConfiguration['your-table-name']['columns']['sys_language_uid']['defaultPosition'] = 5;
         $this->tableConfiguration['your-table-name']['columns']['workspace-status']['defaultPosition'] = 6;
+    }
+}
+```
+
+#### Fixed Columns
+
+The extension provides two fixed columns that appear before configurable columns:
+
+- **Checkbox Column**: Enables row selection for batch operations
+- **Icon Column**: Displays the record type icon with automatic language indentation
+
+Both columns can be disabled per table:
+
+```php
+class FilesController extends AbstractBackendController
+{
+    public function modifyTableConfiguration(): void
+    {
+        // Hide icon column
+        $this->tableConfiguration['sys_file_metadata']['showIconColumn'] = false;
+
+        // Hide checkbox column
+        $this->tableConfiguration['sys_file_metadata']['showCheckboxColumn'] = false;
+    }
+}
+```
+
+#### Special Columns
+
+The extension automatically adds special columns that users can enable via the column selector:
+
+- **UID Column**: Displays the unique record ID
+- **PID Column**: Displays the page ID where the record is stored
+- **Workspace Status Column**: Shows workspace state (when workspace mode is active)
+
+These columns are disabled by default but can be activated:
+
+```php
+class NewsController extends AbstractBackendController
+{
+    public function modifyTableConfiguration(): void
+    {
+        // Show UID column by default
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['uid']['active'] = true;
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['uid']['defaultPosition'] = 2;
+
+        // Show PID column by default
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['pid']['active'] = true;
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['pid']['defaultPosition'] = 3;
     }
 }
 ```
