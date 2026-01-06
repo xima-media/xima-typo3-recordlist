@@ -157,6 +157,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->createQueryBuilder();
         $this->addSearchConstraint();
         $this->addLanguageConstraint();
+        $this->addCategoryConstraint();
         $this->addAdditionalConstraints();
         $this->addOrderConstraint();
         $this->addBasicQueryConstraints();
@@ -614,6 +615,91 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getModuleDataSetting(string $setting): mixed
     {
         return $this->getModuleData()['settings'][$setting] ?? null;
+    }
+
+    protected function addCategoryConstraint(): void
+    {
+        $categoryId = $this->getSelectedCategoryId();
+        if ($categoryId === null) {
+            return;
+        }
+
+        // Find category columns for the current table
+        $categoryColumns = $this->getCategoryColumns();
+        if (empty($categoryColumns)) {
+            return;
+        }
+
+        // Build OR constraint for all category columns
+        $categoryConstraints = [];
+        foreach ($categoryColumns as $columnName) {
+            $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName]['config']['MM'] ?? 'sys_category_record_mm';
+            $mmMatchFields = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName]['config']['MM_match_fields'] ?? [];
+
+            // Subquery to find records with the selected category
+            $subQb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+            $subQb->select('uid_foreign')
+                ->from($mmTable)
+                ->where(
+                    $subQb->expr()->eq('uid_local', $subQb->createNamedParameter($categoryId, Connection::PARAM_INT))
+                );
+
+            if (!empty($mmMatchFields['tablenames'])) {
+                $subQb->andWhere(
+                    $subQb->expr()->eq('tablenames', $subQb->createNamedParameter($mmMatchFields['tablenames']))
+                );
+            }
+            if (!empty($mmMatchFields['fieldname']) || isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName])) {
+                $fieldname = $mmMatchFields['fieldname'] ?? $columnName;
+                $subQb->andWhere(
+                    $subQb->expr()->eq('fieldname', $subQb->createNamedParameter($fieldname))
+                );
+            }
+
+            $recordUids = $subQb->executeQuery()->fetchFirstColumn();
+
+            if (!empty($recordUids)) {
+                $categoryConstraints[] = $this->queryBuilder->expr()->in(
+                    't1.uid',
+                    $this->queryBuilder->quoteArrayBasedValueListToIntegerList($recordUids)
+                );
+            }
+        }
+
+        if (!empty($categoryConstraints)) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$categoryConstraints);
+        } else {
+            // No records found with this category - return empty result
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+        }
+    }
+
+    protected function getSelectedCategoryId(): ?int
+    {
+        $categoryId = $this->request->getQueryParams()['category'] ?? $this->request->getParsedBody()['category'] ?? null;
+        if ($categoryId !== null && MathUtility::canBeInterpretedAsInteger($categoryId)) {
+            return (int)$categoryId;
+        }
+        return null;
+    }
+
+    protected function getCategoryColumns(): array
+    {
+        $categoryColumns = [];
+        $tableName = $this->getTableName();
+
+        if (!isset($GLOBALS['TCA'][$tableName]['columns'])) {
+            return [];
+        }
+
+        foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
+            if (in_array($config['config']['type'] ?? '', ['select', 'category']) &&
+                ($config['config']['foreign_table'] ?? '') === 'sys_category') {
+                $categoryColumns[] = $columnName;
+            }
+        }
+
+        return $categoryColumns;
     }
 
     protected function addAdditionalConstraints(): void

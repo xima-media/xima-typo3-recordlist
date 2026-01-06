@@ -25,4 +25,8 @@ return [
         'path' => '/xima/recordlist/categorytree/data',
         'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::fetchDataAction',
     ],
+    'xima_categorytree_filter' => [
+        'path' => '/xima/recordlist/categorytree/filter',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::filterDataAction',
+    ],
 ];

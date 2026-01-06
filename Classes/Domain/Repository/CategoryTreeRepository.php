@@ -59,6 +59,7 @@ class CategoryTreeRepository
             }
             return $categoryTree;
         }
-        return isset($categoryMap[$startParent]) ? [$categoryMap[$startParent]] : [];
+        // When a specific parent is requested, return its direct children (not the parent itself)
+        return isset($categoryMap[$startParent]) ? $categoryMap[$startParent]['children'] : [];
     }
 }

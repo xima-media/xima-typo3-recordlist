@@ -87,33 +87,41 @@ export class EditablePageTree extends PageTree {
   public sendChangeCommand(data: NodeChangeCommandDataInterface): void {
     let params: string = '';
     let targetUid: string = '0';
+    let parentUid: string = '0';
+    const tableName = 'sys_category'; // Use sys_category instead of pages
 
     if (data.target) {
       targetUid = data.target.identifier;
       if (data.position === TreeNodePositionEnum.BEFORE) {
         const previousNode = this.getPreviousNode(data.target);
         targetUid = ((previousNode.depth === data.target.depth) ? '-' : '') + previousNode.identifier;
+        // For categories, parent is the parent of the target node
+        parentUid = data.target.parentIdentifier || '0';
       } else if (data.position === TreeNodePositionEnum.AFTER) {
         targetUid = '-' + targetUid;
+        // For categories, parent is the parent of the target node
+        parentUid = data.target.parentIdentifier || '0';
+      } else {
+        // INSIDE position - parent is the target node itself
+        parentUid = targetUid;
       }
     }
 
     if (data.command === TreeNodeCommandEnum.NEW) {
       const newData = data as NodeNewOptions;
-      params = '&data[pages][' + data.node.identifier + '][pid]=' + encodeURIComponent(targetUid) +
-        '&data[pages][' + data.node.identifier + '][title]=' + encodeURIComponent(newData.title) +
-        '&data[pages][' + data.node.identifier + '][doktype]=' + encodeURIComponent(newData.doktype);
+      // For categories, we use parent field instead of pid, and sorting is handled separately
+      params = '&data[' + tableName + '][' + data.node.identifier + '][parent]=' + encodeURIComponent(parentUid) +
+        '&data[' + tableName + '][' + data.node.identifier + '][title]=' + encodeURIComponent(newData.title);
     } else if (data.command === TreeNodeCommandEnum.EDIT) {
-      params = '&data[pages][' + data.node.identifier + '][title]=' + encodeURIComponent(data.title);
+      params = '&data[' + tableName + '][' + data.node.identifier + '][title]=' + encodeURIComponent(data.title);
     } else if (data.command === TreeNodeCommandEnum.DELETE) {
-      // @todo currently it's "If uid of deleted record (data.uid) is still selected, randomly select the first node"
       const moduleStateStorage = ModuleStateStorage.current('web');
       if (data.node.identifier === moduleStateStorage.identifier) {
         this.selectFirstNode();
       }
-      params = '&cmd[pages][' + data.node.identifier + '][delete]=1';
+      params = '&cmd[' + tableName + '][' + data.node.identifier + '][delete]=1';
     } else {
-      params = 'cmd[pages][' + data.node.identifier + '][' + data.command + ']=' + targetUid;
+      params = 'cmd[' + tableName + '][' + data.node.identifier + '][' + data.command + ']=' + targetUid;
     }
 
     this.requestTreeUpdate(params).then((response) => {
@@ -176,7 +184,7 @@ export class EditablePageTree extends PageTree {
           records: [
             {
               identifier: node.identifier,
-              tablename: 'pages',
+              tablename: 'sys_category',
             }
           ]
         })
@@ -377,6 +385,19 @@ export class PageTreeNavigationComponent extends TreeModuleState(LitElement) {
     `;
   }
 
+  protected override firstUpdated(): void {
+    super.firstUpdated();
+
+    // Connect toolbar to tree after initial render
+    const treeElement = this.querySelector('#typo3-pagetree-tree') as EditablePageTree;
+    const toolbarElement = this.querySelector('#typo3-pagetree-toolbar') as PageTreeToolbar;
+
+    if (treeElement && toolbarElement) {
+      this.tree = treeElement;
+      toolbarElement.tree = treeElement;
+    }
+  }
+
   private readonly refresh = (): void => {
     this.tree.refreshOrFilterTree();
   };
@@ -436,7 +457,7 @@ export class PageTreeNavigationComponent extends TreeModuleState(LitElement) {
       return;
     }
 
-    // remember the selected page in the global state
+    // remember the selected category in the global state
     ModuleStateStorage.updateWithTreeIdentifier('web', node.identifier, node.__treeIdentifier);
 
     if (evt.detail.propagate === false) {
@@ -446,8 +467,21 @@ export class PageTreeNavigationComponent extends TreeModuleState(LitElement) {
     // Load the currently selected module with the updated URL
     const moduleMenu = top.TYPO3.ModuleMenu.App;
     let contentUrl = ModuleUtility.getFromName(moduleMenu.getCurrentModule()).link;
+
+    // Get the current id parameter from the content iframe URL
+    const currentContentUrl = top.TYPO3.Backend.ContentContainer.getUrl();
+    const currentUrl = new URL(currentContentUrl, window.location.origin);
+    const currentId = currentUrl.searchParams.get('id');
+
     contentUrl += contentUrl.includes('?') ? '&' : '?';
-    top.TYPO3.Backend.ContentContainer.setUrl(contentUrl + 'id=' + node.identifier);
+
+    // Add category parameter and preserve id if it exists
+    let params = 'category=' + node.identifier;
+    if (currentId) {
+      params += '&id=' + currentId;
+    }
+
+    top.TYPO3.Backend.ContentContainer.setUrl(contentUrl + params);
   };
 
   private readonly showContextMenu = (evt: CustomEvent): void => {
@@ -471,6 +505,26 @@ export class PageTreeNavigationComponent extends TreeModuleState(LitElement) {
 class PageTreeToolbar extends TreeToolbar {
   override tree: EditablePageTree = null;
 
+  protected getTree(): EditablePageTree {
+    if (!this.tree) {
+      // Try to get the tree element from the parent
+      const parent = this.closest('typo3-backend-navigation-component-categorytree') as PageTreeNavigationComponent;
+      if (parent) {
+        const treeElement = parent.querySelector('#typo3-pagetree-tree') as EditablePageTree;
+        if (treeElement) {
+          this.tree = treeElement;
+        }
+      }
+    }
+    return this.tree;
+  }
+
+  protected override firstUpdated(): void {
+    super.firstUpdated();
+    // Ensure tree is connected before base class initializes
+    this.getTree();
+  }
+
   protected override render(): TemplateResult {
     /* eslint-disable @stylistic/indent */
     return html`
@@ -484,8 +538,8 @@ class PageTreeToolbar extends TreeToolbar {
           </div>
         </div>
         <div class="tree-toolbar__submenu">
-          ${this.tree?.settings?.doktypes?.length
-      ? this.tree.settings.doktypes.map((item: any) => {
+          ${this.getTree()?.settings?.doktypes?.length
+      ? this.getTree().settings.doktypes.map((item: any) => {
         return html`
                 <div
                   class="tree-toolbar__menuitem tree-toolbar__drag-node"
@@ -513,7 +567,7 @@ class PageTreeToolbar extends TreeToolbar {
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li>
-              <button class="dropdown-item" @click="${() => this.refreshTree()}">
+              <button class="dropdown-item" @click="${() => this.handleRefreshTree()}">
                 <span class="dropdown-item-columns">
                   <span class="dropdown-item-column dropdown-item-column-icon" aria-hidden="true">
                     <typo3-backend-icon identifier="actions-refresh" size="small"></typo3-backend-icon>
@@ -525,7 +579,7 @@ class PageTreeToolbar extends TreeToolbar {
               </button>
             </li>
             <li>
-              <button class="dropdown-item" @click="${(evt: MouseEvent) => this.collapseAll(evt)}">
+              <button class="dropdown-item" @click="${(evt: MouseEvent) => this.handleCollapseAll(evt)}">
                 <span class="dropdown-item-columns">
                   <span class="dropdown-item-column dropdown-item-column-icon" aria-hidden="true">
                     <typo3-backend-icon identifier="apps-pagetree-category-collapse-all" size="small"></typo3-backend-icon>
@@ -542,7 +596,26 @@ class PageTreeToolbar extends TreeToolbar {
     `;
   }
 
+  protected handleRefreshTree(): void {
+    const tree = this.getTree();
+    if (tree && tree.refreshOrFilterTree) {
+      tree.refreshOrFilterTree();
+    }
+  }
+
+  protected handleCollapseAll(evt: MouseEvent): void {
+    const tree = this.getTree();
+    if (tree && tree.collapseAll) {
+      tree.collapseAll();
+    }
+  }
+
   protected handleDragStart(event: DragEvent, item: any): void {
+    const tree = this.getTree();
+    if (!tree) {
+      return;
+    }
+
     const newNode: TreeNodeInterface = {
       __hidden: false,
       __expanded: false,
@@ -567,7 +640,7 @@ class PageTreeToolbar extends TreeToolbar {
       note: '',
       parentIdentifier: '',
       prefix: '',
-      recordType: 'pages',
+      recordType: 'sys_category',
       suffix: '',
       tooltip: '',
       type: 'PageTreeItem',
@@ -575,12 +648,12 @@ class PageTreeToolbar extends TreeToolbar {
       statusInformation: [],
       labels: [],
     };
-    this.tree.draggingNode = newNode;
-    this.tree.nodeDragMode = TreeNodeCommandEnum.NEW;
+    tree.draggingNode = newNode;
+    tree.nodeDragMode = TreeNodeCommandEnum.NEW;
 
     event.dataTransfer.clearData();
     const metadata: DragTooltipMetadata = {
-      statusIconIdentifier: this.tree.getNodeDragStatusIcon(),
+      statusIconIdentifier: tree.getNodeDragStatusIcon(),
       tooltipIconIdentifier: item.icon,
       tooltipLabel: item.title,
     };

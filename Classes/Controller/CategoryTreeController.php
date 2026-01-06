@@ -91,7 +91,7 @@ class CategoryTreeController
             'showIcons' => true,
             'dataUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_xima_categorytree_data'),
             'rootlineUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_page_tree_rootline'),
-            'filterUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_page_tree_filter'),
+            'filterUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_xima_categorytree_filter'),
             'setTemporaryMountPointUrl' => (string)$this->uriBuilder->buildUriFromRoute('ajax_page_tree_set_temporary_mount_point'),
         ];
 
@@ -102,8 +102,21 @@ class CategoryTreeController
     {
         $backendUser = $this->getBackendUser();
         $recordTypeField = $GLOBALS['TCA']['sys_category']['ctrl']['type'] ?? '';
+
+        // If sys_category doesn't have a type field yet, return default category icon for drag-and-drop
         if (empty($recordTypeField)) {
-            return [];
+            $iconIdentifier = 'mimetypes-x-sys_category';
+            // Try to get the actual icon from TCA
+            if (!empty($GLOBALS['TCA']['sys_category']['ctrl']['iconfile'])) {
+                $iconIdentifier = $GLOBALS['TCA']['sys_category']['ctrl']['iconfile'];
+            }
+            return [
+                [
+                    'nodeType' => 0,
+                    'icon' => $iconIdentifier,
+                    'title' => $this->getLanguageService()->sL($GLOBALS['TCA']['sys_category']['ctrl']['title'] ?? 'Category'),
+                ],
+            ];
         }
 
         $recordLabelMap = [];
@@ -160,14 +173,21 @@ class CategoryTreeController
         $items = [];
         $parentIdentifier = $request->getQueryParams()['parent'] ?? null;
         if ($parentIdentifier) {
+            // When loading children dynamically, fetch immediate children only
             $parentDepth = (int)($request->getQueryParams()['depth'] ?? 0);
             $categories = $this->categoryTreeRepository->getTree((int)$parentIdentifier);
-            //$entryPoints = $this->getAllEntryPointPageTrees();
-            //$mountPid = (int)($request->getQueryParams()['mount'] ?? 0);
-            //$this->levelsToFetch = $parentDepth + $this->levelsToFetch;
+
+            // Temporarily increase levels to fetch to include children of the requested parent
+            $originalLevelsToFetch = $this->levelsToFetch;
+            $this->levelsToFetch = $parentDepth + $this->levelsToFetch;
+
             foreach ($categories as $category) {
+                // When a parent gets children, we're fetching from the parent node
+                // so the children start at parentDepth + 1
                 $items[] = $this->categoryToFlatArray($category, 0, $parentDepth + 1);
             }
+
+            $this->levelsToFetch = $originalLevelsToFetch;
         } else {
             // Root level item
             foreach ($categories as $category) {
@@ -325,6 +345,8 @@ class CategoryTreeController
         $categoryId = (int)$category['uid'];
         $identifier = $entryPoint . '_cat_' . $categoryId;
         $items = [];
+        $hasChildren = !empty($category['children']);
+
         $item = [
             'identifier' => (string)$categoryId,
             'parentIdentifier' => (string)(($category['parent'] ?? 0) === 0 ? ($category['pid'] ?? '') : $category['parent']),
@@ -332,14 +354,17 @@ class CategoryTreeController
             'name' => htmlspecialchars($category['title'] ?? ''),
             'depth' => $depth,
             'icon' => $this->iconFactory->getIconForRecord('sys_category', $category, IconSize::SMALL)->getIdentifier(),
-            'hasChildren' => !empty($category['children']),
+            'hasChildren' => $hasChildren,
+            'loaded' => $hasChildren && $depth < $this->levelsToFetch, // Mark as loaded if children are included
             'doktype' => 0,
             'nameSourceField' => 'title',
             'mountPoint' => $entryPoint,
             'workspaceId' => $categoryId,
         ];
         $items[] = $item;
-        if (!empty($category['children'])) {
+
+        // Only include children if we're within the fetch depth
+        if ($hasChildren && $depth < $this->levelsToFetch) {
             foreach ($category['children'] as $child) {
                 $items = array_merge($items, $this->categoryToFlatArray($child, $entryPoint, $depth + 1));
             }
@@ -385,5 +410,64 @@ class CategoryTreeController
                 new AfterCategoryTreeItemsPreparedEvent($request, $items)
             )->getItems()
         );
+    }
+
+    public function filterDataAction(ServerRequestInterface $request): ResponseInterface
+    {
+        $searchQuery = $request->getQueryParams()['q'] ?? '';
+        if (empty($searchQuery)) {
+            return new JsonResponse([]);
+        }
+
+        $categories = $this->categoryTreeRepository->getTree();
+        $matchedCategories = $this->filterCategoriesBySearchQuery($categories, $searchQuery);
+
+        $items = [];
+        foreach ($matchedCategories as $category) {
+            $items[] = $this->categoryToFlatArray($category, 0, 0);
+        }
+        $items = array_merge(...$items);
+
+        return new JsonResponse($this->getPostProcessedPageItems($request, $items));
+    }
+
+    protected function filterCategoriesBySearchQuery(array $categories, string $searchQuery): array
+    {
+        $searchQuery = strtolower(trim($searchQuery));
+        $matched = [];
+
+        foreach ($categories as $category) {
+            $matchInfo = $this->categoryMatchesSearch($category, $searchQuery);
+            if ($matchInfo['matches']) {
+                $matched[] = $matchInfo['category'];
+            }
+        }
+
+        return $matched;
+    }
+
+    protected function categoryMatchesSearch(array $category, string $searchQuery): array
+    {
+        $title = strtolower($category['title'] ?? '');
+        $matches = str_contains($title, $searchQuery);
+
+        // Check children recursively
+        $matchedChildren = [];
+        if (!empty($category['children'])) {
+            foreach ($category['children'] as $child) {
+                $childMatch = $this->categoryMatchesSearch($child, $searchQuery);
+                if ($childMatch['matches']) {
+                    $matches = true;
+                    $matchedChildren[] = $childMatch['category'];
+                }
+            }
+        }
+
+        if ($matches) {
+            $category['children'] = $matchedChildren;
+            return ['matches' => true, 'category' => $category];
+        }
+
+        return ['matches' => false, 'category' => []];
     }
 }
