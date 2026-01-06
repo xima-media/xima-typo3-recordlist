@@ -20,8 +20,8 @@ class NewsSearchCest
 
         $I->searchFor('News');
 
-        $I->see('News');
-        $I->seeElement('//tr[@data-uid]');
+        $I->see('New');
+        $I->seeNumberOfElements('//tr[@data-uid]', 4);
     }
 
     public function searchByAuthor(AcceptanceTester $I): void

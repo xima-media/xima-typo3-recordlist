@@ -48,10 +48,15 @@ class NewsFilterCest
     {
         $I->wantTo('filter news by English language');
 
-        // Language filter is in the URL query parameters, not in the search form
-        $I->amOnPage('/typo3/module/example/news?language=0');
-        $I->switchToContentFrame();
-        $I->waitForElementVisible('main.recordlist', 10);
+        // Set language filter via the language dropdown in the module header
+        $I->click('.module-docheader button.dropdown-toggle');
+        $I->wait(0.5);
+        $I->click('.module-docheader .dropdown-menu a[title="English"]');
+        $I->wait(1);
+
+        // Set items_per_page to max to ensure we see all records
+        $I->selectOption('select[name="items_per_page"]', '500');
+        $I->wait(1);
 
         // Verify ALL records are filtered to English language (no records with other languages)
         $I->seeElement('//tr[@data-sys_language_uid="0"]');
@@ -62,13 +67,19 @@ class NewsFilterCest
     {
         $I->wantTo('filter news by German language');
 
-        // Language filter is in the URL query parameters, not in the search form
-        $I->amOnPage('/typo3/module/example/news?language=1');
-        $I->switchToContentFrame();
-        $I->waitForElementVisible('main.recordlist', 10);
+        // Set language filter via the language dropdown in the module header
+        $I->click('.module-docheader button.dropdown-toggle');
+        $I->wait(0.5);
+        $I->click('.module-docheader .dropdown-menu a[title="German"]');
+        $I->wait(1);
 
-        // Just verify the recordlist is visible (may be empty if no German records exist)
-        $I->seeElement('main.recordlist');
+        // Set items_per_page to max to ensure we see all records
+        $I->selectOption('select[name="items_per_page"]', '500');
+        $I->wait(1);
+
+        // Verify ALL records are filtered to German language (no records with other languages)
+        $I->seeElement('//tr[@data-sys_language_uid="1"]');
+        $I->dontSeeElement('//tr[@data-sys_language_uid!="1"][@data-uid]');
     }
 
     public function filterByAuthor(AcceptanceTester $I): void
