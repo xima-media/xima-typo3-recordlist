@@ -6,16 +6,14 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 
 class PagesController extends AbstractBackendController
 {
-    protected const TEMPLATE_NAME = 'Example/Pages';
-
     public function getRecordPid(): int
     {
         return 1;
     }
 
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'pages';
+        return ['pages'];
     }
 
     public function modifyQueryBuilder(): void

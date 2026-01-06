@@ -1,8 +1,5 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
-<f:if condition="{colConfig.icon}">
-    <core:iconForRecord table="{table}" row="{item}" />
-</f:if>
 <f:if condition="{item.editable}">
     <f:then>
         <xm:link.editRecord

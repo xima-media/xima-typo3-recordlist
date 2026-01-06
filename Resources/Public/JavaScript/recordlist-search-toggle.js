@@ -16,7 +16,7 @@ export default class RecordlistSearchToggle {
     const button = e.currentTarget;
     button.classList.toggle("active");
     const isActive = button.classList.contains("active") ? "1" : "0";
-    UserSettings.update("isSearchButtonActive", isActive);
+    UserSettings.update(TYPO3.settings.XimaTypo3Recordlist.currentTable + ".isSearchButtonActive", isActive);
     document.querySelector("#searchInputs").classList.toggle("hidden");
   }
 }

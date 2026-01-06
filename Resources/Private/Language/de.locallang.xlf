@@ -19,6 +19,14 @@
 				<source />
 				<target>Status</target>
 			</trans-unit>
+			<trans-unit id="table.column.uid">
+				<source />
+				<target>ID</target>
+			</trans-unit>
+			<trans-unit id="table.column.pid">
+				<source />
+				<target>Seiten ID</target>
+			</trans-unit>
 			<trans-unit id="table.button.reset">
 				<source />
 				<target>Zurücksetzen</target>
@@ -83,6 +91,10 @@
 				<source />
 				<target>Freigabe erteilen</target>
 			</trans-unit>
+			<trans-unit id="table.button.requestChanges">
+				<source />
+				<target>Änderungen anfordern</target>
+			</trans-unit>
 			<trans-unit id="table.button.original">
 				<source />
 				<target>Original</target>
@@ -131,6 +143,18 @@
 				<source />
 				<target>Abbrechen</target>
 			</trans-unit>
+			<trans-unit id="table.sort.descending">
+				<source />
+				<target>Absteigend sortieren</target>
+			</trans-unit>
+			<trans-unit id="table.sort.ascending">
+				<source />
+				<target>Aufsteigend sortieren</target>
+			</trans-unit>
+			<trans-unit id="table.th.editFieldOfRecords">
+				<source />
+				<target>Das '%s'-Feld der aufgelisteten Einträge bearbeiten</target>
+			</trans-unit>
 			<trans-unit id="modal.delete.title">
 				<source />
 				<target>Datei löschen</target>
@@ -171,6 +195,10 @@
 				<source />
 				<target>Der Eintrag wurde erfolgreich gelöscht</target>
 			</trans-unit>
+			<trans-unit id="header.button.download">
+				<source />
+				<target>Download</target>
+			</trans-unit>
 			<trans-unit id="header.button.showColumns">
 				<source />
 				<target>Spalten anpassen</target>
@@ -182,6 +210,10 @@
 			<trans-unit id="showColumns.placeholder">
 				<source />
 				<target>Suchbegriff eingeben</target>
+			</trans-unit>
+			<trans-unit id="showColumns.openSelectionOptions">
+				<source />
+				<target>Auswahloptionen öffnen</target>
 			</trans-unit>
 			<trans-unit id="showColumns.checkAll">
 				<source />
@@ -246,6 +278,142 @@
 			<trans-unit id="pagination.of">
 				<source>of %1$d</source>
 				<target>von %1$d</target>
+			</trans-unit>
+			<trans-unit id="pagination.itemsPerPage">
+				<source>Items per page</source>
+				<target>Einträge pro Seite</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.title">
+				<source />
+				<target>Datensatz veröffentlichen</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.content">
+				<source />
+				<target>Möchten Sie den Datensatz wirklich veröffentlichen?</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.cancel">
+				<source />
+				<target>Nein, abbrechen</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.confirm">
+				<source />
+				<target>Ja, veröffentlichen</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.title">
+				<source />
+				<target>Anfrage erfolgreich</target>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.description">
+				<source />
+				<target>Die Anfrage zur Freigabe wurde erfolgreich übermittelt</target>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.title">
+				<source />
+				<target>Anfrage erfolgreich</target>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.description">
+				<source />
+				<target>Die Anfrage für Änderungen wurde erfolgreich übermittelt</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.title">
+				<source />
+				<target>Fehler</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.message">
+				<source />
+				<target>Beim Speichern der Daten ist ein Fehler aufgetreten</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.title">
+				<source />
+				<target>Mehrfachbearbeitung</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.saving">
+				<source />
+				<target>Speichere %d Datensätze...</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.success">
+				<source />
+				<target>%d Datensätze erfolgreich aktualisiert</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.partialSuccess">
+				<source />
+				<target>%d Datensätze aktualisiert, %d fehlgeschlagen</target>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.allFailed">
+				<source />
+				<target>Alle %d Datensätze konnten nicht aktualisiert werden</target>
+			</trans-unit>
+			<trans-unit id="deleteFile.error.title">
+				<source />
+				<target>Fehler</target>
+			</trans-unit>
+			<trans-unit id="deleteFile.error.message">
+				<source />
+				<target>Beim Löschen der Datei ist ein Fehler aufgetreten</target>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.title">
+				<source />
+				<target>Fehler</target>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.message">
+				<source />
+				<target>Der Datensatz konnte nicht aktualisiert werden</target>
+			</trans-unit>
+			<trans-unit id="download.modal.title">
+				<source />
+				<target>Datensätze herunterladen</target>
+			</trans-unit>
+			<trans-unit id="download.button.close">
+				<source />
+				<target>Schließen</target>
+			</trans-unit>
+			<trans-unit id="download.button.download">
+				<source />
+				<target>Herunterladen</target>
+			</trans-unit>
+			<trans-unit id="filter.category.label">
+				<source />
+				<target>Kategorie filtern</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDelete">
+				<source />
+				<target>Keine Berechtigung zum Löschen von Datensätzen</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.pageNotFound">
+				<source />
+				<target>Seite des Datensatzes nicht gefunden</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteRecord">
+				<source />
+				<target>Keine Berechtigung zum Löschen dieses Datensatzes</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noFileMetadataUid">
+				<source />
+				<target>Keine sys_file_metadata UID angegeben</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.fileNotFound">
+				<source />
+				<target>Datei nicht gefunden</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteFile">
+				<source />
+				<target>Keine Berechtigung zum Löschen der Datei</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.deleteFileFailed">
+				<source />
+				<target>Fehler beim Löschen der Datei</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToEdit">
+				<source />
+				<target>Keine Berechtigung zum Bearbeiten des Datensatzes</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.invalidColumn">
+				<source />
+				<target>Ungültiger Spaltenname</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.recordNotFound">
+				<source />
+				<target>Datensatz nicht gefunden</target>
 			</trans-unit>
 		</body>
 	</file>

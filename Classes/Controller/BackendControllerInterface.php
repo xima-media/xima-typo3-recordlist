@@ -6,5 +6,8 @@ interface BackendControllerInterface
 {
     public function getRecordPid(): int;
 
-    public function getTableName(): string;
+    /**
+     * @return array<string>
+     */
+    public function getTableNames(): array;
 }

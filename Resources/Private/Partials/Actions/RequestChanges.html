@@ -1,0 +1,6 @@
+<f:if condition="({isWorkspaceAdmin} && {item.t3ver_stage} === -10) ">
+    <a href="#" data-workspace-action="sendToSpecificStageExecute" data-workspace-stage="0" class="btn btn-danger">
+        <core:icon identifier="actions-close" size="small" />
+        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.requestChanges')}
+    </a>
+</f:if>

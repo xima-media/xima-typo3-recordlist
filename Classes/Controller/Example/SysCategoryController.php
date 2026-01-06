@@ -11,8 +11,8 @@ class SysCategoryController extends AbstractBackendController
         return 17;
     }
 
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'sys_category';
+        return ['sys_category'];
     }
 }

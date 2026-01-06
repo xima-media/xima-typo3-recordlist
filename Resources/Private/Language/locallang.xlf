@@ -15,6 +15,12 @@
 			<trans-unit id="table.column.status">
 				<source>Status</source>
 			</trans-unit>
+			<trans-unit id="table.column.uid">
+				<source>Unique ID</source>
+			</trans-unit>
+			<trans-unit id="table.column.pid">
+				<source>Page ID</source>
+			</trans-unit>
 			<trans-unit id="table.button.reset">
 				<source>Reset</source>
 			</trans-unit>
@@ -63,6 +69,9 @@
 			<trans-unit id="table.button.publish">
 				<source>Grant approval</source>
 			</trans-unit>
+			<trans-unit id="table.button.requestChanges">
+				<source>Request changes</source>
+			</trans-unit>
 			<trans-unit id="table.button.original">
 				<source>Original</source>
 			</trans-unit>
@@ -98,6 +107,15 @@
 			</trans-unit>
 			<trans-unit id="table.button.cancel">
 				<source>Cancel</source>
+			</trans-unit>
+			<trans-unit id="table.sort.descending">
+				<source>Sort descending</source>
+			</trans-unit>
+			<trans-unit id="table.sort.ascending">
+				<source>Sort ascending</source>
+			</trans-unit>
+			<trans-unit id="table.th.editFieldOfRecords">
+				<source>Edit the '%s' field of the listed records</source>
 			</trans-unit>
 			<trans-unit id="modal.delete.title">
 				<source>Delete file</source>
@@ -140,6 +158,9 @@
 			</trans-unit>
 			<trans-unit id="showColumns.placeholder">
 				<source>Enter search term</source>
+			</trans-unit>
+			<trans-unit id="showColumns.openSelectionOptions">
+				<source>Open selection options</source>
 			</trans-unit>
 			<trans-unit id="showColumns.checkAll">
 				<source>Check all</source>
@@ -188,6 +209,108 @@
 			</trans-unit>
 			<trans-unit id="pagination.of">
 				<source>of %1$d</source>
+			</trans-unit>
+			<trans-unit id="pagination.itemsPerPage">
+				<source>Items per page</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.title">
+				<source>Publish record</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.modal.content">
+				<source>Are you sure you want to publish this record?</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.cancel">
+				<source>No, cancel</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.button.confirm">
+				<source>Yes, publish</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.title">
+				<source>Request successful</source>
+			</trans-unit>
+			<trans-unit id="workspace.readyToPublish.notification.success.description">
+				<source>The record has been marked as ready to publish.</source>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.title">
+				<source>Request successful</source>
+			</trans-unit>
+			<trans-unit id="workspace.requestChanges.notification.success.description">
+				<source>The change request has been sent successfully.</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.error.message">
+				<source>An error occurred while saving the data</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.title">
+				<source>Batch Edit</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.saving">
+				<source>Saving %d records...</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.success">
+				<source>Successfully updated %d records</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.partialSuccess">
+				<source>Updated %d records, %d failed</source>
+			</trans-unit>
+			<trans-unit id="inlineEdit.batchEdit.allFailed">
+				<source>Failed to update all %d records</source>
+			</trans-unit>
+			<trans-unit id="deleteFile.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="deleteFile.error.message">
+				<source>An error occurred while deleting the file</source>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="hiddenToggle.error.message">
+				<source>Could not update the record</source>
+			</trans-unit>
+			<trans-unit id="download.modal.title">
+				<source>Download records</source>
+			</trans-unit>
+			<trans-unit id="download.button.close">
+				<source>Close</source>
+			</trans-unit>
+			<trans-unit id="download.button.download">
+				<source>Download</source>
+			</trans-unit>
+			<trans-unit id="filter.category.label">
+				<source>Filter category</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDelete">
+				<source>No permissions to delete records</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.pageNotFound">
+				<source>Page of record not found</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteRecord">
+				<source>No permissions to delete record</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noFileMetadataUid">
+				<source>No sys_file_metadata UID provided</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.fileNotFound">
+				<source>File not found</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToDeleteFile">
+				<source>No permissions to delete file</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.deleteFileFailed">
+				<source>Error while deleting file</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.noPermissionsToEdit">
+				<source>No permissions to edit record</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.invalidColumn">
+				<source>Invalid column name</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.recordNotFound">
+				<source>Record not found</source>
 			</trans-unit>
 		</body>
 	</file>

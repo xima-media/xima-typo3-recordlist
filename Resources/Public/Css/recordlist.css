@@ -13,12 +13,20 @@
     gap: 3px;
 }
 
+.text-inline-edit .inline-edit:hover {
+    outline: Highlight auto 1px;
+    outline: -webkit-focus-ring-color auto 1px;
+    outline-offset: 5px;
+}
+
 span.inline-edit {
     margin-right: 5px;
 }
 
 span.inline-edit:focus-within {
     outline-offset: 5px;
+    background-color: #FFF;
+    box-shadow: 0 0 0 4px #FFF;
 }
 
 .recordlist #nprogress {
@@ -30,8 +38,8 @@ span.inline-edit:focus-within {
     overflow: hidden;
 }
 
-.table > tbody > tr:not([data-sys_language_uid="0"]) td[data-language-indent="1"] > *:first-child {
-    margin-left: 16px;
+.table > tbody > tr:not([data-sys_language_uid="0"]) td.col-icon[data-language-indent="1"] {
+    padding-left: 20px; /* 4px default + 16px language indent */
 }
 
 main.recordlist ul.pagination input.form-control {
@@ -49,4 +57,24 @@ main.recordlist ul.pagination input.form-control {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+
+.recordlist table.table tr[data-state="new"]:not(.active) td {
+    background-color: color-mix(in srgb, var(--typo3-badge-success-bg) 15%, transparent) !important;
+}
+
+.recordlist table.table tr[data-state="modified"]:not(.active) td {
+    background-color: color-mix(in srgb, var(--typo3-badge-warning-bg) 15%, transparent) !important;
+}
+
+.recordlist table.table tr[data-state="deleted"]:not(.active) td {
+    background-color: color-mix(in srgb, var(--typo3-badge-danger-bg) 15%, transparent) !important;
+}
+
+.recordlist table .dropdown-static {
+    position: relative;
+}
+
+.recordlist table .dropdown-static .dropdown-menu {
+    top: 24px;
 }

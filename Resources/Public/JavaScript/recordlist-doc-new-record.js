@@ -40,7 +40,7 @@ export default class RecordlistDocNewRecord {
           btnClass: "btn-primary",
           trigger: function() {
             top.list_frame.location.href = selection.value;
-            Modal.currentModal.trigger("modal-dismiss");
+            Modal.dismiss();
           }
         }
       ]

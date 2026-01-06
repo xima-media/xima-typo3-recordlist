@@ -6,17 +6,9 @@
 <f:be.pageRenderer
     includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/recordlist.css'}" />
 
-<f:if condition="{typo3version} > 12">
-    <f:then>
-        <f:be.pageRenderer
-            includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
-            includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/contrib/tooltip.css'}" />
-        </f:then>
-    <f:else>
-        <f:be.pageRenderer
-            includeJavaScriptModules="{0: '@typo3/backend/tooltip.js'}" />
-    </f:else>
-</f:if>
+<f:be.pageRenderer
+    includeJavaScriptModules="{0: '@xima/recordlist/contrib/tooltip.js'}"
+    includeCssFiles="{0: 'EXT:xima_typo3_recordlist/Resources/Public/Css/contrib/tooltip.css'}" />
 
 <f:render section="Before" arguments="{_all}" optional="true" />
 
@@ -25,6 +17,9 @@
     <f:render partial="DocHeader" arguments="{docHeader:docHeader}" />
 
     <div class="module-body t3js-module-body">
+
+        <f:render section="BeforeContent" arguments="{_all}" optional="true" />
+
         <f:flashMessages queueIdentifier="{flashMessageQueueIdentifier}" />
 
         <f:render section="Content" arguments="{_all}" optional="true">
@@ -49,7 +44,8 @@
 
                 <div class="row">
                     <div class="col-12">
-                        <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:settings.isSearchButtonActive, else:'hidden')}">
+                        <f:variable name="isSearchActive" value="{settings.{table}.isSearchButtonActive}" />
+                        <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:isSearchActive, else:'hidden')}">
 
                             <f:form.hidden name="order_field" value="{order_field}" />
                             <f:form.hidden name="order_direction" value="{order_direction}" />
@@ -100,13 +96,19 @@
 
                 <f:if condition="{records->f:count()}">
                     <main
-                        class="recordlist"
+                        class="recordlist table-fit"
                         data-workspace-switch-action="{workspaceSwitched -> f:format.raw()}"
                         id="workspace-content-wrapper">
 
                         <table class="table table-striped table-hover mb-0">
                             <thead>
                             <tr>
+                                <f:if condition="{tableConfiguration.showCheckboxColumn}">
+                                    <f:render partial="ThCheckbox" arguments="{_all}" />
+                                </f:if>
+                                <f:if condition="{tableConfiguration.showIconColumn}">
+                                    <f:render partial="ThIcon" arguments="{_all}" />
+                                </f:if>
                                 <f:for each="{tableConfiguration.columns}" as="colConfig">
                                     <f:if condition="{colConfig.active}">
                                         <f:render partial="Th" arguments="{_all}" />
@@ -126,16 +128,29 @@
                                     data-uid="{item.uid}"
                                     data-pid="{item.pid}"
                                     data-t3ver_oid="{f:if(condition: item.t3ver_oid, then: item.t3ver_oid, else: item.uid)}"
-                                    data-t3ver_wsid="1"
+                                    data-t3ver_wsid="{workspaceId}"
+                                    data-state="{item.state}"
                                     data-sys_language_uid="{item.sys_language_uid}"
                                     data-stage="{item.t3ver_stage}"
                                     data-table="{table}"
                                     data-sys-file-references="{f:if(condition: item.referencesToPublish, then: '{item.referencesToPublish->f:format.json()}')}"
                                     data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
 
+                                    <f:if condition="{tableConfiguration.showCheckboxColumn}">
+                                        <td class="col-checkbox nowrap">
+                                            <f:render partial="Columns/Checkbox" arguments="{_all}" />
+                                        </td>
+                                    </f:if>
+
+                                    <f:if condition="{tableConfiguration.showIconColumn}">
+                                        <td class="col-icon nowrap" data-language-indent="{f:if(condition: order_is_custom, then: '0', else: '1')}">
+                                            <f:render partial="Columns/Icon" arguments="{_all}" />
+                                        </td>
+                                    </f:if>
+
                                     <f:for each="{tableConfiguration.columns}" as="colConfig">
                                         <f:if condition="{colConfig.active}">
-                                            <td data-language-indent="{colConfig.languageIndent}">
+                                            <td>
                                                 <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
                                             </td>
                                         </f:if>
