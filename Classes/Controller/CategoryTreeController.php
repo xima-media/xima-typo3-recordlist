@@ -7,8 +7,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Dto\Tree\Label\Label;
-use TYPO3\CMS\Backend\Dto\Tree\PageTreeItem;
 use TYPO3\CMS\Backend\Dto\Tree\TreeItem;
+use Xima\XimaTypo3Recordlist\Dto\Tree\CategoryTreeItem;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -83,9 +83,11 @@ class CategoryTreeController
 
     public function fetchConfigurationAction(): ResponseInterface
     {
+        $doktypes = $this->getRecordTypes();
+
         $configuration = [
             'allowDragMove' => true,
-            'doktypes' => $this->getRecordTypes(),
+            'doktypes' => $doktypes,
             'displayDeleteConfirmation' => $this->getBackendUser()->jsConfirmation(JsConfirmation::DELETE),
             'temporaryMountPoint' => null,
             'showIcons' => true,
@@ -110,11 +112,14 @@ class CategoryTreeController
             if (!empty($GLOBALS['TCA']['sys_category']['ctrl']['iconfile'])) {
                 $iconIdentifier = $GLOBALS['TCA']['sys_category']['ctrl']['iconfile'];
             }
+
+            $title = $this->getLanguageService()->sL($GLOBALS['TCA']['sys_category']['ctrl']['title'] ?? 'Category');
+
             return [
                 [
                     'nodeType' => 0,
                     'icon' => $iconIdentifier,
-                    'title' => $this->getLanguageService()->sL($GLOBALS['TCA']['sys_category']['ctrl']['title'] ?? 'Category'),
+                    'title' => $title,
                 ],
             ];
         }
@@ -360,6 +365,7 @@ class CategoryTreeController
             'nameSourceField' => 'title',
             'mountPoint' => $entryPoint,
             'workspaceId' => $categoryId,
+            'storagePid' => (int)($category['pid'] ?? 0), // Add pid for creating new child categories
         ];
         $items[] = $item;
 
@@ -375,8 +381,8 @@ class CategoryTreeController
     protected function getPostProcessedPageItems(ServerRequestInterface $request, array $items): array
     {
         return array_map(
-            static function (array $item): PageTreeItem {
-                return new PageTreeItem(
+            static function (array $item): CategoryTreeItem {
+                return new CategoryTreeItem(
                     // TreeItem
                     new TreeItem(
                         identifier: $item['identifier'],
@@ -397,13 +403,14 @@ class CategoryTreeController
                         statusInformation: (array)($item['statusInformation'] ?? []),
                         labels: (array)($item['labels'] ?? []),
                     ),
-                    // PageTreeItem
+                    // CategoryTreeItem
                     doktype: (int)($item['doktype'] ?? ''),
                     nameSourceField: (string)($item['nameSourceField'] ?? ''),
                     workspaceId: (int)($item['workspaceId'] ?? 0),
                     locked: (bool)($item['locked'] ?? false),
                     stopPageTree: (bool)($item['stopPageTree'] ?? false),
                     mountPoint: (int)($item['mountPoint'] ?? 0),
+                    storagePid: (int)($item['storagePid'] ?? 0),
                 );
             },
             $this->eventDispatcher->dispatch(

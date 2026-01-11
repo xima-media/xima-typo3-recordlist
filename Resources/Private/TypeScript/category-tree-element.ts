@@ -88,6 +88,7 @@ export class EditablePageTree extends PageTree {
     let params: string = '';
     let targetUid: string = '0';
     let parentUid: string = '0';
+    let pidValue: string = '0';
     const tableName = 'sys_category'; // Use sys_category instead of pages
 
     if (data.target) {
@@ -97,20 +98,27 @@ export class EditablePageTree extends PageTree {
         targetUid = ((previousNode.depth === data.target.depth) ? '-' : '') + previousNode.identifier;
         // For categories, parent is the parent of the target node
         parentUid = data.target.parentIdentifier || '0';
+        // Siblings share the same pid as the target node
+        pidValue = (data.target as any).storagePid || '0';
       } else if (data.position === TreeNodePositionEnum.AFTER) {
         targetUid = '-' + targetUid;
         // For categories, parent is the parent of the target node
         parentUid = data.target.parentIdentifier || '0';
+        // Siblings share the same pid as the target node
+        pidValue = (data.target as any).storagePid || '0';
       } else {
         // INSIDE position - parent is the target node itself
         parentUid = targetUid;
+        // Child category gets same pid as parent category
+        pidValue = (data.target as any).storagePid || '0';
       }
     }
 
     if (data.command === TreeNodeCommandEnum.NEW) {
       const newData = data as NodeNewOptions;
-      // For categories, we use parent field instead of pid, and sorting is handled separately
-      params = '&data[' + tableName + '][' + data.node.identifier + '][parent]=' + encodeURIComponent(parentUid) +
+      // For categories, we need both pid (storage page) and parent (hierarchy)
+      params = '&data[' + tableName + '][' + data.node.identifier + '][pid]=' + encodeURIComponent(pidValue) +
+        '&data[' + tableName + '][' + data.node.identifier + '][parent]=' + encodeURIComponent(parentUid) +
         '&data[' + tableName + '][' + data.node.identifier + '][title]=' + encodeURIComponent(newData.title);
     } else if (data.command === TreeNodeCommandEnum.EDIT) {
       params = '&data[' + tableName + '][' + data.node.identifier + '][title]=' + encodeURIComponent(data.title);
@@ -503,7 +511,19 @@ export class PageTreeNavigationComponent extends TreeModuleState(LitElement) {
 
 @customElement('typo3-backend-navigation-component-categorytree-toolbar')
 class PageTreeToolbar extends TreeToolbar {
-  override tree: EditablePageTree = null;
+  private _tree: EditablePageTree = null;
+
+  override get tree(): EditablePageTree {
+    return this._tree;
+  }
+
+  override set tree(value: EditablePageTree) {
+    const oldValue = this._tree;
+    this._tree = value;
+    if (oldValue !== value) {
+      this.requestUpdate('tree', oldValue);
+    }
+  }
 
   protected getTree(): EditablePageTree {
     if (!this.tree) {
@@ -538,24 +558,30 @@ class PageTreeToolbar extends TreeToolbar {
           </div>
         </div>
         <div class="tree-toolbar__submenu">
-          ${this.getTree()?.settings?.doktypes?.length
-      ? this.getTree().settings.doktypes.map((item: any) => {
-        return html`
-                <div
-                  class="tree-toolbar__menuitem tree-toolbar__drag-node"
-                  title="${item.title}"
-                  draggable="true"
-                  data-tree-icon="${item.icon}"
-                  data-node-type="${item.nodeType}"
-                  aria-hidden="true"
-                  @dragstart="${(event: DragEvent) => { this.handleDragStart(event, item); }}"
-                >
-                  <typo3-backend-icon identifier="${item.icon}" size="small"></typo3-backend-icon>
-                </div>
-              `;
-      })
-      : ''
-    }
+          ${(() => {
+            if (!this.tree || !this.tree.settings) {
+              return '';
+            }
+            const doktypes = this.tree.settings.doktypes;
+            if (doktypes && doktypes.length) {
+              return doktypes.map((item: any) => {
+                return html`
+                  <div
+                    class="tree-toolbar__menuitem tree-toolbar__drag-node"
+                    title="${item.title}"
+                    draggable="true"
+                    data-tree-icon="${item.icon}"
+                    data-node-type="${item.nodeType}"
+                    aria-hidden="true"
+                    @dragstart="${(event: DragEvent) => { this.handleDragStart(event, item); }}"
+                  >
+                    <typo3-backend-icon identifier="${item.icon}" size="small"></typo3-backend-icon>
+                  </div>
+                `;
+              });
+            }
+            return '';
+          })()}
           <button
             type="button"
             class="tree-toolbar__menuitem dropdown-toggle dropdown-toggle-no-chevron float-end"
