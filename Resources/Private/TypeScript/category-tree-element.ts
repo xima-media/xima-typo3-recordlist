@@ -617,41 +617,43 @@ class PageTreeToolbar extends TreeToolbar {
             }
             return '';
           })()}
-          <button
-            type="button"
-            class="tree-toolbar__menuitem dropdown-toggle dropdown-toggle-no-chevron float-end"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            aria-label="${lll('labels.openPageTreeOptionsMenu')}"
-          >
-            <typo3-backend-icon identifier="actions-menu-alternative" size="small"></typo3-backend-icon>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <button class="dropdown-item" @click="${() => this.handleRefreshTree()}">
-                <span class="dropdown-item-columns">
-                  <span class="dropdown-item-column dropdown-item-column-icon" aria-hidden="true">
-                    <typo3-backend-icon identifier="actions-refresh" size="small"></typo3-backend-icon>
+          <div class="dropdown" style="margin-left: auto;">
+            <button
+              type="button"
+              class="tree-toolbar__menuitem dropdown-toggle dropdown-toggle-no-chevron"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              aria-label="${lll('labels.openPageTreeOptionsMenu')}"
+            >
+              <typo3-backend-icon identifier="actions-menu-alternative" size="small"></typo3-backend-icon>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <button class="dropdown-item" type="button" @click="${(evt: MouseEvent) => { evt.preventDefault(); this.handleRefreshTree(); }}">
+                  <span class="dropdown-item-columns">
+                    <span class="dropdown-item-column dropdown-item-column-icon" aria-hidden="true">
+                      <typo3-backend-icon identifier="actions-refresh" size="small"></typo3-backend-icon>
+                    </span>
+                    <span class="dropdown-item-column dropdown-item-column-title">
+                      ${lll('labels.refresh')}
+                    </span>
                   </span>
-                  <span class="dropdown-item-column dropdown-item-column-title">
-                    ${lll('labels.refresh')}
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" type="button" @click="${(evt: MouseEvent) => { evt.preventDefault(); this.handleCollapseAll(evt); }}">
+                  <span class="dropdown-item-columns">
+                    <span class="dropdown-item-column dropdown-item-column-icon" aria-hidden="true">
+                      <typo3-backend-icon identifier="apps-pagetree-category-collapse-all" size="small"></typo3-backend-icon>
+                    </span>
+                    <span class="dropdown-item-column dropdown-item-column-title">
+                      ${lll('labels.collapse')}
                   </span>
                 </span>
               </button>
             </li>
-            <li>
-              <button class="dropdown-item" @click="${(evt: MouseEvent) => this.handleCollapseAll(evt)}">
-                <span class="dropdown-item-columns">
-                  <span class="dropdown-item-column dropdown-item-column-icon" aria-hidden="true">
-                    <typo3-backend-icon identifier="apps-pagetree-category-collapse-all" size="small"></typo3-backend-icon>
-                  </span>
-                  <span class="dropdown-item-column dropdown-item-column-title">
-                    ${lll('labels.collapse')}
-                  </span>
-                </span>
-              </button>
-            </li>
-          </ul>
+            </ul>
+          </div>
         </div>
       </div>
     `;
@@ -665,9 +667,15 @@ class PageTreeToolbar extends TreeToolbar {
   }
 
   protected handleCollapseAll(evt: MouseEvent): void {
+    evt.preventDefault();
     const tree = this.getTree();
-    if (tree && tree.collapseAll) {
-      tree.collapseAll();
+    if (tree && tree.nodes) {
+      // Collapse all expanded nodes to hide their children
+      tree.nodes.forEach((node: TreeNodeInterface) => {
+        if (node.__expanded) {
+          tree.hideChildren(node);
+        }
+      });
     }
   }
 
