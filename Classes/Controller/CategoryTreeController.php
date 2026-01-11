@@ -366,6 +366,7 @@ class CategoryTreeController
             'mountPoint' => $entryPoint,
             'workspaceId' => $categoryId,
             'storagePid' => (int)($category['pid'] ?? 0), // Add pid for creating new child categories
+            'sorting' => (int)($category['sorting'] ?? 0),
         ];
         $items[] = $item;
 
@@ -411,6 +412,7 @@ class CategoryTreeController
                     stopPageTree: (bool)($item['stopPageTree'] ?? false),
                     mountPoint: (int)($item['mountPoint'] ?? 0),
                     storagePid: (int)($item['storagePid'] ?? 0),
+                    sorting: (int)($item['sorting'] ?? 0),
                 );
             },
             $this->eventDispatcher->dispatch(

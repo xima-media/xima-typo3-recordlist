@@ -20,6 +20,7 @@ final readonly class CategoryTreeItem implements \JsonSerializable
         public bool $stopPageTree,
         public int $mountPoint,
         public int $storagePid,
+        public int $sorting,
     ) {}
 
     public function jsonSerialize(): array
@@ -34,6 +35,7 @@ final readonly class CategoryTreeItem implements \JsonSerializable
             'stopPageTree' => $this->stopPageTree,
             'mountPoint' => $this->mountPoint,
             'storagePid' => $this->storagePid,
+            'sorting' => $this->sorting,
         ];
     }
 }
