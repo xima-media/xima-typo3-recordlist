@@ -532,13 +532,18 @@ export class PageTreeNavigationComponent extends TreeModuleState(LitElement) {
     if (!node) {
       return;
     }
+    // Get tree element - use cached reference or query for it
+    const tree = this.tree || this.querySelector('#typo3-pagetree-tree') as EditablePageTree;
+    if (!tree) {
+      return;
+    }
     ContextMenu.show(
       node.recordType,
       node.identifier,
       'tree',
       '',
       '',
-      this.tree.getElementFromNode(node),
+      tree.getElementFromNode(node),
       evt.detail.originalEvent as PointerEvent
     );
   };
