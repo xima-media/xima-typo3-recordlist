@@ -15,10 +15,7 @@ use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\PreviewUriBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
-use TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownDivider;
-use TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem;
-use TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownRadio;
-use TYPO3\CMS\Backend\Template\Components\Menu\Menu;
+use TYPO3\CMS\Backend\Template\Components\Buttons\GenericButton;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -1496,7 +1493,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addNewButtonToModuleTemplate(): void
     {
-        if (!$this->isActionAllowed('newRecord')) {
+        if (!$this->isActionAllowedInCurrentTemplate('newRecord')) {
             return;
         }
 
@@ -1521,7 +1518,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addShowColumnsButtonToViewDropdown(): void
     {
-        if (!$this->isActionAllowed('showColumns')) {
+        if (!$this->isActionAllowedInCurrentTemplate('showColumns')) {
             return;
         }
 
@@ -1551,7 +1548,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addDownloadButtonToModuleTemplate(): void
     {
-        if (!$this->isActionAllowed('download')) {
+        if (!$this->isActionAllowedInCurrentTemplate('download')) {
             return;
         }
 
@@ -1581,7 +1578,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addSearchButtonToNewModuleTemplate(): void
     {
-        if (!$this->isActionAllowed('toggleSearch')) {
+        if (!$this->isActionAllowedInCurrentTemplate('toggleSearch')) {
             return;
         }
 
@@ -1601,7 +1598,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addLanguageSelectionToModuleTemplate(): void
     {
-        if (!$this->isActionAllowed('languageSelection')) {
+        if (!$this->isActionAllowedInCurrentTemplate('languageSelection')) {
             return;
         }
 
@@ -1665,7 +1662,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addPidSelectionToModuleTemplate(): void
     {
-        if (!$this->isActionAllowed('pidSelection')) {
+        if (!$this->isActionAllowedInCurrentTemplate('pidSelection')) {
             return;
         }
 
@@ -1699,7 +1696,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addTableSelectionToModuleTemplate(): void
     {
-        if (!$this->isActionAllowed('tableSelection')) {
+        if (!$this->isActionAllowedInCurrentTemplate('tableSelection')) {
             return;
         }
 
@@ -1775,7 +1772,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return $templateConfigurations[$templateName] ?? [];
     }
 
-    protected function isActionAllowed(string $action): bool
+    protected function isActionAllowedInCurrentTemplate(string $action): bool
     {
         $templateConfig = $this->getCurrentTemplateConfiguration();
         // If no actions are defined, all actions are allowed (backwards compatibility)
@@ -1858,7 +1855,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addTemplateSelectionToViewDropdown(): void
     {
-        if (!$this->isActionAllowed('templateSelection')) {
+        if (!$this->isActionAllowedInCurrentTemplate('templateSelection')) {
             return;
         }
 

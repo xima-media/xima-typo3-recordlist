@@ -20,11 +20,11 @@ class PagesController extends AbstractBackendController
     {
         return [
             'Default' => [
-                'title' => 'Page List',
+                'title' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_pages_module.xlf:template.list.title',
                 'icon' => 'actions-list',
             ],
             'Example/PagesCards' => [
-                'title' => 'Page Cards',
+                'title' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_pages_module.xlf:template.cards.title',
                 'icon' => 'actions-menu',
                 'actions' => ['templateSelection', 'tableSelection', 'languageSelection', 'newRecord'],
             ],
