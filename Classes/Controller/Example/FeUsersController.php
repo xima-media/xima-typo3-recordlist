@@ -16,13 +16,16 @@ class FeUsersController extends AbstractBackendController
         return ['fe_users', 'fe_groups'];
     }
 
-    protected function getTemplateName(): string
+    public function getTemplateConfigurations(): array
     {
-        if ($this->getTableName() === 'fe_users') {
-            return 'Example/FeUsers';
-        }
-
-        return 'Default';
+        return match ($this->getTableName()) {
+            'fe_groups' => [
+                'Example/FeUsers' => [],
+            ],
+            default => [
+                'Default' => [],
+            ],
+        };
     }
 
     protected function modifyQueryBuilder(): void
