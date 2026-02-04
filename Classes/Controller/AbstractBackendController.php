@@ -6,7 +6,6 @@ use Doctrine\DBAL\Driver\Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
@@ -93,15 +92,46 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $viewDropdownButtons = [];
 
-    public function __construct(
-        protected ConnectionPool $connectionPool,
-        protected IconFactory $iconFactory,
-        protected PageRenderer $pageRenderer,
-        protected UriBuilder $backendUriBuilder,
-        protected ContainerInterface $container,
-        protected ModuleTemplateFactory $moduleTemplateFactory,
-        protected ResourceFactory $resourceFactory
-    ) {
+    protected ConnectionPool $connectionPool;
+
+    protected IconFactory $iconFactory;
+
+    protected PageRenderer $pageRenderer;
+
+    protected UriBuilder $backendUriBuilder;
+
+    protected ModuleTemplateFactory $moduleTemplateFactory;
+
+    protected ResourceFactory $resourceFactory;
+
+    public function injectConnectionPool(ConnectionPool $connectionPool): void
+    {
+        $this->connectionPool = $connectionPool;
+    }
+
+    public function injectIconFactory(IconFactory $iconFactory): void
+    {
+        $this->iconFactory = $iconFactory;
+    }
+
+    public function injectPageRenderer(PageRenderer $pageRenderer): void
+    {
+        $this->pageRenderer = $pageRenderer;
+    }
+
+    public function injectBackendUriBuilder(UriBuilder $backendUriBuilder): void
+    {
+        $this->backendUriBuilder = $backendUriBuilder;
+    }
+
+    public function injectModuleTemplateFactory(ModuleTemplateFactory $moduleTemplateFactory): void
+    {
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
+    public function injectResourceFactory(ResourceFactory $resourceFactory): void
+    {
+        $this->resourceFactory = $resourceFactory;
     }
 
     /**
