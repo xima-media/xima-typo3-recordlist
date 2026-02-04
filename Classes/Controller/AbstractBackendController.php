@@ -1873,9 +1873,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             foreach ($templateConfigurations as $templateName => $templateConfiguration) {
                 $templateItem = GeneralUtility::makeInstance(DropDownRadio::class)
                     ->setHref('#')
-                    ->setLabel($this->getLanguageService()->sL($templateConfiguration['title']))
-                    ->setTitle($this->getLanguageService()->sL($templateConfiguration['title']))
-                    ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'], IconSize::SMALL))
+                    ->setLabel($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                    ->setTitle($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                    ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'] ?? 'actions-dot', IconSize::SMALL))
                     ->setAttributes(['data-doc-button' => 'templateSelection', 'data-template-name' => $templateName]);
                 if ($currentTemplate === $templateName) {
                     $templateItem->setActive(true);
@@ -1886,13 +1886,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+
         foreach ($templateConfigurations as $templateName => $templateConfiguration) {
-            $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
             $templateItem = $componentFactory->createDropDownRadio()
                 ->setHref('#')
-                ->setLabel($this->getLanguageService()->sL($templateConfiguration['title']))
-                ->setTitle($this->getLanguageService()->sL($templateConfiguration['title']))
-                ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'], IconSize::SMALL))
+                ->setLabel($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                ->setTitle($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'] ?? 'actions-dot', IconSize::SMALL))
                 ->setAttributes(['data-doc-button' => 'templateSelection', 'data-template-name' => $templateName]);
             if ($currentTemplate === $templateName) {
                 $templateItem->setActive(true);
