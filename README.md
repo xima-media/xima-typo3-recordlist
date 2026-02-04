@@ -26,6 +26,7 @@ This extension provides a powerful abstract controller for creating advanced rec
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Customization](#customization)
+    - [Template Configurations](#template-configurations)
     - [Templates](#templates)
     - [Modifying Records](#modifying-records)
     - [Custom Filters](#custom-filters)
@@ -52,6 +53,7 @@ Building custom backend modules for listing and managing records typically requi
 - **Configurable columns** with user-customizable visibility and order
 - **Inline editing** for quick record updates
 - **Multiple tables** in a single module with dropdown selection
+- **Multiple templates** with per-template action control
 - **Workspace integration** for content approval workflows
 - **Pagination** for handling large datasets
 - **View record** button linking to frontend preview
@@ -153,6 +155,76 @@ templates.vendor/my-extension.1740563365 = xima/xima-typo3-recordlist:Resources/
 ## Customization
 
 The extension is highly customizable through method overrides in your controller. Here are the most common customization options:
+
+### Template Configurations
+
+Define multiple templates for your module, each with custom layouts and available actions:
+
+```php
+class NewsController extends AbstractBackendController
+{
+    public function getTemplateConfigurations(?string $tableName = null): array
+    {
+        return [
+            'Default' => [
+                'title' => 'LLL:EXT:my_extension/Resources/Private/Language/locallang.xlf:template.list',
+                'icon' => 'actions-list',
+                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleSearch', 'newRecord'],
+            ],
+            'Cards' => [
+                'title' => 'LLL:EXT:my_extension/Resources/Private/Language/locallang.xlf:template.cards',
+                'icon' => 'actions-menu',
+                'actions' => ['templateSelection', 'newRecord'],
+            ],
+        ];
+    }
+}
+```
+
+**Configuration Options:**
+
+| Key | Description |
+|-----|-------------|
+| `title` | Template label (supports LLL: references) |
+| `icon` | TYPO3 icon identifier for the dropdown |
+| `actions` | Array of enabled actions for this template |
+
+**Available Actions:**
+
+| Action | Description |
+|--------|-------------|
+| `templateSelection` | Template switcher in View dropdown |
+| `showColumns` | Column selector in View dropdown |
+| `download` | Download button |
+| `toggleSearch` | Search toggle button |
+| `tableSelection` | Table selection menu |
+| `pidSelection` | Page selection menu |
+| `languageSelection` | Language selection menu |
+| `newRecord` | New record button |
+
+**Table-Specific Templates:**
+
+For controllers managing multiple tables, return different templates per table:
+
+```php
+public function getTemplateConfigurations(): array
+{
+    $tableName = $this->getCurrentTableName();
+
+    return match ($tableName) {
+        'tx_news_domain_model_news' => [
+            'Default' => ['title' => 'News List', 'icon' => 'actions-list'],
+            'Cards' => ['title' => 'News Cards', 'icon' => 'actions-menu'],
+        ],
+        'tx_news_domain_model_tag' => [
+            'Default' => ['title' => 'Tag List', 'icon' => 'actions-list'],
+        ],
+        default => [
+            'Default' => ['title' => 'List', 'icon' => 'actions-list'],
+        ],
+    };
+}
+```
 
 ### Templates
 
