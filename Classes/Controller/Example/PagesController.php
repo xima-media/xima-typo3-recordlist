@@ -6,16 +6,36 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
 
 class PagesController extends AbstractBackendController
 {
-    protected const TEMPLATE_NAME = 'Example/Pages';
-
     public function getRecordPid(): int
     {
         return 1;
     }
 
-    public function getTableName(): string
+    public function getTableNames(): array
     {
-        return 'pages';
+        return ['pages'];
+    }
+
+    public function getTemplateConfigurations(): array
+    {
+        return [
+            'Default' => [
+                'title' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_pages_module.xlf:template.list.title',
+                'icon' => 'actions-list',
+            ],
+            'Example/PagesCards' => [
+                'title' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_pages_module.xlf:template.cards.title',
+                'icon' => 'actions-menu',
+                'actions' => ['templateSelection', 'tableSelection', 'languageSelection', 'newRecord'],
+            ],
+        ];
+    }
+
+    public function modifyTableConfiguration(): void
+    {
+        $this->tableConfiguration['pages']['columns']['title']['defaultPosition'] = 2;
+        $this->tableConfiguration['pages']['columns']['subtitle']['defaultPosition'] = 3;
+        $this->tableConfiguration['pages']['columns']['description']['defaultPosition'] = 4;
     }
 
     public function modifyQueryBuilder(): void

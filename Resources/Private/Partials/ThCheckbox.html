@@ -1,0 +1,52 @@
+{namespace be=TYPO3\CMS\Backend\ViewHelpers}
+
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-row-selection.js', 1: '@xima/recordlist/recordlist-row-edit-multiple.js'}" />
+
+<th class="col-checkbox nowrap">
+    <div class="btn-group dropdown">
+        <button
+            type="button"
+            class="dropdown-toggle dropdown-toggle-link t3js-multi-record-selection-check-actions-toggle"
+            data-bs-toggle="dropdown"
+            data-bs-boundary="window"
+            aria-expanded="false"
+            aria-label="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.openSelectionOptions')}">
+            <core:icon identifier="actions-selection" size="small" />
+        </button>
+        <ul class="dropdown-menu t3js-multi-record-selection-check-actions">
+            <li>
+                <button
+                    type="button"
+                    class="dropdown-item"
+                    data-multi-record-selection-check-action="check-all"
+                    title="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkAll')}">
+                    <core:icon identifier="actions-selection-elements-all" size="small" />
+                    <f:translate key="LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkAll" />
+                </button>
+            </li>
+
+            <li>
+                <button
+                    type="button"
+                    class="dropdown-item"
+                    data-multi-record-selection-check-action="check-none"
+                    title="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkNone')}">
+                    <core:icon identifier="actions-selection-elements-none" size="small" />
+                    <f:translate key="LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.checkNone" />
+                </button>
+            </li>
+
+            <li>
+                <button
+                    type="button"
+                    class="dropdown-item"
+                    disabled="disabled"
+                    data-multi-record-selection-check-action="toggle"
+                    title="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.toggle')}">
+                    <core:icon identifier="actions-selection-elements-invert" size="small" />
+                    <f:translate key="LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:showColumns.toggle" />
+                </button>
+            </li>
+        </ul>
+    </div>
+</th>

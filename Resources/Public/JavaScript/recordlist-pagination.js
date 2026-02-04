@@ -11,6 +11,10 @@ export default class RecordlistPagination {
     document.querySelectorAll("input[name=\"current_page\"]").forEach(input => {
       input.addEventListener("keypress", this.onPaginationInputKeypress.bind(this));
     });
+
+    document.querySelectorAll("select[name=\"items_per_page\"]").forEach(select => {
+      select.addEventListener("change", this.onItemsPerPageChange.bind(this));
+    });
   }
 
   updateAndSubmitPaginationInput(nextPage) {
@@ -36,6 +40,14 @@ export default class RecordlistPagination {
     const input = e.currentTarget;
     const nextPage = input.value;
     this.updateAndSubmitPaginationInput(nextPage);
+  }
+
+  onItemsPerPageChange(e) {
+    const select = e.currentTarget;
+    document.querySelectorAll("select[name=\"items_per_page\"]").forEach(otherSelect => {
+      otherSelect.value = select.value;
+    });
+    select.closest("form")?.submit();
   }
 }
 

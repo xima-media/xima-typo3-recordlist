@@ -6,7 +6,7 @@
         <f:for each="{item._{colConfig.columnName}}" as="category">
             <a
                 href="#"
-                title="Filter category"
+                title="{f:translate(key: 'filter.category.label')}"
                 class="badge badge-pill category-badge {category.uid -> xm:categoryActiveClass(activeCategories: colConfig.filter.value)}"
                 data-category-uid="{category.uid}"
                 data-field-name="{colConfig.columnName}"

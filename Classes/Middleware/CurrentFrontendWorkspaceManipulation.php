@@ -28,7 +28,7 @@ class CurrentFrontendWorkspaceManipulation implements MiddlewareInterface
         }
 
         // set workspace aspect
-        $backendUser = $GLOBALS['BE_USER'] ?? null;
+        $backendUser = $this->getBackendUser();
         if ($backendUser instanceof BackendUserAuthentication) {
             /** @var Context $context */
             $context = GeneralUtility::makeInstance(Context::class);
@@ -36,5 +36,10 @@ class CurrentFrontendWorkspaceManipulation implements MiddlewareInterface
         }
 
         return $handler->handle($request);
+    }
+
+    private function getBackendUser(): ?BackendUserAuthentication
+    {
+        return $GLOBALS['BE_USER'] ?? null;
     }
 }

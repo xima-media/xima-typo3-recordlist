@@ -11,6 +11,12 @@
 			<trans-unit id="mlang_tabs_tab" resname="mlang_tabs_tab">
 				<source>Pages</source>
 			</trans-unit>
+			<trans-unit id="template.list.title" resname="template.list.title">
+				<source>List view</source>
+			</trans-unit>
+			<trans-unit id="template.cards.title" resname="template.cards.title">
+				<source>Card view</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

@@ -14,7 +14,10 @@ return [
         'xima-typo3-recordlist/current-workspace-manipulation' => [
             'target' => \Xima\XimaTypo3Recordlist\Middleware\CurrentBackendWorkspaceManipulation::class,
             'after' => [
-                'typo3/cms-core/response-propagation',
+                'typo3/cms-backend/authentication',
+            ],
+            'before' => [
+                'typo3/cms-backend/backend-module-validator',
             ],
         ],
     ],

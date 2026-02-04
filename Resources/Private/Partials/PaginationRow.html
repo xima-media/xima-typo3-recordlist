@@ -135,6 +135,20 @@
                             <core:icon identifier="actions-refresh" size="small" />
                         </a>
                     </li>
+                    <li class="page-item">
+                        <span class="page-link">
+                            <label for="items_per_page" class="visually-hidden">
+                                {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:pagination.itemsPerPage')}
+                            </label>
+                            <f:form.select
+                                name="items_per_page"
+                                id="items_per_page"
+                                value="{settings.{table}.itemsPerPage}"
+                                options="{itemsPerPageOptions}"
+                                class="form-select form-select-sm d-inline-block"
+                                style="width: auto;" />
+                        </span>
+                    </li>
                 </ul>
             </nav>
         </td>

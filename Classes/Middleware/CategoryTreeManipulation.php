@@ -17,7 +17,6 @@ class CategoryTreeManipulation implements MiddlewareInterface
          * Make sure it is the ajax request for fetching tree data
          *
          * @var Route $route
-         * @phpstan-ignore-next-line
          */
         $route = $request->getAttribute('route');
         if ($route->getOption('_identifier') !== 'ajax_record_tree_data') {
@@ -39,11 +38,11 @@ class CategoryTreeManipulation implements MiddlewareInterface
             // manually check the selected categories from overrideValues
             $response = $handler->handle($request);
             $treeData = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
-            foreach ($treeData as &$teeItem) {
-                if (!in_array((int)$teeItem['identifier'], $overrideValues, true)) {
+            foreach ($treeData as &$treeItem) {
+                if (!in_array((int)$treeItem['identifier'], $overrideValues, true)) {
                     continue;
                 }
-                $teeItem['checked'] = true;
+                $treeItem['checked'] = true;
             }
             return new JsonResponse($treeData);
         } catch (\Exception) {

@@ -1,5 +1,4 @@
 import AjaxRequest from "@typo3/core/ajax/ajax-request.js";
-import NProgress from "nprogress";
 import Modal from "@typo3/backend/modal.js";
 import { SeverityEnum } from "@typo3/backend/enum/severity.js";
 import $ from "jquery";
@@ -12,8 +11,8 @@ export default class RecordlistWorkspaceReadyToPublish {
   }
 
   init() {
-    document.querySelectorAll("[data-workspace-action=\"readyToPublish\"]").forEach(btn => {
-      btn.addEventListener("click", this.onReadyToPublishClick.bind(this));
+    document.querySelectorAll("[data-workspace-action=\"sendToSpecificStageExecute\"]").forEach(btn => {
+      btn.addEventListener("click", this.onSendToSpecificStageClick.bind(this));
     });
 
     document.querySelectorAll("[data-workspace-action=\"remove\"]").forEach(btn => {
@@ -28,7 +27,9 @@ export default class RecordlistWorkspaceReadyToPublish {
   confirmDeleteRecordFromWorkspace(e) {
     e.preventDefault();
     const btn = e.currentTarget;
+    const typo3version = parseInt(btn.getAttribute("data-typo3-version"));
     const tr = btn.closest("tr");
+    const workspaceId = tr.getAttribute("data-t3ver_wsid");
     const modal = Modal.confirm(TYPO3.lang["window.discard.title"], TYPO3.lang["window.discard.message"], SeverityEnum.warning, [
       {
         text: TYPO3.lang.cancel,
@@ -47,7 +48,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           const payload = {
             action: "Actions",
             data: [tr.getAttribute("data-table"), tr.getAttribute("data-uid")],
-            method: "deleteSingleRecord",
+            method: typo3version === 13 ? "deleteSingleRecord" : "discardSingleRecord",
             tid: 2,
             type: "rpc"
           };
@@ -55,6 +56,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           modal.hideModal();
 
           new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+            .withQueryArguments({workspaceId: workspaceId})
             .post(payload, {
               headers: {
                 "Content-Type": "application/json; charset=utf-8"
@@ -80,6 +82,7 @@ export default class RecordlistWorkspaceReadyToPublish {
     const self = this;
     const uid = parseInt(tr.getAttribute("data-uid") ?? "");
     const table = tr.getAttribute("data-table") ?? "";
+    const workspaceId = tr.getAttribute("data-t3ver_wsid");
     let t3verOid = parseInt(tr.getAttribute("data-t3ver_oid") ?? "");
     if (!t3verOid) {
       t3verOid = uid;
@@ -100,13 +103,13 @@ export default class RecordlistWorkspaceReadyToPublish {
     }
 
     const modal = Modal.advanced({
-      title: "Datensatz veröffentlichen",
+      title: TYPO3.lang['workspace.readyToPublish.modal.title'],
       size: Modal.sizes.small,
       severity: SeverityEnum.info,
-      content: "Möchten Sie den Datensatz wirklich veröffentlichen?",
+      content: TYPO3.lang['workspace.readyToPublish.modal.content'],
       buttons: [
         {
-          text: "Nein, abbrechen",
+          text: TYPO3.lang['workspace.readyToPublish.button.cancel'],
           icon: "actions-close",
           btnClass: "btn-default",
           trigger: function() {
@@ -114,11 +117,11 @@ export default class RecordlistWorkspaceReadyToPublish {
           }
         },
         {
-          text: "Ja, veröffentlichen",
+          text: TYPO3.lang['workspace.readyToPublish.button.confirm'],
           icon: "actions-check",
           btnClass: "btn-success",
           trigger: function() {
-            self.publishRecords(recordsToPublish);
+            self.publishRecords(recordsToPublish, workspaceId);
             modal.hideModal();
           }
         }
@@ -126,7 +129,7 @@ export default class RecordlistWorkspaceReadyToPublish {
     });
   }
 
-  publishRecords(records) {
+  publishRecords(records, workspaceId) {
     const payload = {
       action: "Actions",
       data: [
@@ -142,6 +145,7 @@ export default class RecordlistWorkspaceReadyToPublish {
     };
 
     new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+      .withQueryArguments({workspaceId: workspaceId})
       .post(payload, {
         headers: {
           "Content-Type": "application/json; charset=utf-8"
@@ -152,12 +156,14 @@ export default class RecordlistWorkspaceReadyToPublish {
       });
   }
 
-  onReadyToPublishClick(e) {
+  onSendToSpecificStageClick(e) {
     e.preventDefault();
 
     const eventTarget = e.currentTarget;
     const tr = eventTarget.closest("tr");
     const workspaceId = tr.getAttribute("data-t3ver_wsid");
+    const workspaceStage = parseInt(eventTarget.getAttribute("data-workspace-stage"));
+    const stageName = workspaceStage === -10 ? 'readyToPublish' : 'requestChanges';
 
     if (!tr) {
       return;
@@ -171,15 +177,14 @@ export default class RecordlistWorkspaceReadyToPublish {
 
     const payload = {
       action: "Actions",
-      data: ["-10", [affectedRecord], TYPO3.settings.Workspaces.token],
+      data: [workspaceStage, [affectedRecord], TYPO3.settings.Workspaces.token],
       method: "sendToSpecificStageWindow",
       tid: 1,
       type: "rpc"
     };
 
-    NProgress.configure({ parent: `tr[data-uid="${tr.getAttribute("data-uid")}"]`, showSpinner: true });
-    NProgress.start();
-    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
+    new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+      .withQueryArguments({workspaceId: workspaceId})
       .post(payload, {
         headers: {
           "Content-Type": "application/json; charset=utf-8"
@@ -193,7 +198,7 @@ export default class RecordlistWorkspaceReadyToPublish {
             const serializedForm = Utility.convertFormToObject(modal.querySelector("form"));
             serializedForm.affects = {
               elements: [affectedRecord],
-              nextStage: "-10"
+              nextStage: workspaceStage
             };
 
             const payload = {
@@ -204,14 +209,18 @@ export default class RecordlistWorkspaceReadyToPublish {
               type: "rpc"
             };
 
-            new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch + '&workspaceId=' + workspaceId)
+            new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+              .withQueryArguments({workspaceId: workspaceId})
               .post(payload, {
                 headers: {
                   "Content-Type": "application/json; charset=utf-8"
                 }
               })
               .then(async () => {
-                Notification.success("Anfrage erfolgreich", "Die Anfrage zur Freigabe wurde erfolgreich übermittelt");
+                Notification.success(
+                  TYPO3.lang[`workspace.${stageName}.notification.success.title`],
+                  TYPO3.lang[`workspace.${stageName}.notification.success.description`]
+                );
                 modal.hideModal();
                 top?.TYPO3.Backend.ContentContainer.refresh();
               });
@@ -224,44 +233,6 @@ export default class RecordlistWorkspaceReadyToPublish {
   renderSendToStageWindow(response) {
     const result = response[0].result;
     const $form = $("<form />");
-
-    if (typeof result.sendMailTo !== "undefined" && result.sendMailTo.length > 0) {
-
-      for (const recipient of result.sendMailTo) {
-        $form.append(
-          $("<div />", { class: "form-check hidden" }).append(
-            $("<input />", {
-              type: "checkbox",
-              name: "recipients",
-              class: "form-check-input t3js-workspace-recipient",
-              id: recipient.name,
-              value: recipient.value
-            }).prop("checked", recipient.checked).prop("disabled", recipient.disabled),
-            $("<label />", {
-              class: "form-check-label",
-              for: recipient.name
-            }).text(recipient.label)
-          )
-        );
-      }
-    }
-
-    if (typeof result.additional !== "undefined") {
-      $form.append(
-        $("<div />", { class: "form-group hidden" }).append(
-          $("<label />", {
-            class: "form-label",
-            "for": "additional"
-          }).text(TYPO3.lang["window.sendToNextStageWindow.additionalRecipients"]),
-          $("<textarea />", {
-            class: "form-control",
-            name: "additional",
-            id: "additional"
-          }).text(result.additional.value),
-          $("<div />", { class: "form-text" }).text(TYPO3.lang["window.sendToNextStageWindow.additionalRecipients.hint"])
-        )
-      );
-    }
 
     $form.append(
       $("<div />", { class: "form-group" }).append(

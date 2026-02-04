@@ -1,5 +1,6 @@
 <?php
 
+use Xima\XimaTypo3Recordlist\Controller\Example\BeUsersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\FeUsersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\FilesController;
 use Xima\XimaTypo3Recordlist\Controller\Example\NewsController;
@@ -81,6 +82,21 @@ return [
         'extensionName' => 'XimaTypo3RecordlistExamples',
         'controllerActions' => [
             FilesController::class => [
+                'processRequest',
+            ],
+        ],
+        'inheritNavigationComponentFromMainModule' => false,
+    ],
+    'example_beusers' => [
+        'parent' => 'example',
+        'position' => ['after' => 'list'],
+        'access' => 'user',
+        'iconIdentifier' => 'module-example-6',
+        'workspaces' => '*',
+        'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_beusers_module.xlf',
+        'extensionName' => 'XimaTypo3RecordlistExamples',
+        'controllerActions' => [
+            BeUsersController::class => [
                 'processRequest',
             ],
         ],

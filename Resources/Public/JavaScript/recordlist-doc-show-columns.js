@@ -12,7 +12,7 @@ export default class RecordlistDocShowColumns {
   }
 
   init() {
-    document.querySelectorAll(".showColumnsButton").forEach(link => {
+    document.querySelectorAll('*[data-doc-button="showColumnsButton"]').forEach(link => {
       link.addEventListener("click", this.onShowColumnsClick.bind(this));
     });
   }
@@ -56,7 +56,7 @@ export default class RecordlistDocShowColumns {
 
     this.modal.querySelector('.modal-body').querySelector('input[name="columns-filter"]').addEventListener('input', (e) => {
       columnsItems.forEach(li => {
-        if (li.getAttribute('data-column-name').includes(e.currentTarget.value)) {
+        if (li.getAttribute('data-column-name').toLowerCase().includes(e.currentTarget.value.toLowerCase())) {
           li.classList.remove('d-none')
         } else {
           li.classList.add('d-none')
@@ -101,7 +101,7 @@ export default class RecordlistDocShowColumns {
       }
     })
 
-    UserSettings.update('activeColumns', activeColumns.join(',')).then(r => {
+    UserSettings.update(TYPO3.settings.XimaTypo3Recordlist.currentTable + '.activeColumns', activeColumns.join(',')).then(r => {
       window.location.reload()
     })
 
