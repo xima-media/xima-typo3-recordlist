@@ -209,7 +209,7 @@ For controllers managing multiple tables, return different templates per table:
 ```php
 public function getTemplateConfigurations(): array
 {
-    $tableName = $this->getCurrentTableName();
+    $tableName = $this->getTableName();
 
     return match ($tableName) {
         'tx_news_domain_model_news' => [
