@@ -16,7 +16,7 @@ class FeUsersController extends AbstractBackendController
         return ['fe_users', 'fe_groups'];
     }
 
-    protected function getTemplateName(): string
+    protected function getTemplateConfigurations(): array
     {
         if ($this->getTableName() === 'fe_users') {
             return ['Example/FeUsers' => []];
