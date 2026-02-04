@@ -3,11 +3,9 @@
 namespace Xima\XimaTypo3Recordlist\Controller;
 
 use Doctrine\DBAL\Driver\Exception;
-use Doctrine\DBAL\Result;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
@@ -15,7 +13,6 @@ use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\PreviewUriBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
-use TYPO3\CMS\Backend\Template\Components\Buttons\GenericButton;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -93,15 +90,48 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected EditableArrayPaginator $paginator;
 
-    public function __construct(
-        protected ConnectionPool $connectionPool,
-        protected IconFactory $iconFactory,
-        protected PageRenderer $pageRenderer,
-        protected UriBuilder $backendUriBuilder,
-        protected ContainerInterface $container,
-        protected ModuleTemplateFactory $moduleTemplateFactory,
-        protected ResourceFactory $resourceFactory,
-    ) {
+    protected array $viewDropdownButtons = [];
+
+    protected ConnectionPool $connectionPool;
+
+    protected IconFactory $iconFactory;
+
+    protected PageRenderer $pageRenderer;
+
+    protected UriBuilder $backendUriBuilder;
+
+    protected ModuleTemplateFactory $moduleTemplateFactory;
+
+    protected ResourceFactory $resourceFactory;
+
+    public function injectConnectionPool(ConnectionPool $connectionPool): void
+    {
+        $this->connectionPool = $connectionPool;
+    }
+
+    public function injectIconFactory(IconFactory $iconFactory): void
+    {
+        $this->iconFactory = $iconFactory;
+    }
+
+    public function injectPageRenderer(PageRenderer $pageRenderer): void
+    {
+        $this->pageRenderer = $pageRenderer;
+    }
+
+    public function injectBackendUriBuilder(UriBuilder $backendUriBuilder): void
+    {
+        $this->backendUriBuilder = $backendUriBuilder;
+    }
+
+    public function injectModuleTemplateFactory(ModuleTemplateFactory $moduleTemplateFactory): void
+    {
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
+    public function injectResourceFactory(ResourceFactory $resourceFactory): void
+    {
+        $this->resourceFactory = $resourceFactory;
     }
 
     /**
@@ -181,6 +211,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->modifyPaginatedRecords();
         $this->setPaginatorItems();
 
+        $this->configureViewDropdownButtons();
         $this->configureModuleTemplateDocHeader();
         return $this->moduleTemplate->renderResponse($this->getTemplateName());
     }
@@ -1469,8 +1500,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // new buttons
         $this->addNewButtonToModuleTemplate();
 
-        // show columns button
-        $this->addShowColumnsButtonToModuleTemplate();
+        // add view dropdown to button bar
+        $this->addViewDropdownButtonToModuleTemplate();
 
         // download button
         $this->addDownloadButtonToModuleTemplate();
@@ -1490,6 +1521,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addNewButtonToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('newRecord')) {
+            return;
+        }
+
         $accessiblePages = $this->getAccessibleChildPages();
         $activeLanguage = $this->getActiveLanguage();
         $tableName = $this->getTableName();
@@ -1509,26 +1544,42 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function addShowColumnsButtonToModuleTemplate(): void
+    protected function addShowColumnsButtonToViewDropdown(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('showColumns')) {
+            return;
+        }
+
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-show-columns.js')
         );
 
-        $button = GeneralUtility::makeInstance(GenericButton::class)
+        if ($this->getTypo3Version() === 13) {
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem::class)
+                ->setHref('#')
+                ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
+                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
+                ->setIcon($this->iconFactory->getIcon('actions-options', IconSize::SMALL))
+                ->setAttributes(['data-doc-button' => 'showColumnsButton']);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $this->viewDropdownButtons[] = $componentFactory->createDropDownItem()
             ->setTag('a')
             ->setHref('#')
-            ->setShowLabelText(true)
             ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
             ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
-            ->setIcon($this->iconFactory->getIcon('actions-options'))
-            ->setClasses('showColumnsButton');
-
-        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton($button, ButtonBar::BUTTON_POSITION_RIGHT, 1);
+            ->setIcon($this->iconFactory->getIcon('actions-options', IconSize::SMALL))
+            ->setAttributes(['data-doc-button' => 'showColumnsButton']);
     }
 
     protected function addDownloadButtonToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('download')) {
+            return;
+        }
+
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-download-button.js')
                 ->instance($this->getTableName(), $this->tableConfiguration[$this->getTableName()]['columns'])
@@ -1555,6 +1606,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addSearchButtonToNewModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('toggleSearch')) {
+            return;
+        }
+
         $isSearchButtonActive = (string)$this->getModuleDataSetting($this->getTableName() . '.isSearchButtonActive');
         $searchClass = $isSearchButtonActive ? 'active' : '';
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
@@ -1571,6 +1626,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addLanguageSelectionToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('languageSelection')) {
+            return;
+        }
+
         $languageField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
         $languages = $this->getLanguages();
         if (!$languageField || count($languages) <= 1) {
@@ -1631,6 +1690,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addPidSelectionToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('pidSelection')) {
+            return;
+        }
+
         $accessiblePages = $this->getAccessiblePids();
         if (count($accessiblePages) > 1) {
             $pageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
@@ -1661,6 +1724,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addTableSelectionToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('tableSelection')) {
+            return;
+        }
+
         $tableNames = $this->getTableNames();
         if (count($tableNames) > 1) {
             $tableMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
@@ -1715,7 +1782,32 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getTemplateName(): string
     {
-        return 'Default';
+        $templateConfigurations = $this->getTemplateConfigurations();
+        $selectedTemplate = $this->getModuleDataSetting($this->getTableName() . '.template');
+
+        // Return selected template if it exists in configurations, otherwise return first available
+        if ($selectedTemplate !== null && array_key_exists($selectedTemplate, $templateConfigurations)) {
+            return $selectedTemplate;
+        }
+
+        return array_key_first($templateConfigurations);
+    }
+
+    protected function getCurrentTemplateConfiguration(): array
+    {
+        $templateConfigurations = $this->getTemplateConfigurations();
+        $templateName = $this->getTemplateName();
+        return $templateConfigurations[$templateName] ?? [];
+    }
+
+    protected function isActionAllowedInCurrentTemplate(string $action): bool
+    {
+        $templateConfig = $this->getCurrentTemplateConfiguration();
+        // If no actions are defined, all actions are allowed (backwards compatibility)
+        if (!isset($templateConfig['actions'])) {
+            return true;
+        }
+        return in_array($action, $templateConfig['actions'], true);
     }
 
     protected function assignViewVariables(): void
@@ -1734,5 +1826,119 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('table', $this->getTableName());
         $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
         $this->moduleTemplate->assign('itemsPerPageOptions', array_combine($this::ITEMS_PER_PAGE_OPTIONS, $this::ITEMS_PER_PAGE_OPTIONS));
+    }
+
+    protected function addViewDropdownButtonToModuleTemplate(): void
+    {
+        if (empty($this->viewDropdownButtons)) {
+            return;
+        }
+
+        if ($this->getTypo3Version() === 13) {
+            $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
+            $viewDropdownMenu = $buttonBar->makeDropDownButton()
+                ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.view'))
+                ->setIcon($this->iconFactory->getIcon('actions-menu-alternative', IconSize::SMALL))
+                ->setShowLabelText(true);
+
+            foreach ($this->viewDropdownButtons as $menuItem) {
+                $viewDropdownMenu->addItem($menuItem);
+            }
+
+            $buttonBar->addButton(
+                $viewDropdownMenu,
+                ButtonBar::BUTTON_POSITION_RIGHT,
+                1
+            );
+
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $viewDropdownButton = $componentFactory->createDropDownButton()
+            ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.view'))
+            ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.view'))
+            ->setIcon($this->iconFactory->getIcon('actions-menu-alternative', IconSize::SMALL))
+            ->setShowLabelText(true);
+
+        foreach ($this->viewDropdownButtons as $menuItem) {
+            $viewDropdownButton->addItem($menuItem);
+        }
+
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $viewDropdownButton,
+            ButtonBar::BUTTON_POSITION_RIGHT,
+            1
+        );
+    }
+
+    protected function configureViewDropdownButtons(): void
+    {
+        // template selection
+        $this->addTemplateSelectionToViewDropdown();
+
+        // show columns
+        $this->addShowColumnsButtonToViewDropdown();
+    }
+
+    protected function addTemplateSelectionToViewDropdown(): void
+    {
+        if (!$this->isActionAllowedInCurrentTemplate('templateSelection')) {
+            return;
+        }
+
+        $templateConfigurations = $this->getTemplateConfigurations();
+        if (count($templateConfigurations) < 2) {
+            return;
+        }
+
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-template-selection.js')
+        );
+
+        $currentTemplate = $this->getModuleDataSetting($this->getTableName() . '.template') ?? 'Default';
+        if ($this->getTypo3Version() === 13) {
+            foreach ($templateConfigurations as $templateName => $templateConfiguration) {
+                $templateItem = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownRadio::class)
+                    ->setHref('#')
+                    ->setLabel($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                    ->setTitle($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                    ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'] ?? 'actions-dot', IconSize::SMALL))
+                    ->setAttributes(['data-doc-button' => 'templateSelection', 'data-template-name' => $templateName]);
+                if ($currentTemplate === $templateName) {
+                    $templateItem->setActive(true);
+                }
+                $this->viewDropdownButtons[] = $templateItem;
+            }
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownDivider::class);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+
+        foreach ($templateConfigurations as $templateName => $templateConfiguration) {
+            $templateItem = $componentFactory->createDropDownRadio()
+                ->setHref('#')
+                ->setLabel($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                ->setTitle($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'] ?? 'actions-dot', IconSize::SMALL))
+                ->setAttributes(['data-doc-button' => 'templateSelection', 'data-template-name' => $templateName]);
+            if ($currentTemplate === $templateName) {
+                $templateItem->setActive(true);
+            }
+            $this->viewDropdownButtons[] = $templateItem;
+        }
+        $this->viewDropdownButtons[] = $componentFactory->createDropDownDivider();
+    }
+
+    protected function getTemplateConfigurations(): array
+    {
+        return [
+            'Default' => [
+                'title' => 'Page List',
+                'icon' => 'actions-list',
+                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleSearch', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
+            ],
+        ];
     }
 }

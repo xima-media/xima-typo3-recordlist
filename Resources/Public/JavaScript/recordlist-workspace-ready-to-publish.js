@@ -1,5 +1,4 @@
 import AjaxRequest from "@typo3/core/ajax/ajax-request.js";
-import NProgress from "nprogress";
 import Modal from "@typo3/backend/modal.js";
 import { SeverityEnum } from "@typo3/backend/enum/severity.js";
 import $ from "jquery";
@@ -184,8 +183,6 @@ export default class RecordlistWorkspaceReadyToPublish {
       type: "rpc"
     };
 
-    NProgress.configure({ parent: `tr[data-uid="${tr.getAttribute("data-uid")}"]`, showSpinner: true });
-    NProgress.start();
     new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
       .withQueryArguments({workspaceId: workspaceId})
       .post(payload, {

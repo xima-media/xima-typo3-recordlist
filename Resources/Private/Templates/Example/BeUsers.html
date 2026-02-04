@@ -1,9 +1,13 @@
 <f:layout name="Default" />
 
 <f:section name="BeforeContent">
+    <f:variable name="state" value="{f:constant(name: '\TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::INFO')}" />
+    <f:if condition="{typo3version} < 14">
+        <f:variable name="state" value="-1" />
+    </f:if>
+
     <f:be.infobox
         title="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_beusers_module.xlf:customTemplate.title')}"
         message="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_beusers_module.xlf:customTemplate.message')}"
-        state="{f:constant(name: '\TYPO3\CMS\Core\Type\ContextualFeedbackSeverity::INFO')}"
-    />
+        state="{state}" />
 </f:section>

@@ -12,7 +12,7 @@ export default class RecordlistDocShowColumns {
   }
 
   init() {
-    document.querySelectorAll(".showColumnsButton").forEach(link => {
+    document.querySelectorAll('*[data-doc-button="showColumnsButton"]').forEach(link => {
       link.addEventListener("click", this.onShowColumnsClick.bind(this));
     });
   }

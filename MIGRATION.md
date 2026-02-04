@@ -1,6 +1,6 @@
 # Migration Guide: 13.x → 14.x
 
-Version 14.x adds support for managing multiple tables in a single backend module.
+Version 14.x adds support for managing multiple tables in a single backend module and introduces user-selectable templates.
 
 ## Breaking Changes
 
@@ -62,12 +62,34 @@ protected function modifyQueryBuilder(): void
 
 No changes needed - `$this->tableConfiguration` is automatically scoped to the current table.
 
+### Template Configuration (New Feature)
+
+The hardcoded template method is replaced with a configurable approach:
+
+**Before (hardcoded template):**
+```diff
+class UserController extends AbstractBackendController
+{
+-    protected function getTemplateName(): string
+-    {
+-        return 'Custom';
+-    }
++    protected function getTemplateConfigurations(): array
++    {
++        return ['Custom' => []];
++    }
+}
+```
+
+Refer to the [Example Pages Controllers](Classes/Controller/Example/PagesController.php) for implementations with multiple templates.
+
 ## Migration Steps
 
 1. Update `getTableName()` → `getTableNames()` in your controller
 2. Return array instead of string: `['table_name']`
-3. Clear caches: `ddev typo3 cache:flush`
-4. Test your module
+3. (Optional) Replace hardcoded `getTemplateName()` with `getTemplateConfigurations()`
+4. Clear caches: `ddev typo3 cache:flush`
+5. Test your module
 
 ## Troubleshooting
 
@@ -76,6 +98,8 @@ No changes needed - `$this->tableConfiguration` is automatically scoped to the c
 | `Class must implement method getTableNames()` | Change `getTableName(): string` to `getTableNames(): array` |
 | Settings not in templates | Use `{settings.{table}.settingName}` instead of `{settings.settingName}` |
 | Settings not persisting | Prefix keys: `$this->getTableName() . '.setting'` |
+| Template dropdown not showing | Override `getTemplateConfigurations()` with multiple templates |
+| Custom template not loading | Ensure template file exists and matches configuration key |
 
 ## Resources
 

@@ -199,6 +199,10 @@
 				<source />
 				<target>Download</target>
 			</trans-unit>
+			<trans-unit id="header.button.view">
+				<source />
+				<target>Ansicht</target>
+			</trans-unit>
 			<trans-unit id="header.button.showColumns">
 				<source />
 				<target>Spalten anpassen</target>

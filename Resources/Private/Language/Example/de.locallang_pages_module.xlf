@@ -14,6 +14,14 @@
 				<source>Pages</source>
 				<target>Seiten</target>
 			</trans-unit>
+			<trans-unit id="template.list.title" resname="template.list.title">
+				<source>List view</source>
+				<target>Listenansicht</target>
+			</trans-unit>
+			<trans-unit id="template.cards.title" resname="template.cards.title">
+				<source>Card view</source>
+				<target>Kartenansicht</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

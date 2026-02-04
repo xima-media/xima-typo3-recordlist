@@ -14,7 +14,8 @@
 
 ---
 
-This extension provides a powerful abstract controller for creating advanced record listing backend modules in TYPO3. Save development time by extending `AbstractBackendController` instead of building record lists from scratch.
+This extension provides a powerful abstract controller for creating advanced record listing backend modules in TYPO3. Save development time
+by extending `AbstractBackendController` instead of building record lists from scratch.
 
 ![Screenshot](Documentation/Images/Preview.png)
 
@@ -27,6 +28,7 @@ This extension provides a powerful abstract controller for creating advanced rec
 - [Quick Start](#quick-start)
 - [Customization](#customization)
     - [Templates](#templates)
+    - [Custom Template Configurations](#custom-template-configurations)
     - [Modifying Records](#modifying-records)
     - [Custom Filters](#custom-filters)
     - [Column Configuration](#column-configuration)
@@ -36,7 +38,8 @@ This extension provides a powerful abstract controller for creating advanced rec
 
 ## Why Use This Extension?
 
-Building custom backend modules for listing and managing records typically requires significant boilerplate code. This extension eliminates that overhead by providing:
+Building custom backend modules for listing and managing records typically requires significant boilerplate code. This extension eliminates
+that overhead by providing:
 
 - **Rapid Development**: Get a fully-functional backend module with just a few lines of code
 - **Rich Features Out-of-the-Box**: Filtering, sorting, pagination, inline editing, and more
@@ -52,6 +55,7 @@ Building custom backend modules for listing and managing records typically requi
 - **Configurable columns** with user-customizable visibility and order
 - **Inline editing** for quick record updates
 - **Multiple tables** in a single module with dropdown selection
+- **Multiple templates** with per-template action control
 - **Workspace integration** for content approval workflows
 - **Pagination** for handling large datasets
 - **View record** button linking to frontend preview
@@ -101,6 +105,7 @@ class UserController extends AbstractBackendController
 ```
 
 **Note:** For multiple tables in one module, return multiple table names:
+
 ```php
 public function getTableNames(): array
 {
@@ -110,7 +115,9 @@ public function getTableNames(): array
 
 ### 2. Register Backend Module
 
-Register your module using the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ExtensionArchitecture/HowTo/BackendModule/ModuleConfiguration.html). The key setting is `controllerActions`, which must reference your controller:
+Register your module using
+the [Backend module API](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ExtensionArchitecture/HowTo/BackendModule/ModuleConfiguration.html).
+The key setting is `controllerActions`, which must reference your controller:
 
 ```php
 <?php
@@ -139,7 +146,8 @@ return [
 
 ### 3. Configure Template Path
 
-Add the template path to your sitepackage [using TSconfig](https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/12.0/Feature-96812-OverrideBackendTemplatesWithTSconfig.html#feature-96812):
+Add the template path to your
+sitepackage [using TSconfig](https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/12.0/Feature-96812-OverrideBackendTemplatesWithTSconfig.html#feature-96812):
 
 ```typoscript
 # EXT:my_extension/Configuration/page.tsconfig
@@ -148,7 +156,8 @@ templates.vendor/my-extension.1740563365 = xima/xima-typo3-recordlist:Resources/
 
 **That's it!** Your backend module is now ready to use. Open the TYPO3 backend and navigate to your new module to see it in action.
 
-> 💡 **Tip:** Check out the [Example directory](Classes/Controller/Example) for working implementations including single-table and multi-table modules.
+> 💡 **Tip:** Check out the [Example directory](Classes/Controller/Example) for working implementations including single-table and
+> multi-table modules.
 
 ## Customization
 
@@ -163,19 +172,80 @@ Override templates, partials, or sections by configuring an additional template 
 templates.vendor/my-extension.1740570140 = my-vendor/my-extension:Resources/Private/TemplateOverrides
 ```
 
-Inside your TemplateOverrides folder, create a `Templates` directory, copy the [Default.html](Resources/Private/Templates/Default.html) file, and customize it.
+Inside your TemplateOverrides folder, create a `Templates` directory, copy the [Default.html](Resources/Private/Templates/Default.html)
+file, and customize it.
 
-**Using a Custom Template Name**
+### Custom Template Configurations
 
-If you have multiple backend modules, specify a different template name:
+By default, there is only one template (`Default`) available. If you define multiple templates, the template selection appears automatically
+in the View dropdown and the selection is persisted. To define which templates are available, override `getTemplateConfigurations()`:
 
 ```php
-class UserController extends AbstractBackendController
+class NewsController extends AbstractBackendController
 {
-    protected function getTemplateName(): string
+    protected function getTemplateConfigurations(): array
     {
-        return 'Custom';
+        return [
+            'Default' => [
+                'title' => 'LLL:EXT:my_extension/Resources/Private/Language/locallang.xlf:template.list',
+                'icon' => 'actions-list',
+            ],
+            'Cards' => [
+                'title' => 'LLL:EXT:my_extension/Resources/Private/Language/locallang.xlf:template.cards',
+                'icon' => 'actions-menu',
+                'actions' => ['templateSelection', 'newRecord'], // Only show template switcher and new record button
+            ],
+        ];
     }
+}
+```
+
+Create corresponding template files (e.g., `Default.html`, `Cards.html`) in your `Templates` directory.
+
+**Configuration Options:**
+
+| Key       | Description                                |
+|-----------|--------------------------------------------|
+| `title`   | Template label (supports LLL: references)  |
+| `icon`    | TYPO3 icon identifier for the dropdown     |
+| `actions` | Array of enabled actions for this template |
+
+**Available Actions:**
+
+Setting `actions` limits which actions are shown in the module header for the selected template.
+
+| Action              | Description                        |
+|---------------------|------------------------------------|
+| `templateSelection` | Template switcher in View dropdown |
+| `showColumns`       | Column selector in View dropdown   |
+| `download`          | Download button                    |
+| `toggleSearch`      | Search toggle button               |
+| `tableSelection`    | Table selection menu               |
+| `pidSelection`      | Page selection menu                |
+| `languageSelection` | Language selection menu            |
+| `newRecord`         | New record button                  |
+
+**Table-Specific Templates:**
+
+For controllers managing multiple tables, return different templates per table:
+
+```php
+protected function getTemplateConfigurations(): array
+{
+    $tableName = $this->getTableName();
+
+    return match ($tableName) {
+        'tx_news_domain_model_news' => [
+            'Default' => ['title' => 'News List', 'icon' => 'actions-list'],
+            'Cards' => ['title' => 'News Cards', 'icon' => 'actions-menu'],
+        ],
+        'tx_news_domain_model_tag' => [
+            'Default' => ['title' => 'Tag List', 'icon' => 'actions-list'],
+        ],
+        default => [
+            'Default' => ['title' => 'List', 'icon' => 'actions-list'],
+        ],
+    };
 }
 ```
 
@@ -186,7 +256,7 @@ Add computed fields or transform data by overriding the `modifyRecord()` method:
 ```php
 class UserController extends AbstractBackendController
 {
-    public function modifyRecord(array &$record): void
+    protected function modifyRecord(array &$record): void
     {
         // Add computed field
         $record['fullName'] = $record['first_name'] . ' ' . $record['last_name'];
@@ -204,7 +274,7 @@ Add custom filter options by modifying the query builder:
 ```php
 class UserController extends AbstractBackendController
 {
-    public function modifyQueryBuilder(): void
+    protected function modifyQueryBuilder(): void
     {
         $body = $this->request->getParsedBody();
 
@@ -237,7 +307,7 @@ Set which columns appear by default and in what order:
 ```php
 class NewsController extends AbstractBackendController
 {
-    public function modifyTableConfiguration(): void
+    protected function modifyTableConfiguration(): void
     {
         $this->tableConfiguration['your-table-name']['columns']['fal_media']['defaultPosition'] = 2;
         $this->tableConfiguration['your-table-name']['columns']['author']['defaultPosition'] = 3;
@@ -260,7 +330,7 @@ Both columns can be disabled per table:
 ```php
 class FilesController extends AbstractBackendController
 {
-    public function modifyTableConfiguration(): void
+    protected function modifyTableConfiguration(): void
     {
         // Hide icon column
         $this->tableConfiguration['sys_file_metadata']['showIconColumn'] = false;
@@ -284,7 +354,7 @@ These columns are disabled by default but can be activated:
 ```php
 class NewsController extends AbstractBackendController
 {
-    public function modifyTableConfiguration(): void
+    protected function modifyTableConfiguration(): void
     {
         // Show UID column by default
         $this->tableConfiguration['tx_news_domain_model_news']['columns']['uid']['active'] = true;
@@ -304,7 +374,7 @@ Make specific columns editable inline by assigning a partial:
 ```php
 class UserController extends AbstractBackendController
 {
-    public function modifyTableConfiguration(): void
+    protected function modifyTableConfiguration(): void
     {
         // Enable inline editing for title field
         $this->tableConfiguration['your-table-name']['columns']['title']['partial'] = 'TextInlineEdit';
@@ -319,7 +389,8 @@ class UserController extends AbstractBackendController
 
 #### Adding View/Preview Actions
 
-The view button is automatically displayed if [TCEMAIN.preview](https://docs.typo3.org/permalink/t3tsref:pagetcemain-preview) is configured for your table.
+The view button is automatically displayed if [TCEMAIN.preview](https://docs.typo3.org/permalink/t3tsref:pagetcemain-preview) is configured
+for your table.
 
 To manually add view URLs:
 
@@ -343,7 +414,6 @@ class UserController extends AbstractBackendController
 - 📋 [Changelog](CHANGELOG.md) - See what's new in each version
 - 🔄 [Migration Guide](MIGRATION.md) - Upgrading from 13.x to 14.x
 - 📁 [Example Controllers](Classes/Controller/Example) - Working implementation examples
-
 
 ## Contributing
 
