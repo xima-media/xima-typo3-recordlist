@@ -20,16 +20,21 @@
                             <h2 class="card-title">{record.title}</h2>
                             <span class="card-subtitle">{record.subtitle}</span>
                         </div>
+                        <div class="card-body">
+                            <p class="card-text">{record.description}</p>
+                        </div>
                         <div class="card-footer">
                             <be:link.editRecord uid="{record.uid}" table="pages" class="btn btn-default">
                                 <core:icon identifier="actions-open" />
                                 {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}
                             </be:link.editRecord>
-                            <a
-                                class="btn btn-secondary" target="_blank" href="{record.url}">
-                                <core:icon identifier="actions-view" />
-                                {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.view')}
-                            </a>
+                            <f:if condition="{record.doktype} !== 254">
+                                <a
+                                    class="btn btn-secondary" target="_blank" href="{record.url}">
+                                    <core:icon identifier="actions-view" />
+                                    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.view')}
+                                </a>
+                            </f:if>
                         </div>
                     </div>
                 </div>
