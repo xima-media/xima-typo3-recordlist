@@ -1,8 +1,0 @@
-name: selenium
-repository: Metadrop/ddev-selenium
-version: v1.2.0
-install_date: "2025-12-24T10:10:34+01:00"
-project_files:
-    - docker-compose.selenium.yaml
-global_files: []
-removal_actions: []

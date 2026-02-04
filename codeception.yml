@@ -23,7 +23,7 @@ modules:
     WebDriver:
       url: 'https://xima-typo3-recordlist.ddev.site'
       browser: chrome
-      host: hub
+      host: selenium-chrome
       port: 4444
       window_size: 1920x1080
       wait: 2
