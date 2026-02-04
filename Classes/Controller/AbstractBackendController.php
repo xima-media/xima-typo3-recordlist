@@ -3,7 +3,6 @@
 namespace Xima\XimaTypo3Recordlist\Controller;
 
 use Doctrine\DBAL\Driver\Exception;
-use Doctrine\DBAL\Result;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -15,7 +14,6 @@ use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\PreviewUriBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
-use TYPO3\CMS\Backend\Template\Components\Buttons\GenericButton;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -1527,7 +1525,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
 
         if ($this->getTypo3Version() === 13) {
-            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(DropDownItem::class)
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem::class)
                 ->setHref('#')
                 ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
                 ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
@@ -1871,7 +1869,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $currentTemplate = $this->getModuleDataSetting($this->getTableName() . '.template') ?? 'Default';
         if ($this->getTypo3Version() === 13) {
             foreach ($templateConfigurations as $templateName => $templateConfiguration) {
-                $templateItem = GeneralUtility::makeInstance(DropDownRadio::class)
+                $templateItem = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownRadio::class)
                     ->setHref('#')
                     ->setLabel($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
                     ->setTitle($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
@@ -1882,7 +1880,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
                 $this->viewDropdownButtons[] = $templateItem;
             }
-            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(DropDownDivider::class);
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownDivider::class);
             return;
         }
 

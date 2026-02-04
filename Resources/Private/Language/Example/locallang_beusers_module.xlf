@@ -15,7 +15,7 @@
 				<source>Custom Template</source>
 			</trans-unit>
 			<trans-unit id="customTemplate.message">
-				<source>This module uses a custom template located at Resources/Private/Templates/Example/Pages.html.</source>
+				<source>This module uses a custom template located at Resources/Private/Templates/Example/BeUsers.html.</source>
 			</trans-unit>
 		</body>
 	</file>
