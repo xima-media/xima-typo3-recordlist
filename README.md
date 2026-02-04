@@ -27,8 +27,8 @@ by extending `AbstractBackendController` instead of building record lists from s
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Customization](#customization)
-    - [Template Configurations](#template-configurations)
     - [Templates](#templates)
+    - [Custom Template Configurations](#custom-template-configurations)
     - [Modifying Records](#modifying-records)
     - [Custom Filters](#custom-filters)
     - [Column Configuration](#column-configuration)
@@ -178,7 +178,7 @@ file, and customize it.
 ### Custom Template Configurations
 
 By default, there is only one template (`Default`) available. If you define multiple templates, the template selection appears automatically
-in the View dropdown and is persisted per user. To define which templates are available, override `getTemplateConfigurations()`:
+in the View dropdown and the selection is persisted. To define which templates are available, override `getTemplateConfigurations()`:
 
 ```php
 class NewsController extends AbstractBackendController
