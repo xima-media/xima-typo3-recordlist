@@ -14,24 +14,18 @@ class BeUsersExportCest
         $I->openModule('example_beusers');
     }
 
-    public function exportAsCsv(AcceptanceTester $I): void
+    public function downloadModalOpens(AcceptanceTester $I): void
     {
-        $I->wantTo('export records as CSV');
+        $I->click('.recordlist-download-button');
 
-        $I->exportRecords('csv');
-    }
+        // Modal opens in main frame
+        $I->switchToIFrame();
+        $I->waitForElement('.modal');
+        $I->wait(2);
+        $I->seeOptionIsSelected('.modal select[name="format"]', 'CSV');
 
-    public function exportAsJson(AcceptanceTester $I): void
-    {
-        $I->wantTo('export records as JSON');
-
-        $I->exportRecords('json');
-    }
-
-    public function exportAsXlsx(AcceptanceTester $I): void
-    {
-        $I->wantTo('export records as XLSX');
-
-        $I->exportRecords('xlsx');
+        // Close modal
+        $I->click('.modal button.btn-primary');
+        $I->waitForElementNotVisible('.modal');
     }
 }

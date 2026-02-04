@@ -18,19 +18,20 @@ class NewsSearchCest
     {
         $I->wantTo('search for news by title');
 
-        $I->searchFor('News');
+        $I->searchFor('Employee');
 
-        $I->see('New');
-        $I->seeNumberOfElements('//tr[@data-uid]', 4);
+        $I->see('Employee');
+        $I->seeNumberOfElements('//tr[@data-uid]', 3);
     }
 
-    public function searchByAuthor(AcceptanceTester $I): void
+    public function searchByGermanTitle(AcceptanceTester $I): void
     {
-        $I->wantTo('search for news by author');
+        $I->wantTo('search for news by german title');
 
-        $I->searchFor('Author');
+        $I->searchFor('Kundenzufriedenheit');
 
-        $I->seeElement('main.recordlist');
+        $I->see('Kundenzufriedenheit');
+        $I->seeNumberOfElements('//tr[@data-uid]', 1);
     }
 
     public function searchWithNoResults(AcceptanceTester $I): void

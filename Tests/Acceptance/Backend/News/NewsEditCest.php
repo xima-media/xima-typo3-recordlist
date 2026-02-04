@@ -26,15 +26,6 @@ class NewsEditCest
         $I->see('Copy', '.badge-warning');
     }
 
-    private function assertRecordIsDeleted(AcceptanceTester $I): void
-    {
-        // Verify the record is marked as deleted
-        $I->seeElement('//tr[@data-state="deleted"]');
-
-        // Verify the record shows workspace-state-deleted styling
-        $I->seeElement('//span[@class="workspace-state-deleted"]');
-    }
-
     public function editButtonOpensForm(AcceptanceTester $I): void
     {
         $I->wantTo('verify that edit button opens full edit form');
@@ -54,14 +45,13 @@ class NewsEditCest
         $uid = $I->getFirstRecordUid();
 
         $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
-        $I->waitForElement('.module-docheader', 5);
+        $I->waitForElement('.module-docheader');
 
         $I->fillField('input[data-formengine-input-name="data[tx_news_domain_model_news][' . $uid . '][title]"]', 'Workspace Modified Title');
         $I->click('button[name="_savedok"]');
-        $I->wait(2);
-
-        $I->switchToMainFrame();
-        $I->openModule('example_news');
+        $I->wait(1);
+        $I->click('a.t3js-editform-close');
+        $I->waitForElementVisible('main.recordlist');
 
         $I->see('Workspace Modified Title');
     }
@@ -93,7 +83,11 @@ class NewsEditCest
 
         $I->deleteRecord($uid);
 
-        $this->assertRecordIsDeleted($I);
+        // Verify the record is marked as deleted
+        $I->seeElement('//tr[@data-state="deleted"]');
+
+        // Verify the record shows workspace-state-deleted styling
+        $I->seeElement('//span[@class="workspace-state-deleted"]');
     }
 
     public function inlineEditAuthorCreatesWorkspaceVersion(AcceptanceTester $I): void

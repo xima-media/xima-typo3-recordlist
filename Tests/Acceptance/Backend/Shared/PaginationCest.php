@@ -106,9 +106,10 @@ class PaginationCest
         $I->wait(1);
 
         $I->click('.toggleSearchButton');
-        $I->wait(0.5);
 
-        $I->click('input[name="reset"]');
+        $I->scrollTo('input[name="reset"]');
+        $I->wait(0.3);
+        $I->executeJS('document.querySelector(\'input[name="reset"]\').click();');
         $I->wait(1);
 
         $I->seeOptionIsSelected('select[name="items_per_page"]', '25');

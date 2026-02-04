@@ -19,9 +19,7 @@ class ColumnManagementCest
     {
         $I->wantTo('verify that columns setting modal opens');
 
-        $I->click('.showColumnsButton');
-        $I->switchToMainFrame();
-        $I->waitForElement('.modal', 5);
+        $I->openColumnsModal();
 
         $I->seeElement('.modal');
         $I->switchToContentFrame();
@@ -64,7 +62,7 @@ class ColumnManagementCest
         $I->see('Description', '//thead//th');
 
         // Open column modal and use the "select none" button
-        $I->click('.showColumnsButton');
+        $I->openColumnsModal();
         $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
 
@@ -97,7 +95,7 @@ class ColumnManagementCest
         $I->dontSee('Limit to languages', '//thead//th');
 
         // Open column modal and click toggle selection
-        $I->click('.showColumnsButton');
+        $I->openColumnsModal();
         $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
 
@@ -119,7 +117,7 @@ class ColumnManagementCest
         $I->dontSee('Name', '//thead//th');
 
         // Toggle again to verify it inverts back
-        $I->click('.showColumnsButton');
+        $I->openColumnsModal();
         $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
 
@@ -142,7 +140,7 @@ class ColumnManagementCest
         $I->wantTo('verify that search filter in columns modal filters available options');
 
         // Open column modal
-        $I->click('.showColumnsButton');
+        $I->openColumnsModal();
         $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
 

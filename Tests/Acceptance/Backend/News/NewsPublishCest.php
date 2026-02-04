@@ -18,32 +18,30 @@ class NewsPublishCest
     {
         $I->wantTo('mark a news record as ready to publish');
 
+        // Get the UID of the first record and open its edit form
         $uid = $I->getFirstRecordUid();
-
         $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
-        $I->waitForElement('.module-docheader', 5);
+        $I->waitForElement('.module-docheader');
 
+        // Modify the record to create a workspace version
         $I->fillField('input[data-formengine-input-name="data[tx_news_domain_model_news][' . $uid . '][title]"]', 'Modified Title');
         $I->click('button[name="_savedok"]');
+        $I->wait(1);
+        $I->click('a.t3js-editform-close');
+        $I->waitForElementVisible('main.recordlist', 5);
+
+        $I->click('//tr[@data-t3ver_oid="' . $uid . '"]//a[@data-workspace-action="sendToSpecificStageExecute"][@data-workspace-stage="-10"]');
+
+        // See and fill confirmation modal
+        $I->switchToIFrame();
+        $I->waitForElement('.modal');
+        $I->see('Send to stage', '.modal');
+        $I->fillField('.modal textarea[name="comments"]', 'Ready to publish this news item.');
+        $I->click('.modal button.btn-primary');
         $I->wait(2);
 
-        $I->openModule('example_news');
-
-        $I->markReadyToPublish($uid);
-
-        $I->see('Waiting for Review');
-    }
-
-    public function filterReadyToPublishRecords(AcceptanceTester $I): void
-    {
-        $I->wantTo('filter to show only records ready to publish');
-
-        $I->click('.toggleSearchButton');
-        $I->waitForElementVisible('input[name="is_ready_to_publish"]', 5);
-        $I->checkOption('input[name="is_ready_to_publish"]');
-        $I->click('button[type="submit"]');
-        $I->wait(1);
-
-        $I->seeElement('main.recordlist');
+        // Verify the record is now marked as "Awaiting review" in the list
+        $I->switchToContentFrame();
+        $I->see('Awaiting review', '//tr[@data-t3ver_oid="' . $uid . '"]');
     }
 }

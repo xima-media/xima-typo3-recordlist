@@ -16,8 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        typo3-version: [ "13.4" ]
-        php-version: [ "8.2", "8.3" ]
+        typo3-version: [ "14.0" ]
+        php-version: [ "8.3" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -48,7 +48,6 @@ jobs:
       - name: Install Composer dependencies
         uses: ramsey/composer-install@v2
         with:
-          dependency-versions: ${{ matrix.dependencies }}
           composer-options: --with=typo3/cms-core:"^${{ matrix.typo3-version }}"
 
       # Init TYPO3

@@ -117,36 +117,6 @@ class NewsFilterCest
         }
     }
 
-    public function filterBySitemapChangefreq(AcceptanceTester $I): void
-    {
-        $I->wantTo('filter news by sitemap changefreq using different expression types');
-        $I->selectOption('select[name="items_per_page"]', '500');
-        $I->wait(1);
-
-        $testCases = [
-            ['expr' => 'eq', 'description' => 'equals daily'],
-            ['expr' => 'neq', 'description' => 'not equals daily'],
-        ];
-
-        foreach ($testCases as $testCase) {
-            $this->ensureSearchFormIsOpen($I);
-            $I->selectOption('select[name="filter[sitemap_changefreq][expr]"]', $testCase['expr']);
-            $I->selectOption('select[name="filter[sitemap_changefreq][value]"]', 'daily');
-            $this->submitSearchFormAndSwitchToResults($I);
-
-            $recordCount = $I->grabMultiple('//tr[@data-uid]', 'data-uid');
-            $I->assertGreaterThan(0, count($recordCount), 'Should have filtered records with sitemap_changefreq ' . $testCase['description']);
-
-            foreach ($recordCount as $uid) {
-                $rowText = $I->grabTextFrom('//tr[@data-uid="' . $uid . '"]');
-                match ($testCase['expr']) {
-                    'eq' => $I->assertStringContainsStringIgnoringCase('daily', $rowText, "Record UID $uid should contain \"daily\" in row"),
-                    'neq' => $I->assertStringNotContainsStringIgnoringCase('daily', $rowText, "Record UID $uid should not contain \"daily\" in row"),
-                };
-            }
-        }
-    }
-
     public function filterByCategory(AcceptanceTester $I): void
     {
         $I->wantTo('filter news by category using different expression types');

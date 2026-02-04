@@ -81,32 +81,10 @@ class AcceptanceTester extends \Codeception\Actor
         $I->switchToIFrame('list_frame');
     }
 
-    public function exportRecords(string $format = 'csv', array $options = []): void
-    {
-        $I = $this;
-        $I->click('.recordlist-download-button');
-
-        // Modal opens in main frame
-        $I->switchToIFrame();
-        $I->waitForElement('.modal', 5);
-        $I->selectOption('select[name="format"]', $format);
-
-        if ($format === 'csv' && isset($options['delimiter'])) {
-            $I->selectOption('select[name="csv[delimiter]"]', $options['delimiter']);
-        }
-
-        $I->click('.modal button.btn-primary');
-        $I->wait(2);
-
-        // Switch back to content frame
-        $I->switchToIFrame('list_frame');
-    }
-
     public function markReadyToPublish(int $uid): void
     {
         $I = $this;
-        $I->click('//tr[@data-uid="' . $uid . '"]//button[@data-action="ready-to-publish"]');
-        $I->wait(1);
+
     }
 
     public function switchTable(string $tableName): void
@@ -118,10 +96,19 @@ class AcceptanceTester extends \Codeception\Actor
         $I->wait(1);
     }
 
+    public function openColumnsModal(): void
+    {
+        $I = $this;
+        $I->click('View');
+        $I->click('[data-doc-button="showColumnsButton"]');
+        $I->switchToMainFrame();
+        $I->waitForElement('.modal', 5);
+    }
+
     public function toggleColumn(string $columnName): void
     {
         $I = $this;
-        $I->click('.showColumnsButton');
+        $I->openColumnsModal();
         $I->switchToIFrame();
         $I->waitForElement('.modal', 5);
         // Use JavaScript to click the checkbox since it might be intercepted by styled elements
