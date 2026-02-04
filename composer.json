@@ -91,6 +91,7 @@
 			"@ci:typoscript:lint",
 			"@ci:yaml:lint"
 		],
+		"ci:test:acceptance": "XDEBUG_MODE=coverage && codecept run Acceptance --coverage --coverage-xml",
 		"ci:typoscript:lint": "typoscript-lint --fail-on-warnings",
 		"ci:yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint",
 		"composer:normalize": "@composer normalize --no-check-lock",
