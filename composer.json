@@ -91,7 +91,7 @@
 			"@ci:typoscript:lint",
 			"@ci:yaml:lint"
 		],
-		"ci:test:acceptance": "XDEBUG_MODE=coverage && codecept run Acceptance --coverage --coverage-xml",
+		"ci:test:acceptance": "codecept run Acceptance --coverage --coverage-xml",
 		"ci:typoscript:lint": "typoscript-lint --fail-on-warnings",
 		"ci:yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint",
 		"composer:normalize": "@composer normalize --no-check-lock",
@@ -111,9 +111,6 @@
 			"@yaml:lint"
 		],
 		"test:acceptance": "vendor/bin/codecept run Acceptance",
-		"test:acceptance:beusers": "vendor/bin/codecept run Acceptance Backend/BeUsers",
-		"test:acceptance:debug": "vendor/bin/codecept run Acceptance --debug",
-		"test:acceptance:news": "vendor/bin/codecept run Acceptance Backend/News",
 		"typoscript:lint": "typoscript-lint",
 		"yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint"
 	}
