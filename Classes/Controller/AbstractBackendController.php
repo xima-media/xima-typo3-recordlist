@@ -160,7 +160,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-order-links.js')
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-search-toggle.js')
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-filter-toggle.js')
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-pagination.js')
@@ -1506,8 +1506,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // download button
         $this->addDownloadButtonToModuleTemplate();
 
-        // search button
-        $this->addSearchButtonToNewModuleTemplate();
+        // filter toggle button
+        $this->addToggleFiltersButtonToNewModuleTemplate();
 
         // language menu
         $this->addLanguageSelectionToModuleTemplate();
@@ -1604,21 +1604,21 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
-    protected function addSearchButtonToNewModuleTemplate(): void
+    protected function addToggleFiltersButtonToNewModuleTemplate(): void
     {
-        if (!$this->isActionAllowedInCurrentTemplate('toggleSearch')) {
+        if (!$this->isActionAllowedInCurrentTemplate('toggleFilters')) {
             return;
         }
 
-        $isSearchButtonActive = (string)$this->getModuleDataSetting($this->getTableName() . '.isSearchButtonActive');
-        $searchClass = $isSearchButtonActive ? 'active' : '';
+        $isFilterButtonActive = (string)$this->getModuleDataSetting($this->getTableName() . '.isFilterButtonActive');
+        $filterClass = $isFilterButtonActive ? 'active' : '';
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
-                ->setShowLabelText(false)
-                ->setClasses($searchClass . ' toggleSearchButton')
-                ->setIcon($this->iconFactory->getIcon('actions-search', IconSize::SMALL)),
+                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleFilters'))
+                ->setShowLabelText(true)
+                ->setClasses($filterClass . ' toggleFiltersButton')
+                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             2
         );
@@ -1937,7 +1937,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'Default' => [
                 'title' => 'Page List',
                 'icon' => 'actions-list',
-                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleSearch', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
+                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
             ],
         ];
     }

@@ -219,7 +219,7 @@ Setting `actions` limits which actions are shown in the module header for the se
 | `templateSelection` | Template switcher in View dropdown |
 | `showColumns`       | Column selector in View dropdown   |
 | `download`          | Download button                    |
-| `toggleSearch`      | Search toggle button               |
+| `toggleFilters`     | Filter toggle button               |
 | `tableSelection`    | Table selection menu               |
 | `pidSelection`      | Page selection menu                |
 | `languageSelection` | Language selection menu            |

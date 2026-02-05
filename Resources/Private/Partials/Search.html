@@ -1,0 +1,24 @@
+<html
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    data-namespace-typo3-fluid="true">
+
+<div class="input-group">
+    <label for="search_field" class="visually-hidden">
+        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.label.search')}
+    </label>
+
+    <f:form.textfield
+        name="search_field"
+        class="form-control"
+        type="search"
+        autocomplete="off"
+        placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}"
+        id="search_field"
+        value="{search_field}" />
+    <button class="btn btn-default" type="submit" name="search">
+        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.label.search')}
+    </button>
+</div>
+</html>

@@ -30,7 +30,7 @@ class NewsFilterCest
         try {
             $I->seeElement('input[name="reset"]');
         } catch (\Exception) {
-            $I->click('.toggleSearchButton');
+            $I->click('.toggleFiltersButton');
             $I->wait(0.5);
         }
     }

@@ -49,7 +49,7 @@ class AcceptanceTester extends \Codeception\Actor
     public function searchFor(string $searchTerm): void
     {
         $I = $this;
-        $I->click('.toggleSearchButton');
+        $I->click('.toggleFiltersButton');
         $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->fillField('input[name="search_field"]', $searchTerm);
         $I->click('button[type="submit"]');

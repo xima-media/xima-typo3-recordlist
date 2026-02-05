@@ -44,19 +44,13 @@
 
                 <div class="row">
                     <div class="col-12">
-                        <f:variable name="isSearchActive" value="{settings.{table}.isSearchButtonActive}" />
-                        <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:isSearchActive, else:'hidden')}">
+                        <f:variable name="isFilterActive" value="{settings.{table}.isFilterButtonActive}" />
+                        <div id="filterInputs" class="card p-3 mb-5 {f:if(condition:isFilterActive, else:'hidden')}">
 
                             <f:form.hidden name="order_field" value="{order_field}" />
                             <f:form.hidden name="order_direction" value="{order_direction}" />
 
                             <f:render section="SearchInputs" optional="true">
-                                <div class="row mb-3">
-                                    <div class="col-12 col-xl-6">
-                                        <f:render partial="Filter/SearchField" arguments="{_all}" />
-                                    </div>
-                                </div>
-
                                 <f:render partial="FilterSettings" arguments="{_all}" />
                             </f:render>
 
@@ -84,6 +78,12 @@
                         '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.of\')}
                         {fullRecordCount}
                         ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
+                </f:render>
+
+                <f:render section="SearchInput" optional="true">
+                    <div class="mb-3">
+                        <f:render partial="Search" arguments="{_all}" />
+                    </div>
                 </f:render>
 
                 <f:if condition="{fullRecordCount} && {recordCount} == 0">
