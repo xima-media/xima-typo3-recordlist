@@ -40,7 +40,8 @@ export default class RecordlistPagination {
 
   onPaginationJump(e) {
     e.preventDefault();
-    const paginationInput = document.querySelector("input[name=\"current_page\"]");
+    const pagination = e.currentTarget.closest('.pagination');
+    const paginationInput = pagination?.querySelector("input[name=\"current_page\"]");
     const currentPage = paginationInput?.value ?? "1";
     this.updateAndSubmitPaginationInput(currentPage);
   }
