@@ -78,3 +78,17 @@ main.recordlist ul.pagination input.form-control {
 .recordlist table .dropdown-static .dropdown-menu {
     top: 24px;
 }
+
+/**
+* Filter
+*/
+
+#filterInputs .card-footer {
+    border-top: 1px solid var(--typo3-card-border-color);
+}
+
+@media (min-width: 1400px) {
+    #filterInputs .col-xxl-6 .row {
+        max-width: 90%;
+    }
+}

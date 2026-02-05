@@ -45,28 +45,29 @@
                 <div class="row">
                     <div class="col-12">
                         <f:variable name="isFilterActive" value="{settings.{table}.isFilterButtonActive}" />
-                        <div id="filterInputs" class="card p-3 mb-5 {f:if(condition:isFilterActive, else:'hidden')}">
+                        <div id="filterInputs" class="card mb-5 {f:if(condition:isFilterActive, else:'hidden')}">
+                            <div class="card-body">
+                                <f:form.hidden name="order_field" value="{order_field}" />
+                                <f:form.hidden name="order_direction" value="{order_direction}" />
 
-                            <f:form.hidden name="order_field" value="{order_field}" />
-                            <f:form.hidden name="order_direction" value="{order_direction}" />
-
-                            <f:render section="SearchInputs" optional="true">
-                                <f:render partial="FilterSettings" arguments="{_all}" />
-                            </f:render>
-
-                            <div class="row mb-6">
-                                <div class="col col-auto">
-                                    <f:form.submit
-                                        class="btn btn-default"
-                                        name="reset"
-                                        value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
-                                    <input
-                                        type="submit"
-                                        class="btn btn-primary"
-                                        value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.search')}" />
+                                <f:render section="SearchInputs" optional="true">
+                                    <f:render partial="FilterSettings" arguments="{_all}" />
+                                </f:render>
+                            </div>
+                            <div class="card-footer">
+                                <div class="row">
+                                    <div class="col col-auto">
+                                        <input
+                                            type="submit"
+                                            class="btn btn-primary"
+                                            value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.search')}" />
+                                        <f:form.submit
+                                            class="btn btn-default"
+                                            name="reset"
+                                            value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
+                                    </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>

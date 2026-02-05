@@ -29,4 +29,8 @@ return [
         'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
         'source' => 'EXT:xima_typo3_recordlist/Resources/Public/Icons/example-6.svg',
     ],
+    'actions-filter-alt' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:xima_typo3_recordlist/Resources/Public/Icons/actions-filter-alt.svg',
+    ],
 ];

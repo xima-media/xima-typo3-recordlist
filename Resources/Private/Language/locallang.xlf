@@ -42,8 +42,11 @@
 			<trans-unit id="table.label.searchField">
 				<source>Enter search phrase</source>
 			</trans-unit>
-			<trans-unit id="table.button.toggleFilters">
+			<trans-unit id="table.button.showFilters">
 				<source>Show filters</source>
+			</trans-unit>
+			<trans-unit id="table.button.hideFilters">
+				<source>Hide filters</source>
 			</trans-unit>
 			<trans-unit id="table.label.copy">
 				<source>Copy</source>

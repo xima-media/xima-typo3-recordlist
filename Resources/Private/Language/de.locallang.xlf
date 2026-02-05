@@ -55,9 +55,13 @@
 				<source />
 				<target>Suchbegriff eingeben</target>
 			</trans-unit>
-			<trans-unit id="table.button.toggleFilters">
+			<trans-unit id="table.button.showFilters">
 				<source />
 				<target>Filter anzeigen</target>
+			</trans-unit>
+			<trans-unit id="table.button.hideFilters">
+				<source />
+				<target>Filter ausblenden</target>
 			</trans-unit>
 			<trans-unit id="table.label.copy">
 				<source />

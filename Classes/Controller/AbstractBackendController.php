@@ -186,6 +186,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // build and execute query
         $this->createQueryBuilder();
         $this->addSearchConstraint();
+        $this->addFilterConstraint();
         $this->addLanguageConstraint();
         $this->addAdditionalConstraints();
         $this->addOrderConstraint();
@@ -336,7 +337,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if (isset($body['reset'])) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
-                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
+                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.isFilterButtonActive'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
@@ -560,7 +561,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
             $this->moduleTemplate->assign('search_field', $searchInput);
         }
+    }
 
+    protected function addFilterConstraint(): void
+    {
+        $body = $this->request->getParsedBody();
         if (!empty($body['filter'])) {
             foreach ($body['filter'] as $field => $data) {
                 // Validate field name against TCA
@@ -1604,21 +1609,58 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
+    protected function getActiveFilterCount(): int
+    {
+        $count = 0;
+        $tableName = $this->getTableName();
+
+        // Count dynamic filters from request
+        $body = $this->request->getParsedBody();
+        if (!empty($body['filter'])) {
+            foreach ($body['filter'] as $data) {
+                if (isset($data['value']) && $data['value'] !== '') {
+                    $count++;
+                }
+            }
+        }
+
+        // Count workspace filters from module data
+        if ($this->getModuleDataSetting($tableName . '.onlyOfflineRecords')) {
+            $count++;
+        }
+        if ($this->getModuleDataSetting($tableName . '.onlyReadyToPublish')) {
+            $count++;
+        }
+
+        return $count;
+    }
+
     protected function addToggleFiltersButtonToNewModuleTemplate(): void
     {
         if (!$this->isActionAllowedInCurrentTemplate('toggleFilters')) {
             return;
         }
 
-        $isFilterButtonActive = (string)$this->getModuleDataSetting($this->getTableName() . '.isFilterButtonActive');
-        $filterClass = $isFilterButtonActive ? 'active' : '';
+        $activeFilterCount = $this->getActiveFilterCount();
+        $isFilterButtonActive = (bool)$this->getModuleDataSetting($this->getTableName() . '.isFilterButtonActive');
+        $filterClass = $isFilterButtonActive ? 'active btn-primary' : 'btn-default';
+        $showLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.showFilters');
+        $hideLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.hideFilters');
+        $countSuffix = $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
+        $currentLabel = ($isFilterButtonActive ? $hideLabel : $showLabel) . $countSuffix;
+
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleFilters'))
+                ->setTitle($currentLabel)
                 ->setShowLabelText(true)
                 ->setClasses($filterClass . ' toggleFiltersButton')
-                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
+                ->setDataAttributes([
+                    'show-label' => $showLabel,
+                    'hide-label' => $hideLabel,
+                    'filter-count' => $activeFilterCount,
+                ])
+                ->setIcon($this->iconFactory->getIcon('actions-filter-alt', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             2
         );

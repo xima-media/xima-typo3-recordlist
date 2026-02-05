@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+    <g stroke-width="1">
+        <!-- Top line with slider -->
+        <line x1="1" y1="3.5" x2="4" y2="3.5"/>
+        <circle cx="5.5" cy="3.5" r="1.25"/>
+        <line x1="7" y1="3.5" x2="15" y2="3.5"/>
+        <!-- Middle line with slider -->
+        <line x1="1" y1="8" x2="9" y2="8"/>
+        <circle cx="10.5" cy="8" r="1.25"/>
+        <line x1="12" y1="8" x2="15" y2="8"/>
+        <!-- Bottom line with slider -->
+        <line x1="1" y1="12.5" x2="4" y2="12.5"/>
+        <circle cx="5.5" cy="12.5" r="1.25"/>
+        <line x1="7" y1="12.5" x2="15" y2="12.5"/>
+    </g>
+</svg>
