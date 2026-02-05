@@ -20,4 +20,11 @@ class BeUsersController extends AbstractBackendController
     {
         return ['Example/BeUsers' => []];
     }
+
+    protected function modifyTableConfiguration(): void
+    {
+        $this->tableConfiguration['be_users']['columns']['username']['defaultPosition'] = 1;
+        $this->tableConfiguration['be_users']['columns']['realName']['defaultPosition'] = 2;
+        $this->tableConfiguration['be_users']['columns']['email']['defaultPosition'] = 3;
+    }
 }

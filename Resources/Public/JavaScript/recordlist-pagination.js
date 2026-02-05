@@ -4,23 +4,31 @@ export default class RecordlistPagination {
   }
 
   init() {
-    document.querySelectorAll("a[data-nextpage]").forEach(link => {
-      link.addEventListener("click", this.onPaginationLinkClick.bind(this));
-    });
+    document.querySelectorAll('.pagination').forEach(pagination => {
+      pagination.querySelectorAll("a[data-nextpage]").forEach(link => {
+        link.addEventListener("click", this.onPaginationLinkClick.bind(this));
+      });
 
-    document.querySelectorAll("input[name=\"current_page\"]").forEach(input => {
-      input.addEventListener("keypress", this.onPaginationInputKeypress.bind(this));
-    });
+      pagination.querySelectorAll("a[data-action=\"pagination-jump\"]").forEach(link => {
+        link.addEventListener("click", this.onPaginationJump.bind(this));
+      });
 
-    document.querySelectorAll("select[name=\"items_per_page\"]").forEach(select => {
-      select.addEventListener("change", this.onItemsPerPageChange.bind(this));
+      pagination.querySelectorAll("input[name=\"current_page\"]").forEach(input => {
+        input.addEventListener("keypress", this.onPaginationInputKeypress.bind(this));
+      });
+
+      pagination.querySelectorAll("select[name=\"items_per_page\"]").forEach(select => {
+        select.addEventListener("change", this.onItemsPerPageChange.bind(this));
+      });
     });
   }
 
   updateAndSubmitPaginationInput(nextPage) {
-    const paginationInput = document.querySelector("tr + tr input[name=\"current_page\"]");
-    paginationInput.value = nextPage;
-    paginationInput.closest("form")?.submit();
+    const paginationInputs = document.querySelectorAll("input[name=\"current_page\"]");
+    paginationInputs.forEach(input => {
+      input.value = nextPage;
+    });
+    paginationInputs[0]?.closest("form")?.submit();
   }
 
   onPaginationLinkClick(e) {
@@ -30,9 +38,15 @@ export default class RecordlistPagination {
     this.updateAndSubmitPaginationInput(nextPage);
   }
 
-  onPaginationInputKeypress(e) {
+  onPaginationJump(e) {
     e.preventDefault();
+    const pagination = e.currentTarget.closest('.pagination');
+    const paginationInput = pagination?.querySelector("input[name=\"current_page\"]");
+    const currentPage = paginationInput?.value ?? "1";
+    this.updateAndSubmitPaginationInput(currentPage);
+  }
 
+  onPaginationInputKeypress(e) {
     if (e.key !== "Enter") {
       return;
     }
