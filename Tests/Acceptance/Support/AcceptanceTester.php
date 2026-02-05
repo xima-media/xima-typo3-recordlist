@@ -81,12 +81,6 @@ class AcceptanceTester extends \Codeception\Actor
         $I->switchToIFrame('list_frame');
     }
 
-    public function markReadyToPublish(int $uid): void
-    {
-        $I = $this;
-
-    }
-
     public function switchTable(string $tableName): void
     {
         $I = $this;

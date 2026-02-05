@@ -15,45 +15,32 @@ class PaginationCest
         $I->openModule('example_news');
     }
 
-    public function paginationIsVisible(AcceptanceTester $I): void
+    public function navigateToNextAndPreviousPage(AcceptanceTester $I): void
     {
-        $I->wantTo('verify that pagination controls are visible');
+        $I->wantTo('verify that pagination working for next and previous page navigation');
+        $I->seeNumberOfElements('.pagination', 2);
 
-        $I->seeElement('.pagination');
-    }
-
-    public function navigateToNextPage(AcceptanceTester $I): void
-    {
-        $I->wantTo('navigate to the next page');
-
+        $I->amGoingTo('navigate to the next page');
         $I->click('.pagination .page-link[title="Next"]');
         $I->wait(1);
+        $I->waitForText('Records 26 - 50', 5, '.pagination');
 
-        $I->seeElement('main.recordlist');
-    }
-
-    public function navigateToPreviousPage(AcceptanceTester $I): void
-    {
-        $I->wantTo('navigate to the previous page');
-
-        $I->click('.pagination .page-link[title="Next"]');
-        $I->wait(1);
+        $I->amGoingTo('navigate to the previous page');
         $I->click('.pagination .page-link[title="Previous"]');
         $I->wait(1);
-
-        $I->seeElement('main.recordlist');
+        $I->waitForText('Records 1 - 25', 5, '.pagination');
     }
 
     public function jumpToSpecificPage(AcceptanceTester $I): void
     {
         $I->wantTo('jump to a specific page number');
 
-        $I->fillField('.pagination .paginator-input', '2');
+        $I->fillField('.pagination input[name="current_page"]', '3');
         $I->click('.pagination a[data-action="pagination-jump"]');
         $I->wait(1);
-        $I->switchToContentFrame();
 
-        $I->seeInField('.pagination .paginator-input', '2');
+        $I->waitForText('Records 51 - 75', 5, '.pagination');
+        $I->seeInField('.pagination .paginator-input', '3');
     }
 
     public function paginationPersistsFilters(AcceptanceTester $I): void
@@ -68,19 +55,14 @@ class PaginationCest
         $I->seeInField('input[name="search_field"]', 'E');
     }
 
-    public function itemsPerPageDropdownIsVisible(AcceptanceTester $I): void
-    {
-        $I->wantTo('verify that items per page dropdown is visible');
-
-        $I->seeElement('select[name="items_per_page"]');
-    }
-
     public function changeItemsPerPage(AcceptanceTester $I): void
     {
         $I->wantTo('change items per page value');
 
+        $I->seeElement('select[name="items_per_page"]');
         $I->selectOption('select[name="items_per_page"]', '50');
         $I->click('.pagination a[data-action="pagination-jump"]');
+        $I->wait(1);
 
         $I->seeOptionIsSelected('select[name="items_per_page"]', '50');
     }

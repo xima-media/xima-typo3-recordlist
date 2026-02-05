@@ -44,8 +44,6 @@ export default class RecordlistPagination {
   }
 
   onPaginationInputKeypress(e) {
-    e.preventDefault();
-
     if (e.key !== "Enter") {
       return;
     }
