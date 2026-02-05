@@ -4,20 +4,22 @@ export default class RecordlistPagination {
   }
 
   init() {
-    document.querySelectorAll("a[data-nextpage]").forEach(link => {
-      link.addEventListener("click", this.onPaginationLinkClick.bind(this));
-    });
+    document.querySelectorAll('.pagination').forEach(pagination => {
+      pagination.querySelectorAll("a[data-nextpage]").forEach(link => {
+        link.addEventListener("click", this.onPaginationLinkClick.bind(this));
+      });
 
-    document.querySelectorAll("a[data-action=\"pagination-jump\"]").forEach(link => {
-      link.addEventListener("click", this.onPaginationJump.bind(this));
-    });
+      pagination.querySelectorAll("a[data-action=\"pagination-jump\"]").forEach(link => {
+        link.addEventListener("click", this.onPaginationJump.bind(this));
+      });
 
-    document.querySelectorAll("input[name=\"current_page\"]").forEach(input => {
-      input.addEventListener("keypress", this.onPaginationInputKeypress.bind(this));
-    });
+      pagination.querySelectorAll("input[name=\"current_page\"]").forEach(input => {
+        input.addEventListener("keypress", this.onPaginationInputKeypress.bind(this));
+      });
 
-    document.querySelectorAll("select[name=\"items_per_page\"]").forEach(select => {
-      select.addEventListener("change", this.onItemsPerPageChange.bind(this));
+      pagination.querySelectorAll("select[name=\"items_per_page\"]").forEach(select => {
+        select.addEventListener("change", this.onItemsPerPageChange.bind(this));
+      });
     });
   }
 
