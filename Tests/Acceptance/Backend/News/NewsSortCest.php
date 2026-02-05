@@ -16,7 +16,7 @@ class NewsSortCest
 
     public function sortByAuthorAscending(AcceptanceTester $I): void
     {
-        $I->wantTo('sort news by author name ascending and validate first author starts with A');
+        $I->wantTo('sort news by author name ascending and validate first author is Albert Kelly');
 
         // Sort by author column ascending
         $I->sortBy('Author');
@@ -24,13 +24,13 @@ class NewsSortCest
         // Get the first record's author name
         $firstAuthor = $I->grabTextFrom('//tr[@data-uid][1]//span[contains(@id, "author-")]');
 
-        // Validate that the first author name starts with 'A' (case-insensitive)
-        $I->assertStringStartsWith('A', $firstAuthor, 'First author should start with "A"');
+        // Validate that the first author name is 'Albert Kelly'
+        $I->assertEquals('Albert Kelly', $firstAuthor, 'First author should be "Albert Kelly"');
     }
 
     public function sortByAuthorDescending(AcceptanceTester $I): void
     {
-        $I->wantTo('sort news by author name descending and validate first author starts with Z');
+        $I->wantTo('sort news by author name descending and validate first author is Zoe Bennett');
 
         // Sort by author column descending
         $I->sortBy('Author', 'DESC');
@@ -38,7 +38,7 @@ class NewsSortCest
         // Get the first record's author name
         $firstAuthor = $I->grabTextFrom('//tr[@data-uid][1]//span[contains(@id, "author-")]');
 
-        // Validate that the first author name starts with 'A' (case-insensitive)
-        $I->assertStringStartsWith('Z', $firstAuthor, 'First author should start with "Z"');
+        // Validate that the first author name is 'Zoe Bennett'
+        $I->assertEquals('Zoe Bennett', $firstAuthor, 'First author should be "Zoe Bennett"');
     }
 }

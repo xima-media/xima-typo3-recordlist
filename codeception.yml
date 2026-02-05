@@ -5,7 +5,6 @@ paths:
   output: var/log/codeception/_output
   data: Tests/Acceptance/Fixtures
   support: Tests/Acceptance/Support
-  envs: tests/_envs
 settings:
   shuffle: false
   lint: true
