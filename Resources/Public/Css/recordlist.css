@@ -92,3 +92,14 @@ main.recordlist ul.pagination input.form-control {
         max-width: 90%;
     }
 }
+
+/** v14 fix to apply button border */
+.btn-group > .new-record-in-page.btn.btn-sm.btn-default {
+    border-end-end-radius: var(--typo3-input-border-radius);
+    border-start-end-radius: var(--typo3-input-border-radius);
+}
+
+/** Hide the divider if it's the last element in the dropdown, to avoid a divider at the end of the list. */
+.btn-group .dropdown-menu li:last-child:has(hr) {
+    display: none;
+}
