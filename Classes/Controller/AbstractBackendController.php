@@ -160,7 +160,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-order-links.js')
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-filter-toggle.js')
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-filter-toggle.js')->instance($this->getTypo3Version())
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-pagination.js')
@@ -1641,28 +1641,40 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        $activeFilterCount = $this->getActiveFilterCount();
         $isFilterButtonActive = (bool)$this->getModuleDataSetting($this->getTableName() . '.isFilterButtonActive');
-        $filterClass = $isFilterButtonActive ? 'active btn-primary' : 'btn-default';
+
+        $activeFilterCount = $this->getActiveFilterCount();
         $showLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.showFilters');
+        $showLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
         $hideLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.hideFilters');
-        $countSuffix = $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
-        $currentLabel = ($isFilterButtonActive ? $hideLabel : $showLabel) . $countSuffix;
+        $hideLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
 
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')
-                ->setTitle($currentLabel)
+                ->setTitle($showLabel)
                 ->setShowLabelText(true)
-                ->setClasses($filterClass . ' toggleFiltersButton')
+                ->setClasses('toggleFiltersButton show' . ($isFilterButtonActive ? ' hidden' : ' '))
                 ->setDataAttributes([
-                    'show-label' => $showLabel,
-                    'hide-label' => $hideLabel,
                     'filter-count' => $activeFilterCount,
                 ])
                 ->setIcon($this->iconFactory->getIcon('actions-filter-alt', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             2
+        );
+
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref('#')
+                ->setTitle($hideLabel)
+                ->setShowLabelText(true)
+                ->setClasses('toggleFiltersButton toHide' . ($isFilterButtonActive ? '' : ' hidden'))
+                ->setDataAttributes([
+                    'filter-count' => $activeFilterCount,
+                ])
+                ->setIcon($this->iconFactory->getIcon('actions-filter-alt', IconSize::SMALL)),
+            ButtonBar::BUTTON_POSITION_LEFT,
+            3
         );
     }
 
