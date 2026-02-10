@@ -131,13 +131,13 @@
 				<source />
 				<target>Datensatz einblenden</target>
 			</trans-unit>
-			<trans-unit id="search.filtered.headline">
+			<trans-unit id="search.noResults.headline">
 				<source />
-				<target>Ansicht gefiltert</target>
+				<target>Keine Ergebnisse gefunden</target>
 			</trans-unit>
-			<trans-unit id="search.filtered.text">
+			<trans-unit id="search.noResults.text">
 				<source />
-				<target>Über die 🔍 Suche können die Veranstaltungen gefiltert werden</target>
+				<target>Keine Einträge entsprechen den aktuellen Such- oder Filterkriterien. Passen Sie die Filter an oder setzen Sie diese zurück.</target>
 			</trans-unit>
 			<trans-unit id="table.button.save">
 				<source />

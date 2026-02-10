@@ -14,11 +14,17 @@ export default class RecordlistFilterToggle {
   onFilterToggleClick(e) {
     e.preventDefault();
 
+    // v13: use module-body instead of the iframe
+    let container = document.querySelector(".module-body");
+    if (!container) {
+      container = window;
+    }
+
     // scrollt to top
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    container.scrollTo({top: 0, behavior: "smooth"});
 
     // if scroll position is not at the top (+ some offset for the filterbox), do not close the filterbox, but scroll to the top
-    if (window.scrollY > 100 && !document.querySelector("#filterInputs").classList.contains("hidden")) {
+    if (container.scrollTop > 100 && !document.querySelector("#filterInputs").classList.contains("hidden")) {
       return;
     }
 
