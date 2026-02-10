@@ -1658,7 +1658,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setDataAttributes([
                     'filter-count' => $activeFilterCount,
                 ])
-                ->setIcon($this->iconFactory->getIcon('actions-filter-alt', IconSize::SMALL)),
+                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             2
         );
@@ -1672,7 +1672,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setDataAttributes([
                     'filter-count' => $activeFilterCount,
                 ])
-                ->setIcon($this->iconFactory->getIcon('actions-filter-alt', IconSize::SMALL)),
+                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             3
         );
