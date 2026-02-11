@@ -44,7 +44,7 @@ class BeUsersModuleCest
         $I->seeElement('main.recordlist');
 
         // Verify search field is empty in the new table
-        $I->click('.toggleSearchButton');
+        $I->click('.toggleFiltersButton');
         $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->seeInField('input[name="search_field"]', '');
 
@@ -59,7 +59,7 @@ class BeUsersModuleCest
         $I->seeElement('main.recordlist');
 
         // Verify search field is empty in this table too
-        $I->click('.toggleSearchButton');
+        $I->click('.toggleFiltersButton');
         $I->waitForElementVisible('input[name="search_field"]', 5);
         $I->seeInField('input[name="search_field"]', '');
 

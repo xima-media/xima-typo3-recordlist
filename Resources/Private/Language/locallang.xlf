@@ -42,8 +42,11 @@
 			<trans-unit id="table.label.searchField">
 				<source>Enter search phrase</source>
 			</trans-unit>
-			<trans-unit id="table.button.toggleSearch">
-				<source>Show search form</source>
+			<trans-unit id="table.button.showFilters">
+				<source>Show filters</source>
+			</trans-unit>
+			<trans-unit id="table.button.hideFilters">
+				<source>Hide filters</source>
 			</trans-unit>
 			<trans-unit id="table.label.copy">
 				<source>Copy</source>
@@ -96,11 +99,11 @@
 			<trans-unit id="table.button.unhide">
 				<source>Un-hide record</source>
 			</trans-unit>
-			<trans-unit id="search.filtered.headline">
-				<source>View filtered</source>
+			<trans-unit id="search.noResults.headline">
+				<source>No results found</source>
 			</trans-unit>
-			<trans-unit id="search.filtered.text">
-				<source>By using the 🔍 search you can filter the event list</source>
+			<trans-unit id="search.noResults.text">
+				<source>No records match your current search or filter criteria. Try adjusting your filters or reset them.</source>
 			</trans-unit>
 			<trans-unit id="table.button.save">
 				<source>Save</source>

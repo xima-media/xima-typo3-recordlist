@@ -44,40 +44,37 @@
 
                 <div class="row">
                     <div class="col-12">
-                        <f:variable name="isSearchActive" value="{settings.{table}.isSearchButtonActive}" />
-                        <div id="searchInputs" class="card p-3 mb-5 {f:if(condition:isSearchActive, else:'hidden')}">
+                        <f:variable name="isFilterActive" value="{settings.{table}.isFilterButtonActive}" />
+                        <div id="filterInputs" class="card mb-5 {f:if(condition:isFilterActive, else:'hidden')}">
+                            <div class="card-body">
+                                <f:form.hidden name="order_field" value="{order_field}" />
+                                <f:form.hidden name="order_direction" value="{order_direction}" />
 
-                            <f:form.hidden name="order_field" value="{order_field}" />
-                            <f:form.hidden name="order_direction" value="{order_direction}" />
-
-                            <f:render section="SearchInputs" optional="true">
-                                <div class="row mb-3">
-                                    <div class="col-12 col-xl-6">
-                                        <f:render partial="Filter/SearchField" arguments="{_all}" />
+                                <f:render section="SearchInputs" optional="true">
+                                    <f:render partial="FilterSettings" arguments="{_all}" />
+                                </f:render>
+                            </div>
+                            <div class="card-footer">
+                                <div class="row">
+                                    <div class="col col-auto">
+                                        <input
+                                            type="submit"
+                                            class="btn btn-primary"
+                                            value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.search')}" />
+                                        <f:form.submit
+                                            class="btn btn-default"
+                                            name="reset"
+                                            value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
                                     </div>
                                 </div>
-
-                                <f:render partial="FilterSettings" arguments="{_all}" />
-                            </f:render>
-
-                            <div class="row mb-6">
-                                <div class="col col-auto">
-                                    <f:form.submit
-                                        class="btn btn-default"
-                                        name="reset"
-                                        value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
-                                    <input
-                                        type="submit"
-                                        class="btn btn-primary"
-                                        value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.search')}" />
-                                </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
 
-                <div id="sectionAnchor"></div>
+                <f:if condition="{typo3version} == 13">
+                    <div id="sectionAnchor"></div>
+                </f:if>
 
                 <f:render section="Headline" optional="true">
                     <h1>{recordCount} {f:if(condition: '{recordCount}!={fullRecordCount}', then:
@@ -86,11 +83,27 @@
                         ')}{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
                 </f:render>
 
+                <f:if condition="{typo3version} > 13">
+                    <div id="sectionAnchor"></div>
+                </f:if>
+
+                <f:render section="SearchInput" optional="true">
+                    <div class="mb-3">
+                        <f:render partial="Search" arguments="{_all}" />
+                    </div>
+                </f:render>
+
                 <f:if condition="{fullRecordCount} && {recordCount} == 0">
                     <f:be.infobox
-                        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.headline')}"
+                        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.noResults.headline')}"
                         state="-1">
-                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.filtered.text')}
+                        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:search.noResults.text')}
+                        <div class="mt-2">
+                            <f:form.submit
+                                class="btn btn-sm btn-default"
+                                name="reset"
+                                value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
+                        </div>
                     </f:be.infobox>
                 </f:if>
 
@@ -143,7 +156,9 @@
                                     </f:if>
 
                                     <f:if condition="{tableConfiguration.showIconColumn}">
-                                        <td class="col-icon nowrap" data-language-indent="{f:if(condition: order_is_custom, then: '0', else: '1')}">
+                                        <td
+                                            class="col-icon nowrap"
+                                            data-language-indent="{f:if(condition: order_is_custom, then: '0', else: '1')}">
                                             <f:render partial="Columns/Icon" arguments="{_all}" />
                                         </td>
                                     </f:if>

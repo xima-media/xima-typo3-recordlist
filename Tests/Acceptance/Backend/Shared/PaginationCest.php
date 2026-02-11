@@ -87,7 +87,7 @@ class PaginationCest
         $I->selectOption('select[name="items_per_page"]', '200');
         $I->wait(1);
 
-        $I->click('.toggleSearchButton');
+        $I->click('.toggleFiltersButton');
 
         $I->scrollTo('input[name="reset"]');
         $I->wait(0.3);

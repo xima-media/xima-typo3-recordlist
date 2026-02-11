@@ -160,7 +160,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-order-links.js')
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-search-toggle.js')
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-filter-toggle.js')->instance($this->getTypo3Version())
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-pagination.js')
@@ -186,6 +186,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // build and execute query
         $this->createQueryBuilder();
         $this->addSearchConstraint();
+        $this->addFilterConstraint();
         $this->addLanguageConstraint();
         $this->addAdditionalConstraints();
         $this->addOrderConstraint();
@@ -336,7 +337,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if (isset($body['reset'])) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
-                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
+                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.isFilterButtonActive'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
@@ -560,7 +561,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
             $this->moduleTemplate->assign('search_field', $searchInput);
         }
+    }
 
+    protected function addFilterConstraint(): void
+    {
+        $body = $this->request->getParsedBody();
         if (!empty($body['filter'])) {
             foreach ($body['filter'] as $field => $data) {
                 // Validate field name against TCA
@@ -1506,8 +1511,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // download button
         $this->addDownloadButtonToModuleTemplate();
 
-        // search button
-        $this->addSearchButtonToNewModuleTemplate();
+        // filter toggle button
+        $this->addToggleFiltersButtonToNewModuleTemplate();
 
         // language menu
         $this->addLanguageSelectionToModuleTemplate();
@@ -1604,23 +1609,72 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
-    protected function addSearchButtonToNewModuleTemplate(): void
+    protected function getActiveFilterCount(): int
     {
-        if (!$this->isActionAllowedInCurrentTemplate('toggleSearch')) {
+        $count = 0;
+        $tableName = $this->getTableName();
+
+        // Count dynamic filters from request
+        $body = $this->request->getParsedBody();
+        if (!empty($body['filter'])) {
+            foreach ($body['filter'] as $data) {
+                if (isset($data['value']) && $data['value'] !== '') {
+                    $count++;
+                }
+            }
+        }
+
+        // Count workspace filters from module data
+        if ($this->getModuleDataSetting($tableName . '.onlyOfflineRecords')) {
+            $count++;
+        }
+        if ($this->getModuleDataSetting($tableName . '.onlyReadyToPublish')) {
+            $count++;
+        }
+
+        return $count;
+    }
+
+    protected function addToggleFiltersButtonToNewModuleTemplate(): void
+    {
+        if (!$this->isActionAllowedInCurrentTemplate('toggleFilters')) {
             return;
         }
 
-        $isSearchButtonActive = (string)$this->getModuleDataSetting($this->getTableName() . '.isSearchButtonActive');
-        $searchClass = $isSearchButtonActive ? 'active' : '';
+        $isFilterButtonActive = (bool)$this->getModuleDataSetting($this->getTableName() . '.isFilterButtonActive');
+
+        $activeFilterCount = $this->getActiveFilterCount();
+        $showLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.showFilters');
+        $showLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
+        $hideLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.hideFilters');
+        $hideLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
+
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
-                ->setShowLabelText(false)
-                ->setClasses($searchClass . ' toggleSearchButton')
-                ->setIcon($this->iconFactory->getIcon('actions-search', IconSize::SMALL)),
+                ->setTitle($showLabel)
+                ->setShowLabelText(true)
+                ->setClasses('toggleFiltersButton show' . ($isFilterButtonActive ? ' hidden' : ' '))
+                ->setDataAttributes([
+                    'filter-count' => $activeFilterCount,
+                ])
+                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             2
+        );
+
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref('#')
+                ->setTitle($hideLabel)
+                ->setShowLabelText(true)
+                ->setClasses('toggleFiltersButton toHide' . ($isFilterButtonActive ? '' : ' hidden'))
+                ->setDataAttributes([
+                    'filter-count' => $activeFilterCount,
+                ])
+                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
+            ButtonBar::BUTTON_POSITION_LEFT,
+            3
         );
     }
 
@@ -1937,7 +1991,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'Default' => [
                 'title' => 'Page List',
                 'icon' => 'actions-list',
-                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleSearch', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
+                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
             ],
         ];
     }
