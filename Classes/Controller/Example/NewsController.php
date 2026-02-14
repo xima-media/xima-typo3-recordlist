@@ -29,4 +29,15 @@ class NewsController extends AbstractBackendController
         $this->tableConfiguration['tx_news_domain_model_news']['columns']['categories']['defaultPosition'] = 6;
         $this->tableConfiguration['tx_news_domain_model_news']['columns']['workspace-status']['defaultPosition'] = 7;
     }
+
+    public function modifyQueryBuilder(): void
+    {
+        $this->queryBuilder->addSelectLiteral('CASE WHEN t1.l10n_parent != 0 THEN t1.l10n_parent ELSE t1.uid END AS ' . $this->queryBuilder->quoteIdentifier('sys_language_ordering'));
+    }
+
+    protected function addOrderConstraint(): void
+    {
+        parent::addOrderConstraint();
+        $this->queryBuilder->addOrderBy('sys_language_ordering', 'ASC');
+    }
 }

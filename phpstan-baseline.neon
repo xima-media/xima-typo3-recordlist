@@ -35,3 +35,13 @@ parameters:
 			identifier: nullCoalesce.expr
 			count: 1
 			path: Classes/Controller/AjaxController.php
+
+		-
+			message: "#^Else branch is unreachable because ternary operator condition is always true\\.$#"
+			count: 1
+			path: Classes/Controller/CategoryTreeController.php
+
+		-
+			message: "#^Variable \\$userTsConfig on left side of \\?\\? is never defined\\.$#"
+			count: 2
+			path: Classes/Controller/CategoryTreeController.php
