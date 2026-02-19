@@ -1,6 +1,7 @@
+---
 name: Static Code Analysis
 
-on:
+"on":
   push:
     branches:
       - master
@@ -14,7 +15,8 @@ jobs:
     name: SCA
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -24,24 +26,34 @@ jobs:
         with:
           autostart: false
 
+      # Cache composer dependencies
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            composer-
+
       # Install dependencies
       - name: Install Composer dependencies
         run: |
           ddev start
-          ddev composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          ddev composer config \
+            github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
           ddev composer install
 
       - name: Run static code analysis
         run: ddev composer ci:sca
 
-      - uses: staabm/annotate-pull-request-from-checkstyle-action@v1
-        name: Annotate PHP CS Fixer
+      - name: Annotate PHP CS Fixer
+        uses: staabm/annotate-pull-request-from-checkstyle-action@v1
         with:
           files: php-cs-fixer.xml
           notices-as-warnings: true
 
-      - uses: staabm/annotate-pull-request-from-checkstyle-action@v1
-        name: Annotate PHPStan
+      - name: Annotate PHPStan
+        uses: staabm/annotate-pull-request-from-checkstyle-action@v1
         with:
           files: phpstan.xml
           notices-as-warnings: true
