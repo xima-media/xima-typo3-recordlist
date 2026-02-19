@@ -8,6 +8,9 @@ name: Send notifications
   - watch
   - pull_request_target
 
+permissions:
+  contents: read
+
 jobs:
   notification:
     uses: >-
