@@ -10,11 +10,19 @@ name: Tests
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   tests:
     name: |
       Tests (PHP ${{ matrix.php-version }}, TYPO3 ${{ matrix.typo3-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
