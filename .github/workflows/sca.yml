@@ -1,6 +1,7 @@
+---
 name: Static Code Analysis
 
-on:
+"on":
   push:
     branches:
       - master
@@ -9,12 +10,22 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   sca:
     name: SCA
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -24,24 +35,37 @@ jobs:
         with:
           autostart: false
 
+      # Cache composer dependencies
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.json') }}
+          restore-keys: |
+            composer-
+
       # Install dependencies
       - name: Install Composer dependencies
         run: |
           ddev start
-          ddev composer config github-oauth.github.com ${{ secrets.GITHUB_TOKEN }}
+          ddev composer config \
+            github-oauth.github.com \
+            ${{ secrets.GITHUB_TOKEN }}
           ddev composer install
 
       - name: Run static code analysis
         run: ddev composer ci:sca
 
-      - uses: staabm/annotate-pull-request-from-checkstyle-action@v1
-        name: Annotate PHP CS Fixer
+      - name: Annotate PHP CS Fixer
+        if: github.event_name == 'pull_request'
+        uses: staabm/annotate-pull-request-from-checkstyle-action@v1
         with:
           files: php-cs-fixer.xml
           notices-as-warnings: true
 
-      - uses: staabm/annotate-pull-request-from-checkstyle-action@v1
-        name: Annotate PHPStan
+      - name: Annotate PHPStan
+        if: github.event_name == 'pull_request'
+        uses: staabm/annotate-pull-request-from-checkstyle-action@v1
         with:
           files: phpstan.xml
           notices-as-warnings: true
