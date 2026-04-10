@@ -1109,9 +1109,20 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $filter = [];
             }
 
+            $label = $config['label'] ?? '';
+            if (!str_starts_with($label, 'LLL:')) {
+                foreach ($GLOBALS['TCA'][$tableName]['types'] ?? [] as $type) {
+                    $overrideLabel = $type['columnsOverrides'][$columnName]['label'] ?? '';
+                    if (str_starts_with($overrideLabel, 'LLL:')) {
+                        $label = $overrideLabel;
+                        break;
+                    }
+                }
+            }
+
             $columns[$columnName] = [
                 'columnName' => $columnName,
-                'label' => $config['label'] ?? '',
+                'label' => $label,
                 'partial' => $partial,
                 'active' => false,
                 'filter' => $filter,
