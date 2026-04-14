@@ -28,6 +28,7 @@ use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
@@ -104,6 +105,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected ResourceFactory $resourceFactory;
 
+    protected LanguageServiceFactory $languageServiceFactory;
+
     public function injectConnectionPool(ConnectionPool $connectionPool): void
     {
         $this->connectionPool = $connectionPool;
@@ -132,6 +135,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public function injectResourceFactory(ResourceFactory $resourceFactory): void
     {
         $this->resourceFactory = $resourceFactory;
+    }
+
+    public function injectLanguageServiceFactory(LanguageServiceFactory $languageServiceFactory): void
+    {
+        $this->languageServiceFactory = $languageServiceFactory;
     }
 
     /**
@@ -848,7 +856,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getLanguageService(): LanguageService
     {
-        return $GLOBALS['LANG'];
+        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendAuthentication());
     }
 
     protected function downloadRecords(): ResponseInterface

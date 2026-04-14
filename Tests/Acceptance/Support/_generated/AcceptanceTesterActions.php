@@ -1,6 +1,6 @@
 <?php
 
-//[STAMP] 627910b8ab0278ab3f2f861da40c0fbc
+//[STAMP] 645c4dd7b59faa30754dd9491ce09b19
 // phpcs:ignoreFile
 namespace Xima\XimaTypo3Recordlist\Tests\Acceptance\Support\_generated;
 
@@ -2118,9 +2118,9 @@ trait AcceptanceTesterActions
      *      'checkbox1' => true,
      *      // ...
      * ];
-     * $I->submitForm('//form[@id=my-form]', string $form, 'submitButton');
+     * $I->submitForm('//form[@id=my-form]', $form, 'submitButton');
      * // $I->amOnPage('/path/to/form-page') may be needed
-     * $I->seeInFormFields('//form[@id=my-form]', string $form);
+     * $I->seeInFormFields('//form[@id=my-form]', $form);
      * ```
      * @see \Codeception\Module\WebDriver::seeInFormFields()
      */
@@ -2180,9 +2180,9 @@ trait AcceptanceTesterActions
      *      'checkbox1' => true,
      *      // ...
      * ];
-     * $I->submitForm('//form[@id=my-form]', string $form, 'submitButton');
+     * $I->submitForm('//form[@id=my-form]', $form, 'submitButton');
      * // $I->amOnPage('/path/to/form-page') may be needed
-     * $I->seeInFormFields('//form[@id=my-form]', string $form);
+     * $I->seeInFormFields('//form[@id=my-form]', $form);
      * ```
      * @see \Codeception\Module\WebDriver::seeInFormFields()
      */
@@ -2242,9 +2242,9 @@ trait AcceptanceTesterActions
      *      'checkbox1' => true,
      *      // ...
      * ];
-     * $I->submitForm('//form[@id=my-form]', string $form, 'submitButton');
+     * $I->submitForm('//form[@id=my-form]', $form, 'submitButton');
      * // $I->amOnPage('/path/to/form-page') may be needed
-     * $I->seeInFormFields('//form[@id=my-form]', string $form);
+     * $I->seeInFormFields('//form[@id=my-form]', $form);
      * ```
      * @see \Codeception\Module\WebDriver::seeInFormFields()
      */
@@ -6742,6 +6742,526 @@ trait AcceptanceTesterActions
     /**
      * [!] Method is generated. Documentation taken from corresponding module.
      *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyArray()
+     */
+    public function assertContainsNotOnlyArray(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyArray', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyArray()
+     */
+    public function tryToAssertContainsNotOnlyArray(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyArray', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyArray and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyArray()
+     */
+    public function retryAssertContainsNotOnlyArray(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyArray', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyBool()
+     */
+    public function assertContainsNotOnlyBool(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyBool', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyBool()
+     */
+    public function tryToAssertContainsNotOnlyBool(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyBool', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyBool and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyBool()
+     */
+    public function retryAssertContainsNotOnlyBool(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyBool', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyCallable()
+     */
+    public function assertContainsNotOnlyCallable(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyCallable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyCallable()
+     */
+    public function tryToAssertContainsNotOnlyCallable(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyCallable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyCallable and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyCallable()
+     */
+    public function retryAssertContainsNotOnlyCallable(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyCallable', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyFloat()
+     */
+    public function assertContainsNotOnlyFloat(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyFloat', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyFloat()
+     */
+    public function tryToAssertContainsNotOnlyFloat(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyFloat', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyFloat and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyFloat()
+     */
+    public function retryAssertContainsNotOnlyFloat(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyFloat', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param class-string $className
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyInstancesOf()
+     */
+    public function assertContainsNotOnlyInstancesOf(string $className, iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyInstancesOf', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param class-string $className
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyInstancesOf()
+     */
+    public function tryToAssertContainsNotOnlyInstancesOf(string $className, iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyInstancesOf', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyInstancesOf and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyInstancesOf()
+     */
+    public function retryAssertContainsNotOnlyInstancesOf(string $className, iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyInstancesOf', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyInt()
+     */
+    public function assertContainsNotOnlyInt(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyInt', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyInt()
+     */
+    public function tryToAssertContainsNotOnlyInt(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyInt', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyInt and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyInt()
+     */
+    public function retryAssertContainsNotOnlyInt(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyInt', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyIterable()
+     */
+    public function assertContainsNotOnlyIterable(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyIterable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyIterable()
+     */
+    public function tryToAssertContainsNotOnlyIterable(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyIterable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyIterable and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyIterable()
+     */
+    public function retryAssertContainsNotOnlyIterable(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyIterable', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyNull()
+     */
+    public function assertContainsNotOnlyNull(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyNull', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyNull()
+     */
+    public function tryToAssertContainsNotOnlyNull(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyNull', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyNull and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyNull()
+     */
+    public function retryAssertContainsNotOnlyNull(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyNull', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyNumeric()
+     */
+    public function assertContainsNotOnlyNumeric(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyNumeric', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyNumeric()
+     */
+    public function tryToAssertContainsNotOnlyNumeric(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyNumeric', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyNumeric and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyNumeric()
+     */
+    public function retryAssertContainsNotOnlyNumeric(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyNumeric', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyObject()
+     */
+    public function assertContainsNotOnlyObject(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyObject', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyObject()
+     */
+    public function tryToAssertContainsNotOnlyObject(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyObject', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyObject and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyObject()
+     */
+    public function retryAssertContainsNotOnlyObject(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyObject', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyResource()
+     */
+    public function assertContainsNotOnlyResource(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyResource()
+     */
+    public function tryToAssertContainsNotOnlyResource(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyResource and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyResource()
+     */
+    public function retryAssertContainsNotOnlyResource(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyResource', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyClosedResource()
+     */
+    public function assertContainsNotOnlyClosedResource(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyClosedResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyClosedResource()
+     */
+    public function tryToAssertContainsNotOnlyClosedResource(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyClosedResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyClosedResource and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyClosedResource()
+     */
+    public function retryAssertContainsNotOnlyClosedResource(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyClosedResource', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyScalar()
+     */
+    public function assertContainsNotOnlyScalar(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyScalar', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyScalar()
+     */
+    public function tryToAssertContainsNotOnlyScalar(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyScalar', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyScalar and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyScalar()
+     */
+    public function retryAssertContainsNotOnlyScalar(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyScalar', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyString()
+     */
+    public function assertContainsNotOnlyString(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsNotOnlyString', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyString()
+     */
+    public function tryToAssertContainsNotOnlyString(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsNotOnlyString', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsNotOnlyString and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsNotOnlyString()
+     */
+    public function retryAssertContainsNotOnlyString(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsNotOnlyString', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
      * Asserts that a haystack contains only values of a given type.
      * @param 'array'|'bool'|'boolean'|'callable'|'double'|'float'|'int'|'integer'|'iterable'|'null'|'numeric'|'object'|'real'|'resource'|'resource (closed)'|'scalar'|'string'|class-string $type
      * @param iterable<mixed> $haystack
@@ -6819,6 +7339,487 @@ trait AcceptanceTesterActions
         $retryNum      = $this->retryNum ?? 1;
         $retryInterval = $this->retryInterval ?? 200;
         return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyInstancesOf', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyArray()
+     */
+    public function assertContainsOnlyArray(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyArray', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyArray()
+     */
+    public function tryToAssertContainsOnlyArray(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyArray', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyArray and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyArray()
+     */
+    public function retryAssertContainsOnlyArray(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyArray', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyBool()
+     */
+    public function assertContainsOnlyBool(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyBool', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyBool()
+     */
+    public function tryToAssertContainsOnlyBool(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyBool', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyBool and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyBool()
+     */
+    public function retryAssertContainsOnlyBool(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyBool', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyCallable()
+     */
+    public function assertContainsOnlyCallable(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyCallable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyCallable()
+     */
+    public function tryToAssertContainsOnlyCallable(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyCallable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyCallable and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyCallable()
+     */
+    public function retryAssertContainsOnlyCallable(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyCallable', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyFloat()
+     */
+    public function assertContainsOnlyFloat(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyFloat', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyFloat()
+     */
+    public function tryToAssertContainsOnlyFloat(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyFloat', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyFloat and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyFloat()
+     */
+    public function retryAssertContainsOnlyFloat(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyFloat', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyInt()
+     */
+    public function assertContainsOnlyInt(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyInt', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyInt()
+     */
+    public function tryToAssertContainsOnlyInt(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyInt', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyInt and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyInt()
+     */
+    public function retryAssertContainsOnlyInt(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyInt', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyIterable()
+     */
+    public function assertContainsOnlyIterable(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyIterable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyIterable()
+     */
+    public function tryToAssertContainsOnlyIterable(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyIterable', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyIterable and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyIterable()
+     */
+    public function retryAssertContainsOnlyIterable(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyIterable', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyNull()
+     */
+    public function assertContainsOnlyNull(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyNull', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyNull()
+     */
+    public function tryToAssertContainsOnlyNull(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyNull', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyNull and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyNull()
+     */
+    public function retryAssertContainsOnlyNull(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyNull', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyNumeric()
+     */
+    public function assertContainsOnlyNumeric(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyNumeric', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyNumeric()
+     */
+    public function tryToAssertContainsOnlyNumeric(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyNumeric', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyNumeric and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyNumeric()
+     */
+    public function retryAssertContainsOnlyNumeric(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyNumeric', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyObject()
+     */
+    public function assertContainsOnlyObject(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyObject', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyObject()
+     */
+    public function tryToAssertContainsOnlyObject(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyObject', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyObject and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyObject()
+     */
+    public function retryAssertContainsOnlyObject(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyObject', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyResource()
+     */
+    public function assertContainsOnlyResource(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyResource()
+     */
+    public function tryToAssertContainsOnlyResource(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyResource and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyResource()
+     */
+    public function retryAssertContainsOnlyResource(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyResource', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyClosedResource()
+     */
+    public function assertContainsOnlyClosedResource(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyClosedResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyClosedResource()
+     */
+    public function tryToAssertContainsOnlyClosedResource(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyClosedResource', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyClosedResource and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyClosedResource()
+     */
+    public function retryAssertContainsOnlyClosedResource(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyClosedResource', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyScalar()
+     */
+    public function assertContainsOnlyScalar(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyScalar', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyScalar()
+     */
+    public function tryToAssertContainsOnlyScalar(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyScalar', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyScalar and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyScalar()
+     */
+    public function retryAssertContainsOnlyScalar(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyScalar', func_get_args(), $retryNum, $retryInterval));
+    }
+
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyString()
+     */
+    public function assertContainsOnlyString(iterable $haystack, string $message = ''): void
+    {
+        $this->getScenario()->runStep(new \Codeception\Step\Action('assertContainsOnlyString', func_get_args()));
+    }
+    /**
+     * [!] Method is generated. Documentation taken from corresponding module.
+     *
+     * [!] Test won't be stopped on fail. Error won't be logged
+     * @param iterable<mixed> $haystack
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyString()
+     */
+    public function tryToAssertContainsOnlyString(iterable $haystack, string $message = ''): bool
+    {
+        return $this->getScenario()->runStep(new \Codeception\Step\TryTo('assertContainsOnlyString', func_get_args()));
+    }
+    /**
+     * [!] Method is generated.
+     *
+     * * Executes assertContainsOnlyString and retries on failure.
+     *
+     * Retry number and interval set by $I->retry();
+     *
+     * @see \Codeception\Module\AbstractAsserts::assertContainsOnlyString()
+     */
+    public function retryAssertContainsOnlyString(iterable $haystack, string $message = '')
+    {
+        $retryNum      = $this->retryNum ?? 1;
+        $retryInterval = $this->retryInterval ?? 200;
+        return $this->getScenario()->runStep(new \Codeception\Step\Retry('assertContainsOnlyString', func_get_args(), $retryNum, $retryInterval));
     }
 
     /**
