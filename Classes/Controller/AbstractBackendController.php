@@ -74,6 +74,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         'xlsx' => [],
     ];
 
+    protected const TRANSLATION_PATH = 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:';
+
     protected ModuleTemplate $moduleTemplate;
 
     protected Site $site;
@@ -771,7 +773,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
                 $workspaceStatus = [];
                 $workspaceStatus['level'] = 'warning';
-                $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy');
+                $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.copy');
 
                 // newly created record
                 if ($record['t3ver_oid'] === 0) {
@@ -786,7 +788,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 // stage "Ready to publish"
                 if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
                     $workspaceStatus['level'] = 'success';
-                    $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
+                    $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.waiting');
                     $record['editable'] = $this->isWorkspaceAdmin();
                     $record['state'] = 'pending';
 
@@ -1570,8 +1572,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         if ($this->getTypo3Version() === 13) {
             $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem::class)
                 ->setHref('#')
-                ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
+                ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
+                ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
                 ->setIcon($this->iconFactory->getIcon('actions-options', IconSize::SMALL))
                 ->setAttributes(['data-doc-button' => 'showColumnsButton']);
             return;
@@ -1581,8 +1583,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->viewDropdownButtons[] = $componentFactory->createDropDownItem()
             ->setTag('a')
             ->setHref('#')
-            ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
-            ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
+            ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
+            ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
             ->setIcon($this->iconFactory->getIcon('actions-options', IconSize::SMALL))
             ->setAttributes(['data-doc-button' => 'showColumnsButton']);
     }
@@ -1608,7 +1610,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref($url)
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.download'))
+                ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.download'))
                 ->setShowLabelText(true)
                 ->setClasses('recordlist-download-button')
                 ->setIcon($this->iconFactory->getIcon('actions-download', IconSize::SMALL)),
@@ -1652,9 +1654,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $isFilterButtonActive = (bool)$this->getModuleDataSetting($this->getTableName() . '.isFilterButtonActive');
 
         $activeFilterCount = $this->getActiveFilterCount();
-        $showLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.showFilters');
+        $showLabel = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.button.showFilters');
         $showLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
-        $hideLabel = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.hideFilters');
+        $hideLabel = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.button.hideFilters');
         $hideLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
 
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
@@ -1899,7 +1901,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         if ($this->getTypo3Version() === 13) {
             $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
             $viewDropdownMenu = $buttonBar->makeDropDownButton()
-                ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.view'))
+                ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.view'))
                 ->setIcon($this->iconFactory->getIcon('actions-menu-alternative', IconSize::SMALL))
                 ->setShowLabelText(true);
 
@@ -1918,8 +1920,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
         $viewDropdownButton = $componentFactory->createDropDownButton()
-            ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.view'))
-            ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.view'))
+            ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.view'))
+            ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.view'))
             ->setIcon($this->iconFactory->getIcon('actions-menu-alternative', IconSize::SMALL))
             ->setShowLabelText(true);
 
