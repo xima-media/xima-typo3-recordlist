@@ -1,6 +1,7 @@
 config/system/settings.php
 public/.htaccess
 public/_assets/
+public/_assets_install/
 public/fileadmin/
 public/index.php
 public/typo3/
