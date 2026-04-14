@@ -20,7 +20,7 @@ class BeUsersEditCest
 
         $uid = $I->getFirstRecordUid();
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
         $I->waitForElement('.module-docheader', 5);
 
         $I->see('Edit');

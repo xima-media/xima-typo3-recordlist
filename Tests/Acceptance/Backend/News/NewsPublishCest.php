@@ -20,7 +20,7 @@ class NewsPublishCest
 
         // Get the UID of the first record and open its edit form
         $uid = $I->getFirstRecordUid();
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
         $I->waitForElement('.module-docheader');
 
         // Modify the record to create a workspace version

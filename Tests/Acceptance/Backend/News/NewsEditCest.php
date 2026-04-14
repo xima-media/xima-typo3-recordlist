@@ -32,9 +32,10 @@ class NewsEditCest
 
         $uid = $I->getFirstRecordUid();
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
         $I->waitForElement('.module-docheader', 5);
 
+        $I->seeInCurrentUrl('/typo3/record/edit?edit');
         $I->see('Edit');
     }
 
@@ -44,7 +45,7 @@ class NewsEditCest
 
         $uid = $I->getFirstRecordUid();
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
         $I->waitForElement('.module-docheader');
 
         $I->fillField('input[data-formengine-input-name="data[tx_news_domain_model_news][' . $uid . '][title]"]', 'Workspace Modified Title');
@@ -62,7 +63,7 @@ class NewsEditCest
 
         $uid = $I->getFirstRecordUid();
 
-        $I->click('//tr[@data-uid="' . $uid . '"]//a[@aria-label="Edit"]');
+        $I->click('//tr[@data-uid="' . $uid . '"]//a[@title="Edit"]');
         $I->waitForElement('.module-docheader', 5);
 
         $I->fillField('input[data-formengine-input-name="data[tx_news_domain_model_news][' . $uid . '][title]"]', 'Modified Record State Test');
