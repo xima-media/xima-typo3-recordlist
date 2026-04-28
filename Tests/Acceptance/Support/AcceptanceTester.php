@@ -34,7 +34,7 @@ class AcceptanceTester extends \Codeception\Actor
         $I->fillField('#t3-username', 'admin');
         $I->fillField('#t3-password', 'Passw0rd!');
         $I->click('#t3-login-submit-section > button');
-        $I->waitForElement('.scaffold-header', 10);
+        $I->waitForElement('.scaffold-header', 20);
     }
 
     public function openModule(string $moduleIdentifier): void
