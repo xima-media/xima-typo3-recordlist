@@ -640,7 +640,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         $this->queryBuilder->createNamedParameter($data['value'])
                     ),
                 };
-                if (isset($data['dataType'], $data['expr']) && $data['dataType'] === 'date' && $data['expr'] === 'eq') {
+                if (($data['dataType'] ?? null) === 'date' && (($data['expr'] ?? 'eq') === 'eq')) {
                     $constraint = $this->queryBuilder->expr()->and(
                         $this->queryBuilder->expr()->gte(
                             't1.' . $field,
