@@ -594,13 +594,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $field = 'uid';
                 }
                 if (isset($data['dataType']) && $data['dataType'] === 'date') {
-                    $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
-                    if ($dbType !== 'datetime') {
-                        $data['value'] = strtotime($data['value']);
-                        $data['valueUpperBound'] = $data['value'] + 86400;
-                    } else {
-                        $data['value'] = date('Y-m-d H:i:s', strtotime($data['value']));
-                        $data['valueUpperBound'] = date('Y-m-d H:i:s', strtotime($data['value'] . ' +1 day'));
+                    $fieldConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config'] ?? null;
+                    if (is_array($fieldConfig)) {
+                        $dbType = $fieldConfig['dbType'] ?? '';
+                        if ($dbType !== 'datetime') {
+                            $data['value'] = strtotime($data['value']);
+                            $data['valueUpperBound'] = $data['value'] + 86400;
+                        } else {
+                            $data['value'] = date('Y-m-d H:i:s', strtotime($data['value']));
+                            $data['valueUpperBound'] = date('Y-m-d H:i:s', strtotime($data['value'] . ' +1 day'));
+                        }
                     }
                 }
                 match ($data['expr'] ?? '') {
