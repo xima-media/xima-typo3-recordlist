@@ -597,44 +597,59 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
                     if ($dbType !== 'datetime') {
                         $data['value'] = strtotime($data['value']);
+                        $data['valueUpperBound'] = $data['value'] + 86400;
                     } else {
                         $data['value'] = date('Y-m-d H:i:s', strtotime($data['value']));
+                        $data['valueUpperBound'] = date('Y-m-d H:i:s', strtotime($data['value'] . ' +1 day'));
                     }
                 }
                 match ($data['expr'] ?? '') {
-                    'neq' => $this->additionalConstraints[] = $this->queryBuilder->expr()->neq(
+                    'neq' => $constraint = $this->queryBuilder->expr()->neq(
                         't1.' . $field,
                         $this->queryBuilder->createNamedParameter($data['value'])
                     ),
-                    'lt' => $this->additionalConstraints[] = $this->queryBuilder->expr()->lt(
+                    'lt' => $constraint = $this->queryBuilder->expr()->lt(
                         't1.' . $field,
                         $this->queryBuilder->createNamedParameter($data['value'])
                     ),
-                    'gt' => $this->additionalConstraints[] = $this->queryBuilder->expr()->gt(
+                    'gt' => $constraint = $this->queryBuilder->expr()->gt(
                         't1.' . $field,
                         $this->queryBuilder->createNamedParameter($data['value'])
                     ),
-                    'like' => $this->additionalConstraints[] = $this->queryBuilder->expr()->like(
+                    'like' => $constraint = $this->queryBuilder->expr()->like(
                         't1.' . $field,
                         $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
                     ),
-                    'notLike' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notLike(
+                    'notLike' => $constraint = $this->queryBuilder->expr()->notLike(
                         't1.' . $field,
                         $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
                     ),
-                    'in' => $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                    'in' => $constraint = $this->queryBuilder->expr()->in(
                         't1.' . $field,
                         $data['value']
                     ),
-                    'notIn' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                    'notIn' => $constraint = $this->queryBuilder->expr()->notIn(
                         't1.' . $field,
                         $data['value']
                     ),
-                    default => $this->additionalConstraints[] = $this->queryBuilder->expr()->eq(
+                    default => $constraint = $this->queryBuilder->expr()->eq(
                         't1.' . $field,
                         $this->queryBuilder->createNamedParameter($data['value'])
                     ),
                 };
+                if (isset($data['dataType'], $data['expr']) && $data['dataType'] === 'date' && $data['expr'] === 'eq') {
+                    $constraint = $this->queryBuilder->expr()->and(
+                        $this->queryBuilder->expr()->gte(
+                            't1.' . $field,
+                            $this->queryBuilder->createNamedParameter($data['value'])
+                        ),
+                        $this->queryBuilder->expr()->lt(
+                            't1.' . $field,
+                            $this->queryBuilder->createNamedParameter($data['valueUpperBound'])
+                        )
+                    );
+                }
+                $this->additionalConstraints[] = $constraint;
             }
         }
     }
