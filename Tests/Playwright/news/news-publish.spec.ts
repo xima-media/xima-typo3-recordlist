@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, openModule, getFirstRecordUid } from '../helpers/typo3-backend';
+import { loginAsAdmin, openModule, getFirstRecordUid, waitForSave } from '../helpers/typo3-backend';
 import { resetDatabase } from '../helpers/db-reset';
 
 test.describe('News Publish', () => {
@@ -23,7 +23,7 @@ test.describe('News Publish', () => {
     await titleInput.press('Tab');
     await page.waitForTimeout(500);
     await contentFrame.locator('button[name="_savedok"]').click();
-    await page.waitForTimeout(2000);
+    await waitForSave(contentFrame);
 
     await contentFrame.locator('a.t3js-editform-close').click();
     await contentFrame.locator('main.recordlist').waitFor({ timeout: 10000 });
@@ -32,7 +32,7 @@ test.describe('News Publish', () => {
     await contentFrame.locator(`tr[data-t3ver_oid="${uid}"] a[data-workspace-action="sendToSpecificStageExecute"][data-workspace-stage="-10"]`).click();
 
     // Modal opens in main frame
-    await page.waitForSelector('.modal', { timeout: 5000 });
+    await page.locator('.modal').waitFor({ timeout: 5000 });
     await expect(page.locator('.modal')).toContainText('Send to stage');
     await page.locator('.modal textarea[name="comments"]').fill('Ready to publish this news item.');
     await page.locator('.modal button.btn-primary').click();

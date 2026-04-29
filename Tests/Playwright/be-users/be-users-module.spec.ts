@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, searchFor, switchTable } from '../helpers/typo3-backend';
+import { resetUserPreferences } from '../helpers/db-reset';
 
 test.describe('BeUsers Module', () => {
   // Serial: tests share the same TYPO3 admin session — parallel execution causes search state bleed
   test.describe.configure({ mode: 'serial' });
+
+  test.afterAll(() => { resetUserPreferences(); });
 
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);

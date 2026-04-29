@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, openModule, openColumnsModal, toggleColumn } from '../helpers/typo3-backend';
+import { loginAsAdmin, openModule, openColumnsModal, toggleColumn, waitForReload } from '../helpers/typo3-backend';
 import { resetDatabase, resetUserPreferences } from '../helpers/db-reset';
 
 test.describe('Column Management', () => {
@@ -55,9 +55,8 @@ test.describe('Column Management', () => {
     await openColumnsModal(page, contentFrame);
     await page.locator('.modal button[data-action="select-none"]').click();
     await page.locator('.modal button.btn-primary').click();
-    await page.waitForTimeout(500);
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('.modal').waitFor({ state: 'detached', timeout: 5000 });
+    await waitForReload(contentFrame);
 
     // Default columns are restored
     await expect(contentFrame.locator('thead')).toContainText('Username');
@@ -80,9 +79,8 @@ test.describe('Column Management', () => {
     await openColumnsModal(page, contentFrame);
     await page.locator('.modal button[data-action="select-toggle"]').click();
     await page.locator('.modal button.btn-primary').click();
-    await page.waitForTimeout(500);
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('.modal').waitFor({ state: 'detached', timeout: 5000 });
+    await waitForReload(contentFrame);
 
     // Previously hidden columns now visible
     await expect(contentFrame.locator('thead')).toContainText('Admin');
@@ -95,9 +93,8 @@ test.describe('Column Management', () => {
     await openColumnsModal(page, contentFrame);
     await page.locator('.modal button[data-action="select-toggle"]').click();
     await page.locator('.modal button.btn-primary').click();
-    await page.waitForTimeout(500);
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('.modal').waitFor({ state: 'detached', timeout: 5000 });
+    await waitForReload(contentFrame);
 
     // Back to original state
     await expect(contentFrame.locator('thead')).toContainText('Username');
@@ -143,8 +140,7 @@ test.describe('Column Management', () => {
 
     // Close modal
     await modal.locator('button.btn-primary').click();
-    await page.waitForTimeout(500);
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('.modal').waitFor({ state: 'detached', timeout: 5000 });
+    await waitForReload(contentFrame);
   });
 });

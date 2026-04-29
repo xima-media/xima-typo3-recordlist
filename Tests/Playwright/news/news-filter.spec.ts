@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, openModule } from '../helpers/typo3-backend';
+import { loginAsAdmin, openModule, waitForReload } from '../helpers/typo3-backend';
 
 test.describe('News Filter', () => {
   test.describe.configure({ mode: 'serial' });
@@ -15,8 +15,7 @@ test.describe('News Filter', () => {
     const englishLink = contentFrame.locator('a[title="English"]');
     const englishHref = await englishLink.getAttribute('href');
     await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), englishHref as string);
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+    await waitForReload(contentFrame);
 
     await expect(contentFrame.locator('tr[data-sys_language_uid="0"][data-uid]').first()).toBeVisible();
     await expect(contentFrame.locator('tr[data-uid][data-sys_language_uid]:not([data-sys_language_uid="0"])')).toHaveCount(0);
@@ -29,8 +28,7 @@ test.describe('News Filter', () => {
     const germanLink = contentFrame.locator('a[title="German"]');
     const germanHref = await germanLink.getAttribute('href');
     await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), germanHref as string);
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-    await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+    await waitForReload(contentFrame);
 
     await expect(contentFrame.locator('tr[data-sys_language_uid="1"][data-uid]').first()).toBeVisible();
     await expect(contentFrame.locator('tr[data-uid][data-sys_language_uid]:not([data-sys_language_uid="1"])')).toHaveCount(0);
@@ -63,8 +61,7 @@ test.describe('News Filter', () => {
       await contentFrame.locator('select[name="filter[author][expr]"]').selectOption(tc.expr);
       await filterPanel.fill(tc.value);
       await contentFrame.locator('button[type="submit"][name="search"]').first().click();
-      await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-      await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+      await waitForReload(contentFrame);
 
       const rows = contentFrame.locator('tr[data-uid]');
       const count = await rows.count();
@@ -99,8 +96,7 @@ test.describe('News Filter', () => {
       await contentFrame.locator('input[name="filter[categories][value]"]').evaluate((el) => { (el as HTMLInputElement).value = '18'; });
       await categoryExpr.selectOption(expr);
       await contentFrame.locator('button[type="submit"][name="search"]').first().click();
-      await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-      await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+      await waitForReload(contentFrame);
 
       const count = await contentFrame.locator('tr[data-uid]').count();
       expect(count, `expr=${expr} should return records`).toBeGreaterThan(0);

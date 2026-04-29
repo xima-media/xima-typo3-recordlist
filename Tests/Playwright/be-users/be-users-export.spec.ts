@@ -12,8 +12,7 @@ test.describe('BeUsers Export', () => {
     await contentFrame.locator('.recordlist-download-button').click();
 
     // Modal opens in the main frame (outside the iframe)
-    await page.waitForSelector('.modal', { timeout: 5000 });
-    await page.waitForTimeout(2000);
+    await page.locator('.modal select[name="format"]').waitFor({ state: 'visible', timeout: 5000 });
 
     await expect(page.locator('.modal select[name="format"]')).toHaveValue('csv');
 

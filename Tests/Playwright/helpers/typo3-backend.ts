@@ -1,4 +1,4 @@
-import { Page, FrameLocator, expect } from '@playwright/test';
+import { Page, FrameLocator } from '@playwright/test';
 
 export async function loginAsAdmin(page: Page): Promise<void> {
   await page.goto('/typo3');
@@ -10,11 +10,22 @@ export async function loginAsAdmin(page: Page): Promise<void> {
 }
 
 export async function openModule(page: Page, moduleIdentifier: string): Promise<FrameLocator> {
-  await page.click(`a[data-modulemenu-identifier="${moduleIdentifier}"]`);
-  await page.waitForTimeout(1000);
   const contentFrame = page.frameLocator('iframe[name="list_frame"]');
-  await contentFrame.locator('main.recordlist').waitFor({ timeout: 10000 });
+  await page.click(`a[data-modulemenu-identifier="${moduleIdentifier}"]`);
+  await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
+  await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
   return contentFrame;
+}
+
+export async function waitForReload(contentFrame: FrameLocator): Promise<void> {
+  await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
+  await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+}
+
+export async function waitForSave(contentFrame: FrameLocator): Promise<void> {
+  // _savedok submits the form — iframe reloads the edit page after save
+  await contentFrame.locator('button[name="_savedok"]').waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
+  await contentFrame.locator('button[name="_savedok"]').waitFor({ state: 'visible', timeout: 10000 });
 }
 
 export async function getFirstRecordUid(contentFrame: FrameLocator): Promise<string> {
@@ -28,16 +39,14 @@ export async function switchTable(contentFrame: FrameLocator, tableName: string)
   // Link lives inside a CSS popover with no layout box — navigate the iframe's window directly
   await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
   // TYPO3 reloads the iframe; wait for stale recordlist to detach, then reappear with new content
-  await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-  await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+  await waitForReload(contentFrame);
 }
 
 export async function sortBy(contentFrame: FrameLocator, columnName: string, direction: 'ASC' | 'DESC' = 'ASC'): Promise<void> {
   // Sort links use href="#" with JS handlers — evaluate bypasses visibility (menu hidden behind custom dropdown-static)
   await contentFrame.locator(`thead th:has-text("${columnName}") a[data-order-direction="${direction}"]`).evaluate((el) => (el as HTMLElement).click());
   // Wait for page to reload with new sort order
-  await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-  await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+  await waitForReload(contentFrame);
 }
 
 export async function searchFor(contentFrame: FrameLocator, searchTerm: string): Promise<void> {
@@ -66,8 +75,8 @@ export async function toggleColumn(page: Page, contentFrame: FrameLocator, colum
   // Checkbox is in the modal (main frame) — use JS click to avoid styled-element interception
   await page.locator(`input#select-column-${columnName}`).evaluate((el) => (el as HTMLElement).click());
   await page.locator('.modal button.btn-primary').click();
-  await page.waitForTimeout(500);
+  // Wait for modal to close before checking recordlist state
+  await page.locator('.modal').waitFor({ state: 'detached', timeout: 5000 });
   // Modal save reloads the iframe — wait for recordlist to reappear
-  await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
-  await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
+  await waitForReload(contentFrame);
 }
