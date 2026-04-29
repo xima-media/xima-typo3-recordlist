@@ -1,4 +1,4 @@
-import { Page, FrameLocator } from '@playwright/test';
+import { Page, FrameLocator, expect } from '@playwright/test';
 
 export async function loginAsAdmin(page: Page): Promise<void> {
   await page.goto('/typo3');
@@ -49,4 +49,25 @@ export async function searchFor(contentFrame: FrameLocator, searchTerm: string):
   await searchField.fill(searchTerm);
   await searchField.press('Enter');
   await contentFrame.locator('main.recordlist').waitFor({ timeout: 5000 });
+}
+
+export async function openColumnsModal(page: Page, contentFrame: FrameLocator): Promise<void> {
+  // "View" button is a CSS popover toggle — click it to show the dropdown
+  await contentFrame.locator('button.dropdown-toggle').filter({ hasText: 'View' }).click();
+  await page.waitForTimeout(300);
+  // showColumnsButton is inside the popover (may have zero layout box in headless) — click via JS
+  await contentFrame.locator('[data-doc-button="showColumnsButton"]').evaluate((el) => (el as HTMLElement).click());
+  // Modal opens in the MAIN frame (TYPO3 Modal.advanced() uses top-level document)
+  await page.locator('.modal').waitFor({ timeout: 5000 });
+}
+
+export async function toggleColumn(page: Page, contentFrame: FrameLocator, columnName: string): Promise<void> {
+  await openColumnsModal(page, contentFrame);
+  // Checkbox is in the modal (main frame) — use JS click to avoid styled-element interception
+  await page.locator(`input#select-column-${columnName}`).evaluate((el) => (el as HTMLElement).click());
+  await page.locator('.modal button.btn-primary').click();
+  await page.waitForTimeout(500);
+  // Modal save reloads the iframe — wait for recordlist to reappear
+  await contentFrame.locator('main.recordlist').waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
+  await contentFrame.locator('main.recordlist').waitFor({ state: 'visible', timeout: 10000 });
 }

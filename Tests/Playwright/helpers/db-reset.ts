@@ -22,6 +22,12 @@ function mysqlFile(filePath: string): void {
   });
 }
 
+const DEFAULT_UC = 'a:2:{s:20:"contextualRecordEdit";i:0;s:8:"titleLen";i:50;}';
+
+export function resetUserPreferences(): void {
+  mysql(`UPDATE be_users SET uc = '${DEFAULT_UC}';`);
+}
+
 export function resetDatabase(): void {
   const tables = fs.readdirSync(FIXTURE_PATH)
     .filter(f => f.endsWith('.sql'))
