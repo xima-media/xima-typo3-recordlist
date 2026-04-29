@@ -3,287 +3,287 @@
 	<file source-language="en" datatype="plaintext" original="messages" date="2023-04-04T09:23:21Z"
 		  product-name="xima_typo3_recordlist">
 		<body>
-			<trans-unit id="newRecordinPageModalTitle">
+			<trans-unit id="newRecordinPageModalTitle" approved="yes">
 				<source />
 				<target>Seite für neuen Datensatz auswählen</target>
 			</trans-unit>
-			<trans-unit id="table.column.language">
+			<trans-unit id="table.column.language" approved="yes">
 				<source />
 				<target>Sprache</target>
 			</trans-unit>
-			<trans-unit id="table.column.actions">
+			<trans-unit id="table.column.actions" approved="yes">
 				<source />
 				<target>Aktionen</target>
 			</trans-unit>
-			<trans-unit id="table.column.status">
+			<trans-unit id="table.column.status" approved="yes">
 				<source />
 				<target>Status</target>
 			</trans-unit>
-			<trans-unit id="table.column.uid">
+			<trans-unit id="table.column.uid" approved="yes">
 				<source />
 				<target>ID</target>
 			</trans-unit>
-			<trans-unit id="table.column.pid">
+			<trans-unit id="table.column.pid" approved="yes">
 				<source />
 				<target>Seiten ID</target>
 			</trans-unit>
-			<trans-unit id="table.button.reset">
+			<trans-unit id="table.button.reset" approved="yes">
 				<source />
 				<target>Zurücksetzen</target>
 			</trans-unit>
-			<trans-unit id="table.button.search">
+			<trans-unit id="table.button.search" approved="yes">
 				<source />
 				<target>Suchen</target>
 			</trans-unit>
-			<trans-unit id="filter.label.search">
+			<trans-unit id="filter.label.search" approved="yes">
 				<source />
 				<target>Suche</target>
 			</trans-unit>
-			<trans-unit id="table.filter.label">
+			<trans-unit id="table.filter.label" approved="yes">
 				<source />
 				<target>Einträge filtern</target>
 			</trans-unit>
-			<trans-unit id="table.label.records">
+			<trans-unit id="table.label.records" approved="yes">
 				<source />
 				<target>Einträge</target>
 			</trans-unit>
-			<trans-unit id="table.label.of">
+			<trans-unit id="table.label.of" approved="yes">
 				<source />
 				<target>von</target>
 			</trans-unit>
-			<trans-unit id="table.label.searchField">
+			<trans-unit id="table.label.searchField" approved="yes">
 				<source />
 				<target>Suchbegriff eingeben</target>
 			</trans-unit>
-			<trans-unit id="table.button.showFilters">
+			<trans-unit id="table.button.showFilters" approved="yes">
 				<source />
 				<target>Filter anzeigen</target>
 			</trans-unit>
-			<trans-unit id="table.button.hideFilters">
+			<trans-unit id="table.button.hideFilters" approved="yes">
 				<source />
 				<target>Filter ausblenden</target>
 			</trans-unit>
-			<trans-unit id="table.label.copy">
+			<trans-unit id="table.label.copy" approved="yes">
 				<source />
 				<target>Arbeitskopie</target>
 			</trans-unit>
-			<trans-unit id="table.label.waiting">
+			<trans-unit id="table.label.waiting" approved="yes">
 				<source />
 				<target>Wartet auf Freigabe</target>
 			</trans-unit>
-			<trans-unit id="table.button.view">
+			<trans-unit id="table.button.view" approved="yes">
 				<source />
 				<target>Auf Webseite anzeigen</target>
 			</trans-unit>
-			<trans-unit id="table.button.revert">
+			<trans-unit id="table.button.revert" approved="yes">
 				<source />
 				<target>Arbeitskopie verwerfen</target>
 			</trans-unit>
-			<trans-unit id="table.button.delete">
+			<trans-unit id="table.button.delete" approved="yes">
 				<source />
 				<target>Datensatz löschen</target>
 			</trans-unit>
-			<trans-unit id="table.button.requestReview">
+			<trans-unit id="table.button.requestReview" approved="yes">
 				<source />
 				<target>Freigabe anfordern</target>
 			</trans-unit>
-			<trans-unit id="table.button.toReview">
+			<trans-unit id="table.button.toReview" approved="yes">
 				<source />
 				<target>Zur Freigabe</target>
 			</trans-unit>
-			<trans-unit id="table.button.publish">
+			<trans-unit id="table.button.publish" approved="yes">
 				<source />
 				<target>Freigabe erteilen</target>
 			</trans-unit>
-			<trans-unit id="table.button.requestChanges">
+			<trans-unit id="table.button.requestChanges" approved="yes">
 				<source />
 				<target>Änderungen anfordern</target>
 			</trans-unit>
-			<trans-unit id="table.button.original">
+			<trans-unit id="table.button.original" approved="yes">
 				<source />
 				<target>Original</target>
 			</trans-unit>
-			<trans-unit id="table.button.edit">
+			<trans-unit id="table.button.edit" approved="yes">
 				<source />
 				<target>Bearbeiten</target>
 			</trans-unit>
-			<trans-unit id="table.button.changelog">
+			<trans-unit id="table.button.changelog" approved="yes">
 				<source />
 				<target>Änderungen anzeigen</target>
 			</trans-unit>
-			<trans-unit id="table.button.translate">
+			<trans-unit id="table.button.translate" approved="yes">
 				<source />
 				<target>Übersetzung erstellen</target>
 			</trans-unit>
-			<trans-unit id="table.button.translate_deepl">
+			<trans-unit id="table.button.translate_deepl" approved="yes">
 				<source />
 				<target>Übersetzung mit DeepL erstellen</target>
 			</trans-unit>
-			<trans-unit id="table.button.duplicate">
+			<trans-unit id="table.button.duplicate" approved="yes">
 				<source />
 				<target>Duplizieren</target>
 			</trans-unit>
-			<trans-unit id="table.button.hide">
+			<trans-unit id="table.button.hide" approved="yes">
 				<source />
 				<target>Datensatz verbergen</target>
 			</trans-unit>
-			<trans-unit id="table.button.unhide">
+			<trans-unit id="table.button.unhide" approved="yes">
 				<source />
 				<target>Datensatz einblenden</target>
 			</trans-unit>
-			<trans-unit id="search.noResults.headline">
+			<trans-unit id="search.noResults.headline" approved="yes">
 				<source />
 				<target>Keine Ergebnisse gefunden</target>
 			</trans-unit>
-			<trans-unit id="search.noResults.text">
+			<trans-unit id="search.noResults.text" approved="yes">
 				<source />
 				<target>Keine Einträge entsprechen den aktuellen Such- oder Filterkriterien. Passen Sie die Filter an oder setzen Sie diese zurück.</target>
 			</trans-unit>
-			<trans-unit id="table.button.save">
+			<trans-unit id="table.button.save" approved="yes">
 				<source />
 				<target>Speichern</target>
 			</trans-unit>
-			<trans-unit id="table.button.cancel">
+			<trans-unit id="table.button.cancel" approved="yes">
 				<source />
 				<target>Abbrechen</target>
 			</trans-unit>
-			<trans-unit id="table.sort.descending">
+			<trans-unit id="table.sort.descending" approved="yes">
 				<source />
 				<target>Absteigend sortieren</target>
 			</trans-unit>
-			<trans-unit id="table.sort.ascending">
+			<trans-unit id="table.sort.ascending" approved="yes">
 				<source />
 				<target>Aufsteigend sortieren</target>
 			</trans-unit>
-			<trans-unit id="table.th.editFieldOfRecords">
+			<trans-unit id="table.th.editFieldOfRecords" approved="yes">
 				<source />
 				<target>Das '%s'-Feld der aufgelisteten Einträge bearbeiten</target>
 			</trans-unit>
-			<trans-unit id="pagination.pageIndicator">
+			<trans-unit id="pagination.pageIndicator" approved="yes">
 				<source />
 				<target>Seite %1$s von %2$d</target>
 			</trans-unit>
-			<trans-unit id="pagination.rangeIndicator">
+			<trans-unit id="pagination.rangeIndicator" approved="yes">
 				<source />
 				<target>Einträge %1$d - %2$d</target>
 			</trans-unit>
-			<trans-unit id="modal.delete.title">
+			<trans-unit id="modal.delete.title" approved="yes">
 				<source />
 				<target>Datei löschen</target>
 			</trans-unit>
-			<trans-unit id="modal.delete.message">
+			<trans-unit id="modal.delete.message" approved="yes">
 				<source />
 				<target>Sind Sie sicher, dass Sie diese Datei löschen möchten?</target>
 			</trans-unit>
-			<trans-unit id="modal.delete.record.title">
+			<trans-unit id="modal.delete.record.title" approved="yes">
 				<source />
 				<target>Eintrag löschen</target>
 			</trans-unit>
-			<trans-unit id="modal.delete.record.message">
+			<trans-unit id="modal.delete.record.message" approved="yes">
 				<source />
 				<target>Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?</target>
 			</trans-unit>
-			<trans-unit id="modal.delete.button.cancel">
+			<trans-unit id="modal.delete.button.cancel" approved="yes">
 				<source />
 				<target>Nein, abbrechen</target>
 			</trans-unit>
-			<trans-unit id="modal.delete.button.confirm">
+			<trans-unit id="modal.delete.button.confirm" approved="yes">
 				<source />
 				<target>Ja, löschen</target>
 			</trans-unit>
-			<trans-unit id="notification.delete.success.title">
+			<trans-unit id="notification.delete.success.title" approved="yes">
 				<source />
 				<target>Datei gelöscht</target>
 			</trans-unit>
-			<trans-unit id="notification.delete.success.message">
+			<trans-unit id="notification.delete.success.message" approved="yes">
 				<source />
 				<target>Die Datei wurde erfolgreich gelöscht</target>
 			</trans-unit>
-			<trans-unit id="notification.delete.record.success.title">
+			<trans-unit id="notification.delete.record.success.title" approved="yes">
 				<source />
 				<target>Eintrag gelöscht</target>
 			</trans-unit>
-			<trans-unit id="notification.delete.record.success.message">
+			<trans-unit id="notification.delete.record.success.message" approved="yes">
 				<source />
 				<target>Der Eintrag wurde erfolgreich gelöscht</target>
 			</trans-unit>
-			<trans-unit id="header.button.download">
+			<trans-unit id="header.button.download" approved="yes">
 				<source />
 				<target>Download</target>
 			</trans-unit>
-			<trans-unit id="header.button.view">
+			<trans-unit id="header.button.view" approved="yes">
 				<source />
 				<target>Ansicht</target>
 			</trans-unit>
-			<trans-unit id="header.button.showColumns">
+			<trans-unit id="header.button.showColumns" approved="yes">
 				<source />
 				<target>Spalten anpassen</target>
 			</trans-unit>
-			<trans-unit id="showColumns.filter">
+			<trans-unit id="showColumns.filter" approved="yes">
 				<source />
 				<target>Filtern nach</target>
 			</trans-unit>
-			<trans-unit id="showColumns.placeholder">
+			<trans-unit id="showColumns.placeholder" approved="yes">
 				<source />
 				<target>Suchbegriff eingeben</target>
 			</trans-unit>
-			<trans-unit id="showColumns.openSelectionOptions">
+			<trans-unit id="showColumns.openSelectionOptions" approved="yes">
 				<source />
 				<target>Auswahloptionen öffnen</target>
 			</trans-unit>
-			<trans-unit id="showColumns.checkAll">
+			<trans-unit id="showColumns.checkAll" approved="yes">
 				<source />
 				<target>Alle auswählen</target>
 			</trans-unit>
-			<trans-unit id="showColumns.checkNone">
+			<trans-unit id="showColumns.checkNone" approved="yes">
 				<source />
 				<target>Keine auswählen</target>
 			</trans-unit>
-			<trans-unit id="showColumns.toggle">
+			<trans-unit id="showColumns.toggle" approved="yes">
 				<source />
 				<target>Auswahl umkehren</target>
 			</trans-unit>
-			<trans-unit id="showColumns.abort">
+			<trans-unit id="showColumns.abort" approved="yes">
 				<source />
 				<target>Abbruch</target>
 			</trans-unit>
-			<trans-unit id="showColumns.refresh">
+			<trans-unit id="showColumns.refresh" approved="yes">
 				<source />
 				<target>Aktualisieren</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.label">
+			<trans-unit id="filter.expr.label" approved="yes">
 				<source />
 				<target>Art</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.eq">
+			<trans-unit id="filter.expr.eq" approved="yes">
 				<source />
 				<target>Ist genau</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.neq">
+			<trans-unit id="filter.expr.neq" approved="yes">
 				<source />
 				<target>Ist nicht</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.like">
+			<trans-unit id="filter.expr.like" approved="yes">
 				<source />
 				<target>Enthält</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.notLike">
+			<trans-unit id="filter.expr.notLike" approved="yes">
 				<source />
 				<target>Enthält nicht</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.gt">
+			<trans-unit id="filter.expr.gt" approved="yes">
 				<source />
 				<target>Mehr als</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.lt">
+			<trans-unit id="filter.expr.lt" approved="yes">
 				<source />
 				<target>Weniger als</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.in">
+			<trans-unit id="filter.expr.in" approved="yes">
 				<source />
 				<target>Enthält</target>
 			</trans-unit>
-			<trans-unit id="filter.expr.notIn">
+			<trans-unit id="filter.expr.notIn" approved="yes">
 				<source />
 				<target>Enthält nicht</target>
 			</trans-unit>
@@ -299,135 +299,135 @@
 				<source>Items per page</source>
 				<target>Einträge pro Seite</target>
 			</trans-unit>
-			<trans-unit id="workspace.readyToPublish.modal.title">
+			<trans-unit id="workspace.readyToPublish.modal.title" approved="yes">
 				<source />
 				<target>Datensatz veröffentlichen</target>
 			</trans-unit>
-			<trans-unit id="workspace.readyToPublish.modal.content">
+			<trans-unit id="workspace.readyToPublish.modal.content" approved="yes">
 				<source />
 				<target>Möchten Sie den Datensatz wirklich veröffentlichen?</target>
 			</trans-unit>
-			<trans-unit id="workspace.readyToPublish.button.cancel">
+			<trans-unit id="workspace.readyToPublish.button.cancel" approved="yes">
 				<source />
 				<target>Nein, abbrechen</target>
 			</trans-unit>
-			<trans-unit id="workspace.readyToPublish.button.confirm">
+			<trans-unit id="workspace.readyToPublish.button.confirm" approved="yes">
 				<source />
 				<target>Ja, veröffentlichen</target>
 			</trans-unit>
-			<trans-unit id="workspace.readyToPublish.notification.success.title">
+			<trans-unit id="workspace.readyToPublish.notification.success.title" approved="yes">
 				<source />
 				<target>Anfrage erfolgreich</target>
 			</trans-unit>
-			<trans-unit id="workspace.readyToPublish.notification.success.description">
+			<trans-unit id="workspace.readyToPublish.notification.success.description" approved="yes">
 				<source />
 				<target>Die Anfrage zur Freigabe wurde erfolgreich übermittelt</target>
 			</trans-unit>
-			<trans-unit id="workspace.requestChanges.notification.success.title">
+			<trans-unit id="workspace.requestChanges.notification.success.title" approved="yes">
 				<source />
 				<target>Anfrage erfolgreich</target>
 			</trans-unit>
-			<trans-unit id="workspace.requestChanges.notification.success.description">
+			<trans-unit id="workspace.requestChanges.notification.success.description" approved="yes">
 				<source />
 				<target>Die Anfrage für Änderungen wurde erfolgreich übermittelt</target>
 			</trans-unit>
-			<trans-unit id="inlineEdit.error.title">
+			<trans-unit id="inlineEdit.error.title" approved="yes">
 				<source />
 				<target>Fehler</target>
 			</trans-unit>
-			<trans-unit id="inlineEdit.error.message">
+			<trans-unit id="inlineEdit.error.message" approved="yes">
 				<source />
 				<target>Beim Speichern der Daten ist ein Fehler aufgetreten</target>
 			</trans-unit>
-			<trans-unit id="inlineEdit.batchEdit.title">
+			<trans-unit id="inlineEdit.batchEdit.title" approved="yes">
 				<source />
 				<target>Mehrfachbearbeitung</target>
 			</trans-unit>
-			<trans-unit id="inlineEdit.batchEdit.saving">
+			<trans-unit id="inlineEdit.batchEdit.saving" approved="yes">
 				<source />
 				<target>Speichere %d Datensätze...</target>
 			</trans-unit>
-			<trans-unit id="inlineEdit.batchEdit.success">
+			<trans-unit id="inlineEdit.batchEdit.success" approved="yes">
 				<source />
 				<target>%d Datensätze erfolgreich aktualisiert</target>
 			</trans-unit>
-			<trans-unit id="inlineEdit.batchEdit.partialSuccess">
+			<trans-unit id="inlineEdit.batchEdit.partialSuccess" approved="yes">
 				<source />
 				<target>%d Datensätze aktualisiert, %d fehlgeschlagen</target>
 			</trans-unit>
-			<trans-unit id="inlineEdit.batchEdit.allFailed">
+			<trans-unit id="inlineEdit.batchEdit.allFailed" approved="yes">
 				<source />
 				<target>Alle %d Datensätze konnten nicht aktualisiert werden</target>
 			</trans-unit>
-			<trans-unit id="deleteFile.error.title">
+			<trans-unit id="deleteFile.error.title" approved="yes">
 				<source />
 				<target>Fehler</target>
 			</trans-unit>
-			<trans-unit id="deleteFile.error.message">
+			<trans-unit id="deleteFile.error.message" approved="yes">
 				<source />
 				<target>Beim Löschen der Datei ist ein Fehler aufgetreten</target>
 			</trans-unit>
-			<trans-unit id="hiddenToggle.error.title">
+			<trans-unit id="hiddenToggle.error.title" approved="yes">
 				<source />
 				<target>Fehler</target>
 			</trans-unit>
-			<trans-unit id="hiddenToggle.error.message">
+			<trans-unit id="hiddenToggle.error.message" approved="yes">
 				<source />
 				<target>Der Datensatz konnte nicht aktualisiert werden</target>
 			</trans-unit>
-			<trans-unit id="download.modal.title">
+			<trans-unit id="download.modal.title" approved="yes">
 				<source />
 				<target>Datensätze herunterladen</target>
 			</trans-unit>
-			<trans-unit id="download.button.close">
+			<trans-unit id="download.button.close" approved="yes">
 				<source />
 				<target>Schließen</target>
 			</trans-unit>
-			<trans-unit id="download.button.download">
+			<trans-unit id="download.button.download" approved="yes">
 				<source />
 				<target>Herunterladen</target>
 			</trans-unit>
-			<trans-unit id="filter.category.label">
+			<trans-unit id="filter.category.label" approved="yes">
 				<source />
 				<target>Kategorie filtern</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.noPermissionsToDelete">
+			<trans-unit id="ajax.error.noPermissionsToDelete" approved="yes">
 				<source />
 				<target>Keine Berechtigung zum Löschen von Datensätzen</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.pageNotFound">
+			<trans-unit id="ajax.error.pageNotFound" approved="yes">
 				<source />
 				<target>Seite des Datensatzes nicht gefunden</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.noPermissionsToDeleteRecord">
+			<trans-unit id="ajax.error.noPermissionsToDeleteRecord" approved="yes">
 				<source />
 				<target>Keine Berechtigung zum Löschen dieses Datensatzes</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.noFileMetadataUid">
+			<trans-unit id="ajax.error.noFileMetadataUid" approved="yes">
 				<source />
 				<target>Keine sys_file_metadata UID angegeben</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.fileNotFound">
+			<trans-unit id="ajax.error.fileNotFound" approved="yes">
 				<source />
 				<target>Datei nicht gefunden</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.noPermissionsToDeleteFile">
+			<trans-unit id="ajax.error.noPermissionsToDeleteFile" approved="yes">
 				<source />
 				<target>Keine Berechtigung zum Löschen der Datei</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.deleteFileFailed">
+			<trans-unit id="ajax.error.deleteFileFailed" approved="yes">
 				<source />
 				<target>Fehler beim Löschen der Datei</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.noPermissionsToEdit">
+			<trans-unit id="ajax.error.noPermissionsToEdit" approved="yes">
 				<source />
 				<target>Keine Berechtigung zum Bearbeiten des Datensatzes</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.invalidColumn">
+			<trans-unit id="ajax.error.invalidColumn" approved="yes">
 				<source />
 				<target>Ungültiger Spaltenname</target>
 			</trans-unit>
-			<trans-unit id="ajax.error.recordNotFound">
+			<trans-unit id="ajax.error.recordNotFound" approved="yes">
 				<source />
 				<target>Datensatz nicht gefunden</target>
 			</trans-unit>
