@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, sortBy } from '../helpers/typo3-backend';
-import { resetDatabase } from '../helpers/db-reset';
+import { resetDatabase, resetUserPreferences } from '../helpers/db-reset';
 
 test.describe('News Sort', () => {
-  test.beforeAll(() => { resetDatabase(); });
+  test.beforeAll(() => { resetDatabase(); resetUserPreferences(); });
 
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);

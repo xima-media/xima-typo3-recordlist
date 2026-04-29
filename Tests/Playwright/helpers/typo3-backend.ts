@@ -34,12 +34,35 @@ export async function getFirstRecordUid(contentFrame: FrameLocator): Promise<str
 }
 
 export async function switchTable(contentFrame: FrameLocator, tableName: string): Promise<void> {
-  const link = contentFrame.locator(`a.dropdown-item.dropdown-item-spaced[title="${tableName}"]`);
-  const href = await link.getAttribute('href');
-  // Link lives inside a CSS popover with no layout box — navigate the iframe's window directly
-  await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
-  // TYPO3 reloads the iframe; wait for stale recordlist to detach, then reappear with new content
-  await waitForReload(contentFrame);
+  // v13: table switcher renders as <select name="tableSelector"> (makeMenu())
+  // v14: renders as Bootstrap dropdown a.dropdown-item links
+  const isV13 = await contentFrame.locator('select[name="tableSelector"]').count() > 0;
+  if (isV13) {
+    await contentFrame.locator('select[name="tableSelector"]').selectOption({ label: tableName });
+    await waitForReload(contentFrame);
+  } else {
+    const link = contentFrame.locator(`a.dropdown-item.dropdown-item-spaced[title="${tableName}"]`);
+    const href = await link.getAttribute('href');
+    // Link lives inside a CSS popover with no layout box — navigate the iframe's window directly
+    await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
+    // TYPO3 reloads the iframe; wait for stale recordlist to detach, then reappear with new content
+    await waitForReload(contentFrame);
+  }
+}
+
+export async function selectLanguage(contentFrame: FrameLocator, languageName: string): Promise<void> {
+  // v13: language filter renders as <select name="languageSelector"> (makeMenu())
+  // v14: renders as a[title="..."] links inside a dropdown
+  const isV13 = await contentFrame.locator('select[name="languageSelector"]').count() > 0;
+  if (isV13) {
+    await contentFrame.locator('select[name="languageSelector"]').selectOption({ label: languageName });
+    await waitForReload(contentFrame);
+  } else {
+    const link = contentFrame.locator(`a[title="${languageName}"]`);
+    const href = await link.getAttribute('href');
+    await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
+    await waitForReload(contentFrame);
+  }
 }
 
 export async function sortBy(contentFrame: FrameLocator, columnName: string, direction: 'ASC' | 'DESC' = 'ASC'): Promise<void> {

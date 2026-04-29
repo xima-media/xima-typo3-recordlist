@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, openModule, waitForReload } from '../helpers/typo3-backend';
+import { loginAsAdmin, openModule, waitForReload, selectLanguage } from '../helpers/typo3-backend';
 
 test.describe('News Filter', () => {
   test.describe.configure({ mode: 'serial' });
@@ -11,11 +11,7 @@ test.describe('News Filter', () => {
   test('filter by English language — only English records shown', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_news');
 
-    // Language links are inside CSS popovers — navigate via href directly
-    const englishLink = contentFrame.locator('a[title="English"]');
-    const englishHref = await englishLink.getAttribute('href');
-    await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), englishHref as string);
-    await waitForReload(contentFrame);
+    await selectLanguage(contentFrame, 'English');
 
     await expect(contentFrame.locator('tr[data-sys_language_uid="0"][data-uid]').first()).toBeVisible();
     await expect(contentFrame.locator('tr[data-uid][data-sys_language_uid]:not([data-sys_language_uid="0"])')).toHaveCount(0);
@@ -24,11 +20,7 @@ test.describe('News Filter', () => {
   test('filter by German language — only German records shown', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_news');
 
-    // Language links are inside CSS popovers — navigate via href directly
-    const germanLink = contentFrame.locator('a[title="German"]');
-    const germanHref = await germanLink.getAttribute('href');
-    await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), germanHref as string);
-    await waitForReload(contentFrame);
+    await selectLanguage(contentFrame, 'German');
 
     await expect(contentFrame.locator('tr[data-sys_language_uid="1"][data-uid]').first()).toBeVisible();
     await expect(contentFrame.locator('tr[data-uid][data-sys_language_uid]:not([data-sys_language_uid="1"])')).toHaveCount(0);
