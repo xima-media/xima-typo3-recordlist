@@ -61,14 +61,14 @@ jobs:
           max_attempts: 3
           retry_on: error
           timeout_minutes: 10
-          command: ddev composer ci:test:acceptance
-          new_command_on_retry: ddev composer test:acceptance -- -g failed
+          command: ddev playwright test
+          new_command_on_retry: ddev playwright test --last-failed
 
       # Save acceptance reports
       - uses: actions/upload-artifact@v4
         with:
           name: acceptance-reports-${{ matrix.php-version }}-${{ matrix.typo3-version }}
-          path: Tests/Acceptance/_output
+          path: Tests/Playwright/playwright-report/
         if: failure()
 
       # Report coverage
