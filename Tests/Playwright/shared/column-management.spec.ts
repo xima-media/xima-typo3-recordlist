@@ -143,4 +143,18 @@ test.describe('Column Management', () => {
     await page.locator('.modal').waitFor({ state: 'detached', timeout: 5000 });
     await waitForReload(contentFrame);
   });
+
+  test('content block label are translated in column selection', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_news');
+
+    await openColumnsModal(page, contentFrame);
+    await expect(page.locator('.modal')).toContainText('Content block field');
+  });
+
+  test('content block label are translated in table column', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_news');
+
+    await toggleColumn(page, contentFrame, 'xima_extendednews_content_blocks_filed');
+    await expect(contentFrame.locator('thead')).toContainText('Content block');
+  });
 });
