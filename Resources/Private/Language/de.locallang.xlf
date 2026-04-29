@@ -159,6 +159,14 @@
 				<source />
 				<target>Das '%s'-Feld der aufgelisteten Einträge bearbeiten</target>
 			</trans-unit>
+			<trans-unit id="pagination.pageIndicator">
+				<source />
+				<target>Seite %1$s von %2$d</target>
+			</trans-unit>
+			<trans-unit id="pagination.rangeIndicator">
+				<source />
+				<target>Einträge %1$d - %2$d</target>
+			</trans-unit>
 			<trans-unit id="modal.delete.title">
 				<source />
 				<target>Datei löschen</target>
