@@ -4,5 +4,5 @@ typeName: extendedNews
 fields:
   - identifier: title
     useExistingField: true
-  - identifier: content_blocks_filed
+  - identifier: content_blocks_field
     type: Text

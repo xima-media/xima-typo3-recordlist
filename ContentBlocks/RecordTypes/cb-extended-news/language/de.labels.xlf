@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
-  <file datatype="plaintext" original="labels.xlf" source-language="en" date="2026-04-13T11:42:07+00:00" product-name="xima/extended-news">
-    <header/>
-    <body>
-      <trans-unit id="title">
-        <source>Erweiterte News</source>
-      </trans-unit>
-      <trans-unit id="content_blocks_filed.label">
-        <source>Content Block Feld</source>
-      </trans-unit>
-    </body>
-  </file>
+<file datatype="plaintext" original="labels.xlf" source-language="en" date="2026-04-13T11:42:07+00:00" product-name="xima/extended-news">
+	<header/>
+	<body>
+	  <trans-unit id="title">
+		<source>Erweiterte News</source>
+	  </trans-unit>
+	  <trans-unit id="content_blocks_field.label">
+		<source>Content Block Feld</source>
+	  </trans-unit>
+	</body>
+</file>
 </xliff>
