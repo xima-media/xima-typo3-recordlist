@@ -10,7 +10,7 @@ test.describe('BeUsers Edit', () => {
     const contentFrame = await openModule(page, 'example_beusers');
     const uid = await getFirstRecordUid(contentFrame);
 
-    await contentFrame.locator(`tr[data-uid="${uid}"] a[title="Edit"]`).click();
+    await contentFrame.locator(`tr[data-uid="${uid}"] a:is([title="Edit"],[aria-label="Edit"])`).click();
     await contentFrame.locator('.module-docheader').first().waitFor({ timeout: 5000 });
 
     await expect(contentFrame.locator('body')).toContainText('Edit');

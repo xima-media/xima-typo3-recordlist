@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, openModule, searchFor, switchTable } from '../helpers/typo3-backend';
+import { loginAsAdmin, openModule, searchFor, switchTable, waitForReload } from '../helpers/typo3-backend';
 import { resetUserPreferences } from '../helpers/db-reset';
 
 test.describe('BeUsers Module', () => {
@@ -44,11 +44,12 @@ test.describe('BeUsers Module', () => {
     await contentFrame.locator('input[name="search_field"]').waitFor({ state: 'visible', timeout: 5000 });
     await expect(contentFrame.locator('input[name="search_field"]')).toHaveValue('');
 
-    // Search in Backend usergroup
+    // Search in Backend usergroup — use waitForReload to ensure POST completes before switching
     await contentFrame.locator('input[name="search_field"]').fill('Editors');
     await contentFrame.locator('input[name="search_field"]').press('Enter');
-    await contentFrame.locator('main.recordlist').waitFor({ timeout: 5000 });
+    await waitForReload(contentFrame);
     await expect(contentFrame.locator('input[name="search_field"]')).toHaveValue('Editors');
+    await expect(contentFrame.locator('main.recordlist')).toContainText('Editors');
 
     // Switch to File mount — search field should be empty
     await switchTable(contentFrame, 'File mount');
