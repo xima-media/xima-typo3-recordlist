@@ -29,9 +29,3 @@ parameters:
 			identifier: identical.alwaysFalse
 			count: 1
 			path: Classes/Controller/AbstractBackendController.php
-
-		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
-			count: 1
-			path: Classes/Controller/AjaxController.php

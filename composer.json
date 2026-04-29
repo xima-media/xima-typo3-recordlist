@@ -23,11 +23,6 @@
 	"require-dev": {
 		"armin/editorconfig-cli": "^2.1",
 		"bk2k/bootstrap-package": "^16.0",
-		"codeception/codeception": "^5.1",
-		"codeception/module-asserts": "^3.0",
-		"codeception/module-db": "^3.2",
-		"codeception/module-phpbrowser": "^4.0",
-		"codeception/module-webdriver": "^4.0",
 		"ergebnis/composer-normalize": "^2.45",
 		"friendsofphp/php-cs-fixer": "^3.12",
 		"georgringer/news": "^14.0",
@@ -91,7 +86,6 @@
 			"@ci:typoscript:lint",
 			"@ci:yaml:lint"
 		],
-		"ci:test:acceptance": "codecept run Acceptance",
 		"ci:typoscript:lint": "typoscript-lint --fail-on-warnings",
 		"ci:yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint",
 		"composer:normalize": "@composer normalize --no-check-lock",
@@ -110,7 +104,6 @@
 			"@typoscript:lint",
 			"@yaml:lint"
 		],
-		"test:acceptance": "vendor/bin/codecept run Acceptance",
 		"typoscript:lint": "typoscript-lint",
 		"yaml:lint": "find ./ ! -path './vendor/*' ! -path '*/node_modules/*' \\( -name '*.yaml' -o -name '*.yml' \\) | xargs -r yaml-lint"
 	}

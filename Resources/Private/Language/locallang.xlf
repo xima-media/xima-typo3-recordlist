@@ -120,6 +120,12 @@
 			<trans-unit id="table.th.editFieldOfRecords">
 				<source>Edit the '%s' field of the listed records</source>
 			</trans-unit>
+			<trans-unit id="pagination.pageIndicator">
+				<source>Page %1$s of %2$d</source>
+			</trans-unit>
+			<trans-unit id="pagination.rangeIndicator">
+				<source>Records %1$d - %2$d</source>
+			</trans-unit>
 			<trans-unit id="modal.delete.title">
 				<source>Delete file</source>
 			</trans-unit>
