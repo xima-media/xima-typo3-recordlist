@@ -40,20 +40,15 @@ test.describe('BeUsers Module', () => {
 
     // Switch to Backend usergroup — search field should be empty
     await switchTable(contentFrame, 'Backend usergroup');
-    await contentFrame.locator('.toggleFiltersButton:not(.hidden)').click();
-    await contentFrame.locator('input[name="search_field"]').waitFor({ state: 'visible', timeout: 5000 });
     await expect(contentFrame.locator('input[name="search_field"]')).toHaveValue('');
 
-    // Search in Backend usergroup
-    await contentFrame.locator('input[name="search_field"]').fill('Editors');
-    await contentFrame.locator('input[name="search_field"]').press('Enter');
-    await contentFrame.locator('main.recordlist').waitFor({ timeout: 5000 });
+    // Search in Backend usergroup — use waitForReload to ensure POST completes before switching
+    await searchFor(contentFrame, 'Editors');
     await expect(contentFrame.locator('input[name="search_field"]')).toHaveValue('Editors');
+    await expect(contentFrame.locator('main.recordlist')).toContainText('Editors');
 
     // Switch to File mount — search field should be empty
     await switchTable(contentFrame, 'File mount');
-    await contentFrame.locator('.toggleFiltersButton:not(.hidden)').click();
-    await contentFrame.locator('input[name="search_field"]').waitFor({ state: 'visible', timeout: 5000 });
     await expect(contentFrame.locator('input[name="search_field"]')).toHaveValue('');
 
     // Return to Backend user — original search should still be there

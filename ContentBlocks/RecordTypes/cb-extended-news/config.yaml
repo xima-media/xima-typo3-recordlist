@@ -1,0 +1,8 @@
+name: xima/extended-news
+table: tx_news_domain_model_news
+typeName: extendedNews
+fields:
+  - identifier: title
+    useExistingField: true
+  - identifier: content_blocks_field
+    type: Text
