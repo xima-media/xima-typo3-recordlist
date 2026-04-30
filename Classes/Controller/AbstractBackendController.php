@@ -421,16 +421,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function loadWorkspaceScripts(): void
     {
+        $this->pageRenderer->addInlineSetting(
+            'FormEngine',
+            'moduleUrl',
+            (string)$this->backendUriBuilder->buildUriFromRoute('record_edit')
+        );
+        $this->pageRenderer->addInlineSetting('FormEngine', 'formName', 'editform');
+
         if ($this::WORKSPACE_ID) {
             $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
                 JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-workspace-ready-to-publish.js')
             );
             $this->pageRenderer->addInlineLanguageLabelFile('EXT:workspaces/Resources/Private/Language/locallang.xlf');
-            $this->pageRenderer->addInlineSetting(
-                'FormEngine',
-                'moduleUrl',
-                (string)$this->backendUriBuilder->buildUriFromRoute('record_edit')
-            );
             $this->pageRenderer->addInlineSetting(
                 'RecordHistory',
                 'moduleUrl',
