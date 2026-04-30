@@ -20,6 +20,11 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
                     ],
                 ],
             ],
+            'LANG' => [
+                'availableLocales' => [
+                    'de',
+                ],
+            ],
             'LOG' => [
                 'writerConfiguration' => [
                     \TYPO3\CMS\Core\Log\LogLevel::DEBUG => [

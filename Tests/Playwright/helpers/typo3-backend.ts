@@ -74,13 +74,10 @@ export async function sortBy(contentFrame: FrameLocator, columnName: string, dir
 
 export async function searchFor(contentFrame: FrameLocator, searchTerm: string): Promise<void> {
   const searchField = contentFrame.locator('input[name="search_field"]');
-  if (!await searchField.isVisible()) {
-    await contentFrame.locator('.toggleFiltersButton:not(.hidden)').click();
-    await searchField.waitFor({ state: 'visible', timeout: 5000 });
-  }
   await searchField.fill(searchTerm);
   await searchField.press('Enter');
-  await contentFrame.locator('main.recordlist').waitFor({ timeout: 5000 });
+  await searchField.waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
+  await searchField.waitFor({ state: 'visible', timeout: 10000 });
 }
 
 export async function openColumnsModal(page: Page, contentFrame: FrameLocator): Promise<void> {
