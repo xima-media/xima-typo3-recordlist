@@ -76,7 +76,8 @@ export async function searchFor(contentFrame: FrameLocator, searchTerm: string):
   const searchField = contentFrame.locator('input[name="search_field"]');
   await searchField.fill(searchTerm);
   await searchField.press('Enter');
-  await waitForReload(contentFrame);
+  await searchField.waitFor({ state: 'detached', timeout: 3000 }).catch(() => {});
+  await searchField.waitFor({ state: 'visible', timeout: 10000 });
 }
 
 export async function openColumnsModal(page: Page, contentFrame: FrameLocator): Promise<void> {
