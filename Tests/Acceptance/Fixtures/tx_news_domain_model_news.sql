@@ -126,12 +126,12 @@ VALUES
 
 -- Date filter test data for content block date fields (three dbType variants)
 INSERT INTO `tx_news_domain_model_news`
-    (`uid`, `content_blocks_timestamp`, `content_blocks_date`, `content_blocks_datetime`)
+		(`uid`, `content_blocks_timestamp`, `content_blocks_date`, `content_blocks_datetime`)
 VALUES
-    (1, UNIX_TIMESTAMP('2024-01-15 00:00:00'), '2024-01-15', '2024-01-15 10:00:00'),
-    (2, UNIX_TIMESTAMP('2024-01-15 00:00:00'), '2024-01-15', '2024-01-15 14:30:00'),
-    (3, UNIX_TIMESTAMP('2024-02-01 00:00:00'), '2024-02-01', '2024-02-01 09:15:00')
+		(1, UNIX_TIMESTAMP('2024-01-15 00:00:00'), '2024-01-15', '2024-01-15 10:00:00'),
+		(2, UNIX_TIMESTAMP('2024-01-15 00:00:00'), '2024-01-15', '2024-01-15 14:30:00'),
+		(3, UNIX_TIMESTAMP('2024-02-01 00:00:00'), '2024-02-01', '2024-02-01 09:15:00')
 ON DUPLICATE KEY UPDATE
-    content_blocks_timestamp = VALUES(content_blocks_timestamp),
-    content_blocks_date      = VALUES(content_blocks_date),
-    content_blocks_datetime  = VALUES(content_blocks_datetime);
+		content_blocks_timestamp = VALUES(content_blocks_timestamp),
+		content_blocks_date      = VALUES(content_blocks_date),
+		content_blocks_datetime  = VALUES(content_blocks_datetime);

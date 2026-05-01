@@ -2,19 +2,19 @@ import { test, expect, FrameLocator, Page } from '@playwright/test';
 import {loginAsAdmin, openModule, toggleColumn, waitForReload} from '../helpers/typo3-backend';
 
 /**
- * Tests date-field filtering for all three TCA datetime dbType variants added via
- * the xima/extended-news content block:
- *
- *   content_blocks_timestamp  – integer Unix timestamp (dbType: int → epoch-space comparison)
- *   content_blocks_date       – SQL DATE string        (dbType: date → DATE() comparison)
- *   content_blocks_datetime   – SQL DATETIME string    (dbType: datetime → DATE() comparison)
- *
- * Fixture values (set in tx_news_domain_model_news.sql):
- *   uid=1  2024-01-15  (timestamp at midnight, date '2024-01-15', datetime '2024-01-15 10:00:00')
- *   uid=2  2024-01-15  (timestamp at midnight, date '2024-01-15', datetime '2024-01-15 14:30:00')
- *   uid=3  2024-02-01  (timestamp at midnight, date '2024-02-01', datetime '2024-02-01 09:15:00')
- *   all others → NULL / 0
- */
+* Tests date-field filtering for all three TCA datetime dbType variants added via
+* the xima/extended-news content block:
+*
+*   content_blocks_timestamp  – integer Unix timestamp (dbType: int → epoch-space comparison)
+*   content_blocks_date       – SQL DATE string        (dbType: date → DATE() comparison)
+*   content_blocks_datetime   – SQL DATETIME string    (dbType: datetime → DATE() comparison)
+*
+* Fixture values (set in tx_news_domain_model_news.sql):
+*   uid=1  2024-01-15  (timestamp at midnight, date '2024-01-15', datetime '2024-01-15 10:00:00')
+*   uid=2  2024-01-15  (timestamp at midnight, date '2024-01-15', datetime '2024-01-15 14:30:00')
+*   uid=3  2024-02-01  (timestamp at midnight, date '2024-02-01', datetime '2024-02-01 09:15:00')
+*   all others → NULL / 0
+*/
 
 const DATE_FIELDS: Array<{ field: string; label: string }> = [
     { field: 'content_blocks_timestamp', label: 'integer Unix timestamp' },
