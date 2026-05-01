@@ -109,6 +109,8 @@ test.describe('News Date Filter', () => {
             await applyDateFilter(page, contentFrame, field, 'lt', '2024-02-01');
 
             const uids = await visibleUids(contentFrame);
+            expect(uids, `lt 2024-02-01 must include uid=1`).toContain('1');
+            expect(uids, `lt 2024-02-01 must include uid=2`).toContain('2');
             // uid=3 (2024-02-01) must NOT appear — the boundary date itself is not strictly less than
             expect(uids, `lt 2024-02-01 must not include uid=3`).not.toContain('3');
         });
