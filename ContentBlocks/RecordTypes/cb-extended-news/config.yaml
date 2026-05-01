@@ -1,8 +1,21 @@
 name: xima/extended-news
 table: tx_news_domain_model_news
 typeName: extendedNews
+prefixFields: false
 fields:
   - identifier: title
     useExistingField: true
   - identifier: content_blocks_field
     type: Text
+  - identifier: content_blocks_timestamp
+    prefix: none
+    type: DateTime
+    dbType: int
+  - identifier: content_blocks_date
+    prefix: none
+    type: DateTime
+    dbType: date
+  - identifier: content_blocks_datetime
+    prefix: none
+    type: DateTime
+    dbType: datetime

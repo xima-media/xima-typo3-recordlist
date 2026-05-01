@@ -154,7 +154,7 @@ test.describe('Column Management', () => {
   test('content block label are translated in table column', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_news');
 
-    await toggleColumn(page, contentFrame, 'xima_extendednews_content_blocks_field');
+    await toggleColumn(page, contentFrame, 'content_blocks_field');
     await expect(contentFrame.locator('thead')).toContainText('Content block');
   });
 });
