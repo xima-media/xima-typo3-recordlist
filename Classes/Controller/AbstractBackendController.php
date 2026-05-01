@@ -615,12 +615,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     'like' => 'LIKE',
                     'notlike' => 'NOT LIKE',
                     'in' => 'IN',
+                    'notin' => 'NOT IN',
                     default => '=',
                 };
-                $rightExpr = $data['value'];
+                $value = $data['value'];
+                $rightExpr = $this->queryBuilder->createNamedParameter($value);
 
                 if ($expr === 'like' || $expr === 'notlike') {
-                    $rightExpr = '%' . addcslashes($rightExpr, '%_') . '%';
+                    $rightExpr = $this->queryBuilder->createNamedParameter('%' . addcslashes($value, '%_') . '%');
+                }
+
+                if ($expr === 'in' || $expr === 'notin') {
+                    $rightExpr = '(' . $this->queryBuilder->quoteArrayBasedValueListToStringList($value) . ')';
                 }
 
                 if (isset($data['dataType']) && $data['dataType'] === 'date') {
@@ -629,13 +635,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         'date', 'datetime' => 'IFNULL(DATE(t1.' . $field . '), "")',
                         default => 'IFNULL(DATE(FROM_UNIXTIME(t1.' . $field . ')), "")',
                     };
-                    $rightExpr = date('Y-m-d', strtotime($rightExpr));
+                    $date = date('Y-m-d', strtotime($value));
+                    $rightExpr = $this->queryBuilder->createNamedParameter($date);
                 }
 
                 $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
                     $leftExpr,
                     $operator,
-                    $this->queryBuilder->createNamedParameter($rightExpr)
+                    $rightExpr
                 );
             }
         }
