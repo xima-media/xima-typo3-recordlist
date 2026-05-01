@@ -603,43 +603,49 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     }
                     $field = 'uid';
                 }
-                if (isset($data['dataType']) && $data['dataType'] === 'date') {
-                    $data['value'] = strtotime($data['value']);
-                }
-                match ($data['expr'] ?? '') {
-                    'neq' => $this->additionalConstraints[] = $this->queryBuilder->expr()->neq(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
-                    'lt' => $this->additionalConstraints[] = $this->queryBuilder->expr()->lt(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
-                    'gt' => $this->additionalConstraints[] = $this->queryBuilder->expr()->gt(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
-                    'like' => $this->additionalConstraints[] = $this->queryBuilder->expr()->like(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
-                    ),
-                    'notLike' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notLike(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
-                    ),
-                    'in' => $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
-                        't1.' . $field,
-                        $data['value']
-                    ),
-                    'notIn' => $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
-                        't1.' . $field,
-                        $data['value']
-                    ),
-                    default => $this->additionalConstraints[] = $this->queryBuilder->expr()->eq(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
+
+                $leftExpr = 't1.' . $field;
+                $expr = strtolower($data['expr'] ?? '');
+                $operator = match ($expr) {
+                    'neq' => '!=',
+                    'lt' => '<',
+                    'gt' => '>',
+                    'gte' => '>=',
+                    'lte' => '<=',
+                    'like' => 'LIKE',
+                    'notlike' => 'NOT LIKE',
+                    'in' => 'IN',
+                    'notin' => 'NOT IN',
+                    default => '=',
                 };
+                $value = $data['value'];
+                $rightExpr = $this->queryBuilder->createNamedParameter($value);
+
+                if ($expr === 'like' || $expr === 'notlike') {
+                    $rightExpr = $this->queryBuilder->createNamedParameter('%' . addcslashes($value, '%_') . '%');
+                }
+
+                if ($expr === 'in' || $expr === 'notin') {
+                    $rightExpr = '(' . $this->queryBuilder->quoteArrayBasedValueListToStringList($value) . ')';
+                }
+
+                if (isset($data['dataType']) && $data['dataType'] === 'date') {
+                    $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
+                    $date = date('Y-m-d', strtotime($value));
+                    if ($dbType === 'date' || $dbType === 'datetime') {
+                        $leftExpr = 'IFNULL(DATE(t1.' . $field . '), "")';
+                        $rightExpr = $this->queryBuilder->createNamedParameter($date);
+                    } else {
+                        $leftExpr = 'IFNULL(t1.' . $field . ', 0)';
+                        $rightExpr = $this->queryBuilder->createNamedParameter(strtotime($date), Connection::PARAM_INT);
+                    }
+                }
+
+                $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                    $leftExpr,
+                    $operator,
+                    $rightExpr
+                );
             }
         }
     }
