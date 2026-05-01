@@ -605,7 +605,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 }
 
                 $leftExpr = 't1.' . $field;
-                $expr = $data['expr'] ?? '';
+                $expr = strtolower($data['expr'] ?? '');
                 $operator = match ($expr) {
                     'neq' => '!=',
                     'lt' => '<',
@@ -613,7 +613,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     'gte' => '>=',
                     'lte' => '<=',
                     'like' => 'LIKE',
-                    'notLike' => 'NOT LIKE',
+                    'notlike' => 'NOT LIKE',
                     'in' => 'IN',
                     default => '=',
                 };
