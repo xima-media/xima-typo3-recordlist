@@ -603,66 +603,37 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     }
                     $field = 'uid';
                 }
-                if (isset($data['dataType']) && $data['dataType'] === 'date') {
-                    $fieldConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config'] ?? null;
-                    if (is_array($fieldConfig)) {
-                        $dbType = $fieldConfig['dbType'] ?? '';
-                        if ($dbType !== 'datetime') {
-                            $data['value'] = strtotime($data['value']);
-                            $data['valueUpperBound'] = $data['value'] + 86400;
-                        } else {
-                            $data['value'] = date('Y-m-d H:i:s', strtotime($data['value']));
-                            $data['valueUpperBound'] = date('Y-m-d H:i:s', strtotime($data['value'] . ' +1 day'));
-                        }
-                    }
-                }
-                match ($data['expr'] ?? '') {
-                    'neq' => $constraint = $this->queryBuilder->expr()->neq(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
-                    'lt' => $constraint = $this->queryBuilder->expr()->lt(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
-                    'gt' => $constraint = $this->queryBuilder->expr()->gt(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
-                    'like' => $constraint = $this->queryBuilder->expr()->like(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
-                    ),
-                    'notLike' => $constraint = $this->queryBuilder->expr()->notLike(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter('%' . addcslashes($data['value'], '%_') . '%')
-                    ),
-                    'in' => $constraint = $this->queryBuilder->expr()->in(
-                        't1.' . $field,
-                        $data['value']
-                    ),
-                    'notIn' => $constraint = $this->queryBuilder->expr()->notIn(
-                        't1.' . $field,
-                        $data['value']
-                    ),
-                    default => $constraint = $this->queryBuilder->expr()->eq(
-                        't1.' . $field,
-                        $this->queryBuilder->createNamedParameter($data['value'])
-                    ),
+
+                $leftExpr = 't1.' . $field;
+                $expr = $data['expr'] ?? '';
+                $operator = match ($expr) {
+                    'neq' => '!=',
+                    'lt' => '<',
+                    'gt' => '>',
+                    'gte' => '>=',
+                    'lte' => '<=',
+                    'like' => 'LIKE',
+                    'notLike' => 'NOT LIKE',
+                    'in' => 'IN',
+                    default => '=',
                 };
-                if (($data['dataType'] ?? null) === 'date' && (($data['expr'] ?? 'eq') === 'eq')) {
-                    $constraint = $this->queryBuilder->expr()->and(
-                        $this->queryBuilder->expr()->gte(
-                            't1.' . $field,
-                            $this->queryBuilder->createNamedParameter($data['value'])
-                        ),
-                        $this->queryBuilder->expr()->lt(
-                            't1.' . $field,
-                            $this->queryBuilder->createNamedParameter($data['valueUpperBound'])
-                        )
-                    );
+                $rightExpr = $data['value'];
+
+                if ($expr === 'like' || $expr === 'notlike') {
+                    $rightExpr = '%' . addcslashes($rightExpr, '%_') . '%';
                 }
-                $this->additionalConstraints[] = $constraint;
+
+                if (isset($data['dataType']) && $data['dataType'] === 'date') {
+                    $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
+                    $leftExpr = $dbType !== 'datetime' ? 'IFNULL(DATE(FROM_UNIXTIME(t1.' . $field . ')), "")' : 'IFNULL(DATE(t1.' . $field . '),"")';
+                    $rightExpr = date('Y-m-d', strtotime($rightExpr));
+                }
+
+                $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                    $leftExpr,
+                    $operator,
+                    $this->queryBuilder->createNamedParameter($rightExpr)
+                );
             }
         }
     }
