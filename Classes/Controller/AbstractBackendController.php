@@ -608,10 +608,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $date = date('Y-m-d', strtotime($data['value']));
                     if ($dbType === 'date' || $dbType === 'datetime') {
                         $leftExpr = 'IFNULL(DATE(t1.' . $field . '), "")';
-                        $rightExpr = $this->queryBuilder->createNamedParameter($date);
                     } else {
-                        $leftExpr = 'IFNULL(t1.' . $field . ', 0)';
-                        $rightExpr = $this->queryBuilder->createNamedParameter(strtotime($date), Connection::PARAM_INT);
+                        $leftExpr = 'IFNULL(DATE(FROM_UNIXTIME(t1.' . $field . ')), "")';
                     }
                     $operator = match ($data['expr'] ?? '') {
                         'neq' => '!=',
@@ -624,7 +622,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
                         $leftExpr,
                         $operator,
-                        $rightExpr
+                        $this->queryBuilder->createNamedParameter($date)
                     );
                     continue;
                 }
