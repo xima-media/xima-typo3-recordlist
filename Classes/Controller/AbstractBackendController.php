@@ -625,7 +625,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
                 if (isset($data['dataType']) && $data['dataType'] === 'date') {
                     $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
-                    $leftExpr = $dbType !== 'datetime' ? 'IFNULL(DATE(FROM_UNIXTIME(t1.' . $field . ')), "")' : 'IFNULL(DATE(t1.' . $field . '),"")';
+                    $leftExpr = match ($dbType) {
+                        'date', 'datetime' => 'IFNULL(DATE(t1.' . $field . '), "")',
+                        default => 'IFNULL(DATE(FROM_UNIXTIME(t1.' . $field . ')), "")',
+                    };
                     $rightExpr = date('Y-m-d', strtotime($rightExpr));
                 }
 
