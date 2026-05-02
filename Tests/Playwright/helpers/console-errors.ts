@@ -5,12 +5,12 @@ export interface ConsoleErrorTracker {
 }
 
 /**
- * Attach a JS console error tracker to the given Playwright page.
- * Captures console.error() calls from all frames (including iframes).
- * Network-level errors ("Failed to load resource") are excluded.
- *
- * @param ignorePatterns  Optional regex patterns to suppress additional noise
- */
+* Attach a JS console error tracker to the given Playwright page.
+* Captures console.error() calls from all frames (including iframes).
+* Network-level errors ("Failed to load resource") are excluded.
+*
+* @param ignorePatterns  Optional regex patterns to suppress additional noise
+*/
 export function trackConsoleErrors(page: Page, ignorePatterns: RegExp[] = []): ConsoleErrorTracker {
   const errors: string[] = [];
 
