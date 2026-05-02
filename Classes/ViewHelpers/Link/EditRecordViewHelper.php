@@ -26,6 +26,7 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
     public function initializeArguments(): void
     {
         parent::initializeArguments();
+        $this->registerTagAttribute('aria-label', 'string', 'Accessible label for the link');
         $this->registerArgument('uid', 'int', 'uid of record to be edited', true);
         $this->registerArgument('table', 'string', 'target database table', true);
         $this->registerArgument('fields', 'string', 'Edit only these fields (comma separated list)');
