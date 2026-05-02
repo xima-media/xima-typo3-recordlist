@@ -1,13 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, getFirstRecordUid, waitForSave } from '../helpers/typo3-backend';
 import { resetDatabase } from '../helpers/db-reset';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('News Publish', () => {
   test.afterAll(() => { resetDatabase(); });
 
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('mark record as ready to publish', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_news');

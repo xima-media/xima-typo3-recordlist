@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule } from '../helpers/typo3-backend';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('BeUsers Export', () => {
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('download modal opens', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_beusers');

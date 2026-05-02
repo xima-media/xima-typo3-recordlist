@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, searchFor, switchTable } from '../helpers/typo3-backend';
 import { resetUserPreferences } from '../helpers/db-reset';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('BeUsers Module', () => {
   // Serial: tests share the same TYPO3 admin session — parallel execution causes search state bleed
@@ -8,9 +9,12 @@ test.describe('BeUsers Module', () => {
 
   test.afterAll(() => { resetUserPreferences(); });
 
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('all tables are accessible', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_beusers');

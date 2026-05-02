@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, openColumnsModal, toggleColumn, waitForReload } from '../helpers/typo3-backend';
 import { resetDatabase, resetUserPreferences } from '../helpers/db-reset';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('Column Management', () => {
   test.describe.configure({ mode: 'serial' });
@@ -8,10 +9,13 @@ test.describe('Column Management', () => {
   test.beforeAll(() => { resetDatabase(); });
   test.afterAll(() => { resetDatabase(); });
 
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     resetUserPreferences();
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('columns modal opens', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_beusers');

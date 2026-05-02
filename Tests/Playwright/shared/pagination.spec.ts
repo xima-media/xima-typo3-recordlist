@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, searchFor, waitForReload } from '../helpers/typo3-backend';
 import { resetDatabase, resetUserPreferences } from '../helpers/db-reset';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('Pagination', () => {
   test.describe.configure({ mode: 'serial' });
@@ -8,10 +9,13 @@ test.describe('Pagination', () => {
   test.beforeAll(() => { resetDatabase(); });
   test.afterAll(() => { resetDatabase(); });
 
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     resetUserPreferences();
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('navigate to next and previous page', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_news');
