@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, getFirstRecordUid, waitForReload, waitForSave } from '../helpers/typo3-backend';
 import { resetDatabase } from '../helpers/db-reset';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('News Edit', () => {
   test.describe.configure({ mode: 'serial' });
@@ -8,15 +9,18 @@ test.describe('News Edit', () => {
   test.beforeAll(() => { resetDatabase(); });
   test.afterAll(() => { resetDatabase(); });
 
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('edit button opens form', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_news');
     const uid = await getFirstRecordUid(contentFrame);
 
-    await contentFrame.locator(`tr[data-uid="${uid}"] a:is([title="Edit"],[aria-label="Edit"])`).click();
+    await contentFrame.locator(`tr[data-uid="${uid}"] a[aria-label="Edit"]`).click();
     await contentFrame.locator('.module-docheader').first().waitFor({ timeout: 5000 });
 
     await expect(page).toHaveURL(/\/typo3\/record\/edit/);
@@ -27,7 +31,7 @@ test.describe('News Edit', () => {
     const contentFrame = await openModule(page, 'example_news');
     const uid = await getFirstRecordUid(contentFrame);
 
-    await contentFrame.locator(`tr[data-uid="${uid}"] a:is([title="Edit"],[aria-label="Edit"])`).click();
+    await contentFrame.locator(`tr[data-uid="${uid}"] a[aria-label="Edit"]`).click();
     await contentFrame.locator('.module-docheader').first().waitFor({ timeout: 5000 });
 
     const titleInput = contentFrame.locator(`input[data-formengine-input-name="data[tx_news_domain_model_news][${uid}][title]"]`);
@@ -49,7 +53,7 @@ test.describe('News Edit', () => {
     const contentFrame = await openModule(page, 'example_news');
     const uid = await getFirstRecordUid(contentFrame);
 
-    await contentFrame.locator(`tr[data-uid="${uid}"] a:is([title="Edit"],[aria-label="Edit"])`).click();
+    await contentFrame.locator(`tr[data-uid="${uid}"] a[aria-label="Edit"]`).click();
     await contentFrame.locator('.module-docheader').first().waitFor({ timeout: 5000 });
 
     const titleInput = contentFrame.locator(`input[data-formengine-input-name="data[tx_news_domain_model_news][${uid}][title]"]`);
