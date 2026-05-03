@@ -70,6 +70,7 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
         $this->tag->forceClosingTag(true);
         if ($this->arguments['title']) {
             $this->tag->addAttribute('title', $this->arguments['title']);
+            $this->tag->addAttribute('aria-label', $this->arguments['title']);
         }
         return $this->tag->render();
     }
