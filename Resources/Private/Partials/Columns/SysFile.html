@@ -1,10 +1,13 @@
-{namespace be=TYPO3\CMS\Backend\ViewHelpers}
-{namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
+{namespace be=TYPO3\CMS\Backend\ViewHelpers}{namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
 <f:if condition="{item.{colConfig.columnName}}">
     <f:if condition="{item.{colConfig.columnName}.properties.type} == '2'">
         <xm:link.editRecord
-            returnUrl="{f:be.uri(route: moduleName)}" table="{table}" uid="{item.uid}" workspaceId="{workspaceId}">
+            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+            returnUrl="{f:be.uri(route: moduleName)}"
+            table="{table}"
+            uid="{item.uid}"
+            workspaceId="{workspaceId}">
             <be:thumbnail image="{item.{colConfig.columnName}}" width="50" height="50" />
         </xm:link.editRecord>
     </f:if>

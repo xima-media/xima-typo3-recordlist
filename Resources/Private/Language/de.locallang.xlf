@@ -103,6 +103,10 @@
 				<source />
 				<target>Original</target>
 			</trans-unit>
+			<trans-unit id="table.button.editOriginal" approved="yes">
+				<source />
+				<target>Original bearbeiten</target>
+			</trans-unit>
 			<trans-unit id="table.button.edit" approved="yes">
 				<source />
 				<target>Bearbeiten</target>
