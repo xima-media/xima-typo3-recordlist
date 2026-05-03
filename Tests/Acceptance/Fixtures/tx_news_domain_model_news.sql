@@ -123,3 +123,15 @@ VALUES
 (118, 15, 1, 58, 'Wissensdatenbank-Update abgeschlossen', 'wissensdatenbank-update-abgeschlossen', 'Verbesserte Dokumentation verbessert Benutzerunterstützung', '<p>Die aktualisierte Wissensdatenbank bietet umfassende Dokumentation für alle Produkte.</p><p>Neue Artikel und Videos helfen Benutzern, schnell Lösungen zu finden.</p>', UNIX_TIMESTAMP('2024-08-02 13:45:00'), 'Doris Sanders', 'always'),
 (119, 15, 1, 59, 'Jahresend-Leistungsüberprüfung', 'jahresend-leistungsueberprüfung', 'Starke Ergebnisse positionieren Unternehmen für zukünftiges Wachstum', '<p>Die Jahresend-Leistungsüberprüfung zeigt starke Ergebnisse über alle Metriken hinweg.</p><p>Erfolge umfassen Umsatzwachstum, Kundenakquise und operative Verbesserungen.</p>', UNIX_TIMESTAMP('2024-08-06 10:00:00'), 'Joe Price', 'hourly'),
 (120, 15, 1, 60, 'Zukunftspläne und Roadmap enthüllt', 'zukunftsplaene-und-roadmap-enthuellt', 'Strategische Initiativen geben Richtung für kommende Jahre vor', '<p>Unsere zukünftige Roadmap skizziert ehrgeizige Pläne für Innovation und Expansion.</p><p>Schlüsselinitiativen umfassen neue Produktentwicklung und Markteintritt.</p>', UNIX_TIMESTAMP('2024-08-09 14:30:00'), 'Ruby Bennett', 'daily');
+
+-- Date filter test data for content block date fields (three dbType variants)
+INSERT INTO `tx_news_domain_model_news`
+		(`uid`, `content_blocks_timestamp`, `content_blocks_date`, `content_blocks_datetime`)
+VALUES
+		(1, UNIX_TIMESTAMP('2024-01-15 00:00:00'), '2024-01-15', '2024-01-15 10:00:00'),
+		(2, UNIX_TIMESTAMP('2024-01-15 14:30:00'), '2024-01-15', '2024-01-15 14:30:00'),
+		(3, UNIX_TIMESTAMP('2024-02-01 00:00:00'), '2024-02-01', '2024-02-01 09:15:00')
+ON DUPLICATE KEY UPDATE
+		content_blocks_timestamp = VALUES(content_blocks_timestamp),
+		content_blocks_date      = VALUES(content_blocks_date),
+		content_blocks_datetime  = VALUES(content_blocks_datetime);
