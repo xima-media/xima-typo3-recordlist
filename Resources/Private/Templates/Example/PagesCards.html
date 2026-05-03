@@ -2,6 +2,7 @@
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
     xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
     xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:xm="http://typo3.org/ns/Xima/XimaTypo3Recordlist/ViewHelpers"
     data-namespace-typo3-fluid="true">
 
 <f:layout name="Default" />
@@ -9,7 +10,8 @@
 
 <f:section name="Content">
     <div class="container">
-        <h1>{records->f:count()} {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
+        <h1>{records->f:count()}
+            {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.records')}</h1>
         <div class="card-container">
             <f:for each="{records}" as="record">
                 <div class="card card-size-small">
@@ -25,13 +27,20 @@
                             <p class="card-text">{record.description}</p>
                         </div>
                         <div class="card-footer">
-                            <be:link.editRecord uid="{record.uid}" table="pages" class="btn btn-default">
+                            <xm:link.editRecord
+                                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+                                uid="{record.uid}"
+                                table="pages"
+                                class="btn btn-default">
                                 <core:icon identifier="actions-open" />
                                 {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}
-                            </be:link.editRecord>
+                            </xm:link.editRecord>
                             <f:if condition="{record.doktype} !== 254">
                                 <a
-                                    class="btn btn-secondary" target="_blank" href="{record.url}">
+                                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.view')}"
+                                    class="btn btn-secondary"
+                                    target="_blank"
+                                    href="{record.url}">
                                     <core:icon identifier="actions-view" />
                                     {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.view')}
                                 </a>

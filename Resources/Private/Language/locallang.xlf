@@ -78,6 +78,9 @@
 			<trans-unit id="table.button.original">
 				<source>Original</source>
 			</trans-unit>
+			<trans-unit id="table.button.editOriginal">
+				<source>Edit original</source>
+			</trans-unit>
 			<trans-unit id="table.button.edit">
 				<source>Edit</source>
 			</trans-unit>

@@ -26,13 +26,13 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
     public function initializeArguments(): void
     {
         parent::initializeArguments();
-        $this->registerTagAttribute('aria-label', 'string', 'Accessible label for the link');
         $this->registerArgument('uid', 'int', 'uid of record to be edited', true);
         $this->registerArgument('table', 'string', 'target database table', true);
         $this->registerArgument('fields', 'string', 'Edit only these fields (comma separated list)');
         $this->registerArgument('module', 'string', 'Set module identifier for context - marking as active when editing the record', false, '');
         $this->registerArgument('returnUrl', 'string', 'return to this URL after closing the edit dialog', false, '');
         $this->registerArgument('workspaceId', 'int', 'workspace uid to respect in edit view', false, 0);
+        $this->registerArgument('title', 'string', 'title attribute for the link', false, '');
     }
 
     /**
@@ -68,6 +68,9 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
         $this->tag->addAttribute('href', $uri);
         $this->tag->setContent($this->renderChildren());
         $this->tag->forceClosingTag(true);
+        if ($this->arguments['title']) {
+            $this->tag->addAttribute('title', $this->arguments['title']);
+        }
         return $this->tag->render();
     }
 }
