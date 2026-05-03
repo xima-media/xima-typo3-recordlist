@@ -1,13 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, sortBy } from '../helpers/typo3-backend';
 import { resetDatabase, resetUserPreferences } from '../helpers/db-reset';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('News Sort', () => {
   test.beforeAll(() => { resetDatabase(); resetUserPreferences(); });
 
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('sort by author ascending — first author is Albert Kelly', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_news');

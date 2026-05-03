@@ -8,7 +8,11 @@
 <f:if condition="{item.editable}">
     <f:then>
         <xm:link.editRecord
-            returnUrl="{f:be.uri(route: moduleName)}" table="{table}" uid="{item.uid}" workspaceId="{workspaceId}">
+            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+            returnUrl="{f:be.uri(route: moduleName)}"
+            table="{table}"
+            uid="{item.uid}"
+            workspaceId="{workspaceId}">
             <span class="workspace-state-{item.state}">{fieldValue}</span>
         </xm:link.editRecord>
     </f:then>

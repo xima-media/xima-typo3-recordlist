@@ -3,11 +3,19 @@
 <f:if condition="{item.editable}">
     <f:then>
         <xm:link.editRecord
-            returnUrl="{f:be.uri(route: moduleName)}" table="{table}" uid="{item.uid}" workspaceId="{workspaceId}">
-            <span class="workspace-state-{item.state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters: 255)}</span>
+            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+            returnUrl="{f:be.uri(route: moduleName)}"
+            table="{table}"
+            uid="{item.uid}"
+            workspaceId="{workspaceId}">
+            <span class="workspace-state-{item.state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters:
+                255)}
+            </span>
         </xm:link.editRecord>
     </f:then>
     <f:else>
-        <span class="workspace-state-{item.state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters: 255)}</span>
+        <span class="workspace-state-{item.state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters:
+            255)}
+        </span>
     </f:else>
 </f:if>

@@ -1,13 +1,17 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin, openModule, getFirstRecordUid } from '../helpers/typo3-backend';
 import { resetDatabase } from '../helpers/db-reset';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 test.describe('BeUsers Delete', () => {
   test.afterAll(() => { resetDatabase(); });
 
+  let consoleErrors: ConsoleErrorTracker;
   test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
     await loginAsAdmin(page);
   });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
 
   test('delete record with confirmation', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_beusers');

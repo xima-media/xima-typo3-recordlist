@@ -32,6 +32,7 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
         $this->registerArgument('module', 'string', 'Set module identifier for context - marking as active when editing the record', false, '');
         $this->registerArgument('returnUrl', 'string', 'return to this URL after closing the edit dialog', false, '');
         $this->registerArgument('workspaceId', 'int', 'workspace uid to respect in edit view', false, 0);
+        $this->registerArgument('title', 'string', 'title attribute for the link', false, '');
     }
 
     /**
@@ -67,6 +68,10 @@ class EditRecordViewHelper extends AbstractTagBasedViewHelper
         $this->tag->addAttribute('href', $uri);
         $this->tag->setContent($this->renderChildren());
         $this->tag->forceClosingTag(true);
+        if ($this->arguments['title']) {
+            $this->tag->addAttribute('title', $this->arguments['title']);
+            $this->tag->addAttribute('aria-label', $this->arguments['title']);
+        }
         return $this->tag->render();
     }
 }

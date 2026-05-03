@@ -5,7 +5,11 @@
         </f:then>
         <f:else>
             <div class="dropdown dropdown-static">
-                <button class="dropdown-toggle dropdown-toggle-link">
+                <button
+                    type="button"
+                    class="dropdown-toggle dropdown-toggle-link"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
                     {colConfig.label}
                     <f:if condition="{order_field}==={colConfig.columnName}">
                         <div class="text-primary">
