@@ -1,6 +1,10 @@
+import DocumentService from "@typo3/core/document-service.js";
+
 export default class RecordlistPagination {
   constructor() {
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {

@@ -4,10 +4,13 @@ import { SeverityEnum } from "@typo3/backend/enum/severity.js";
 import $ from "jquery";
 import Utility from "@typo3/backend/utility.js";
 import Notification from "@typo3/backend/notification.js";
+import DocumentService from "@typo3/core/document-service.js";
 
 export default class RecordlistWorkspaceReadyToPublish {
   constructor() {
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {

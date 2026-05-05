@@ -1,6 +1,7 @@
 import Icons from '@typo3/backend/icons.js'
 import AjaxRequest from '@typo3/core/ajax/ajax-request.js'
 import Notification from "@typo3/backend/notification.js";
+import DocumentService from '@typo3/core/document-service.js'
 
 class RecordlistInlineEdit {
 
@@ -12,7 +13,9 @@ class RecordlistInlineEdit {
             checkboxChecked: '.t3js-multi-record-selection-check:checked',
             tableRow: '[data-uid][data-table]'
         };
-        this.bindEvents();
+        DocumentService.ready().then(() => {
+            this.bindEvents();
+        });
     }
 
     bindEvents() {

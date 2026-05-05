@@ -1,3 +1,5 @@
+import DocumentService from "@typo3/core/document-service.js";
+
 /**
 * RecordlistRowSelection
 * Handles row selection in recordlist tables via checkbox clicks, row clicks, and multi-selection controls
@@ -19,7 +21,9 @@ export default class RecordlistRowSelection {
     this.activeClass = 'active';
     this.lastChecked = null;
 
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {
