@@ -588,6 +588,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 if (isset($data['mm']) && $data['mm'] === '1') {
                     $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config'] ?? [];
                     $mmTable = $columnConfig['MM'] ?? '';
+                    $field = 'uid';
 
                     if (($columnConfig['type'] ?? '') === 'group' && $mmTable) {
                         // Group: value is "tableName_uid" — split on last underscore to handle tables with underscores
@@ -622,36 +623,28 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         $parentUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
 
                         if (empty($parentUids)) {
+                            // no records found: cause empty result set
                             $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                        } elseif (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
-                            $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
-                                't1.uid',
-                                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
-                            );
-                        } else {
-                            $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
-                                't1.uid',
-                                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
-                            );
+                            continue;
                         }
-                        continue;
+                        $data['value'] = $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids);
+                    } else {
+                        // Category-style MM: value is comma-separated local UIDs, result is foreign UIDs (= record UIDs)
+                        $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
+                        $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
+                        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+                        $qb->select('uid_foreign')
+                            ->from($mmTable)
+                            ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'] ?? '')))
+                            ->andWhere($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($recordsUids)));
+                        $uids = $qb->executeQuery()->fetchAllNumeric();
+                        $data['value'] = array_map('current', $uids);
+                        if (empty($data['value'])) {
+                            // no records found: cause empty result set
+                            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+                            continue;
+                        }
                     }
-
-                    // Category-style MM: value is comma-separated local UIDs, result is foreign UIDs (= record UIDs)
-                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-                    $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
-                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                    $qb->select('uid_foreign')
-                        ->from($mmTable)
-                        ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'] ?? '')))
-                        ->andWhere($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($recordsUids)));
-                    $uids = $qb->executeQuery()->fetchAllNumeric();
-                    $data['value'] = array_map('current', $uids);
-                    if (empty($data['value'])) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                        continue;
-                    }
-                    $field = 'uid';
                 }
                 if (isset($data['dataType']) && $data['dataType'] === 'date') {
                     $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
