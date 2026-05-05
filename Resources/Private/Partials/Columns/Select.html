@@ -1,4 +1,5 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-select.js'}" />
 
 <span class="badge-container select-badge-container">
     <f:if condition="{item.{colConfig.columnName}}">
@@ -12,8 +13,9 @@
                                 returnUrl="{f:be.uri(route: moduleName)}"
                                 table="{table}"
                                 uid="{item.uid}"
-                                class="badge badge-pill select-badge"
-                                workspaceId="{workspaceId}">
+                                class="badge badge-pill select-badge{f:if(condition: '{filterValue} == {colConfig.filter.value}', then: ' badge-primary')}"
+                                workspaceId="{workspaceId}"
+                                additionalAttributes="{'data-field-name': colConfig.columnName, 'data-value': filterValue}">
                                 <f:if condition="{colConfig.filter.iconIdentifier}">
                                     <core:icon identifier="{colConfig.filter.iconIdentifier}" size="small" />
                                 </f:if>

@@ -1289,7 +1289,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             if ($column['filter']['partial'] === 'Group') {
-                $allowedTables = GeneralUtility::trimExplode(',', $config['config']['allowed'] ?? []);
+                $allowedTables = GeneralUtility::trimExplode(',', $config['config']['allowed'] ?? '');
                 if ($config['config']['foreign_table'] ?? false) {
                     $allowedTables[] = $config['config']['foreign_table'];
                 }
