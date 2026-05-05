@@ -21,7 +21,7 @@
             optionValueField="{optionValueField}"
             optionLabelField="{optionLabelField}">
             <f:for each="{colConfig.filter.items}" as="tableItems" key="tableName">
-                <f:form.select.optgroup label="{tableName}">
+                <f:form.select.optgroup label="{colConfig.filter.tables.{tableName}.label}">
                     <f:for each="{tableItems}" as="item" key="itemKey">
                         <f:form.select.option value="{item.{optionValueField}}" label="{item.{optionLabelField}}" />
                     </f:for>

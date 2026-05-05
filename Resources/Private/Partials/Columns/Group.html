@@ -19,6 +19,9 @@
                                     uid="{item.uid}"
                                     class="badge badge-pill group-badge"
                                     workspaceId="{workspaceId}">
+                                    <f:if condition="{colConfig.filter.tables.{tableName}.iconIdentifier}">
+                                        <core:icon identifier="{colConfig.filter.tables.{tableName}.iconIdentifier}" size="small" />
+                                    </f:if>
                                     {colConfig.filter.items.{tableName}.{fieldValue}.label->f:format.crop(maxCharacters: 20)}
                                 </xm:link.editRecord>
                             </f:then>

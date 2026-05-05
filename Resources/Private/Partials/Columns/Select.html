@@ -14,6 +14,9 @@
                                 uid="{item.uid}"
                                 class="badge badge-pill select-badge"
                                 workspaceId="{workspaceId}">
+                                <f:if condition="{colConfig.filter.iconIdentifier}">
+                                    <core:icon identifier="{colConfig.filter.iconIdentifier}" size="small" />
+                                </f:if>
                                 {filterItem.label}
                             </xm:link.editRecord>
                         </f:then>

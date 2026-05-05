@@ -1276,6 +1276,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                             'value' => $record['uid'],
                         ];
                     }
+                    $column['filter']['iconIdentifier'] = $GLOBALS['TCA'][$foreignTable]['ctrl']['typeicon_classes']['default'] ?? '';
+                    $column['filter']['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$foreignTable]['ctrl']['title'] ?? '');
                 }
             }
 
@@ -1297,6 +1299,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                             'value' => $record['uid'],
                         ];
                     }
+                    $column['filter']['tables'][$allowedTable] ??= [];
+                    $column['filter']['tables'][$allowedTable]['iconIdentifier'] = $GLOBALS['TCA'][$allowedTable]['ctrl']['typeicon_classes']['default'] ?? '';
+                    $column['filter']['tables'][$allowedTable]['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$allowedTable]['ctrl']['title'] ?? '');
                 }
             }
         }
