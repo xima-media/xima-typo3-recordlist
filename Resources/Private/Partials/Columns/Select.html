@@ -1,30 +1,28 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
-<span class="category-badge-container">
+<span class="badge-container select-badge-container">
     <f:if condition="{item.{colConfig.columnName}}">
-    <f:for each="{item.{colConfig.columnName} -> f:split(separator: ',')}" as="fieldValue">
-        <f:for each="{colConfig.filter.items}" as="filterItem" key="filterValue">
-            <f:if condition="{filterValue} == {fieldValue}">
-                <f:if condition="{item.editable}">
-                    <f:then>
-                        <span class="category-badge-container">
+        <f:for each="{item.{colConfig.columnName} -> f:split(separator: ',')}" as="fieldValue">
+            <f:for each="{colConfig.filter.items}" as="filterItem" key="filterValue">
+                <f:if condition="{filterValue} == {fieldValue}">
+                    <f:if condition="{item.editable}">
+                        <f:then>
                             <xm:link.editRecord
                                 title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
                                 returnUrl="{f:be.uri(route: moduleName)}"
                                 table="{table}"
                                 uid="{item.uid}"
-                                class="badge badge-pill category-badge"
+                                class="badge badge-pill select-badge"
                                 workspaceId="{workspaceId}">
                                 {filterItem.label}
                             </xm:link.editRecord>
-                        </span>
-                    </f:then>
-                    <f:else>
-                        <span class="category-badge-container">{filterItem.label}</span>
-                    </f:else>
+                        </f:then>
+                        <f:else>
+                            {filterItem.label}
+                        </f:else>
+                    </f:if>
                 </f:if>
-            </f:if>
+            </f:for>
         </f:for>
-    </f:for>
     </f:if>
 </span>

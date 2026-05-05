@@ -4,7 +4,7 @@
     xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
-<span class="category-badge-container">
+<span class="badge-container group-badge-container">
     <f:if condition="{item.{colConfig.columnName}}">
         <f:for each="{item.{colConfig.columnName}}" as="fieldValues" key="tableName">
             <f:for each="{fieldValues}" as="fieldValue">
@@ -12,20 +12,18 @@
                     <f:then>
                         <f:if condition="{item.editable}">
                             <f:then>
-                                <span class="category-badge-container">
-                                    <xm:link.editRecord
-                                        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
-                                        returnUrl="{f:be.uri(route: moduleName)}"
-                                        table="{table}"
-                                        uid="{item.uid}"
-                                        class="badge badge-pill category-badge"
-                                        workspaceId="{workspaceId}">
-                                        {colConfig.filter.items.{tableName}.{fieldValue}.label->f:format.crop(maxCharacters: 20)}
-                                    </xm:link.editRecord>
-                                </span>
+                                <xm:link.editRecord
+                                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+                                    returnUrl="{f:be.uri(route: moduleName)}"
+                                    table="{table}"
+                                    uid="{item.uid}"
+                                    class="badge badge-pill group-badge"
+                                    workspaceId="{workspaceId}">
+                                    {colConfig.filter.items.{tableName}.{fieldValue}.label->f:format.crop(maxCharacters: 20)}
+                                </xm:link.editRecord>
                             </f:then>
                             <f:else>
-                                <span class="category-badge-container">{colConfig.filter.items.{tableName}.{fieldValue}.label}</span>
+                                {colConfig.filter.items.{tableName}.{fieldValue}.label}
                             </f:else>
                         </f:if>
                     </f:then>
