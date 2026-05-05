@@ -1414,6 +1414,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addSysFiles();
         $this->addPreviewButton();
         $this->addSysCategories();
+        $this->addSelectRelations();
         $this->addGroupRelations();
         $this->addInlineRelations();
     }
@@ -2150,6 +2151,146 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
             ],
         ];
+    }
+
+    protected function addSelectRelations(): void
+    {
+        $recordUids = array_column($this->records, 'uid');
+        if (empty($recordUids)) {
+            return;
+        }
+
+        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
+            if (!($column['active'] ?? false)) {
+                continue;
+            }
+
+            if ($column['partial'] !== 'Select') {
+                continue;
+            }
+
+            $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config'] ?? [];
+            $foreignTable = $columnConfig['foreign_table'] ?? '';
+            $mmTable = $columnConfig['MM'] ?? '';
+
+            if ($foreignTable && isset($GLOBALS['TCA'][$foreignTable]) && $mmTable) {
+                // Case: foreign_table + MM — resolve via MM table JOIN (same pattern as addGroupRelations)
+                $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
+                $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
+                $isOpposite = !empty($columnConfig['MM_opposite_field']);
+                $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
+                $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+
+                $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+                $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
+                    ->from($mmTable, 'mm')
+                    ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
+                    ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
+
+                foreach ($mmMatchFields as $matchField => $matchValue) {
+                    $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
+                }
+
+                $groupedRelations = [];
+                foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+                    $parentUid = (int)$row[$localField];
+                    $groupedRelations[$parentUid][] = [
+                        'value' => (string)(int)$row['foreign_uid'],
+                        'label' => $row['label'] ?? '',
+                    ];
+                }
+
+                foreach ($this->records as &$record) {
+                    if (isset($groupedRelations[$record['uid']])) {
+                        $record[$column['columnName']] = $groupedRelations[$record['uid']];
+                    }
+                }
+                unset($record);
+            } elseif ($foreignTable && isset($GLOBALS['TCA'][$foreignTable])) {
+                // Case: foreign_table without MM — UIDs stored as CSV in the field
+                $allUids = [];
+                foreach ($this->records as $record) {
+                    $raw = (string)($record[$column['columnName']] ?? '');
+                    if ($raw === '') {
+                        continue;
+                    }
+                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
+                        if (MathUtility::canBeInterpretedAsInteger($uid)) {
+                            $allUids[] = (int)$uid;
+                        }
+                    }
+                }
+                $allUids = array_unique($allUids);
+                if (empty($allUids)) {
+                    continue;
+                }
+
+                $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
+                $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+                $rows = $qb->select('uid', $labelField)
+                    ->from($foreignTable)
+                    ->where($qb->expr()->in('uid', $qb->quoteArrayBasedValueListToIntegerList($allUids)))
+                    ->executeQuery()
+                    ->fetchAllAssociative();
+
+                $labelMap = [];
+                foreach ($rows as $row) {
+                    $labelMap[(int)$row['uid']] = $row[$labelField] ?? '';
+                }
+
+                foreach ($this->records as &$record) {
+                    $raw = (string)($record[$column['columnName']] ?? '');
+                    if ($raw === '') {
+                        continue;
+                    }
+                    $relations = [];
+                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
+                        $uid = (int)$uid;
+                        if (isset($labelMap[$uid])) {
+                            $relations[] = [
+                                'value' => (string)$uid,
+                                'label' => $labelMap[$uid],
+                            ];
+                        }
+                    }
+                    if (!empty($relations)) {
+                        $record[$column['columnName']] = $relations;
+                    }
+                }
+                unset($record);
+            } else {
+                // Case: static items — values stored as CSV, labels from TCA config
+                $itemMap = [];
+                foreach ($columnConfig['items'] ?? [] as $item) {
+                    $value = (string)($item['value'] ?? '');
+                    $label = (string)($item['label'] ?? '');
+                    if ($value !== '') {
+                        $itemMap[$value] = $this->getLanguageService()->sL($label) ?: $label;
+                    }
+                }
+
+                foreach ($this->records as &$record) {
+                    $items = GeneralUtility::trimExplode(',', (string)($record[$column['columnName']] ?? ''), true);
+                    if (empty($items)) {
+                        $record[$column['columnName']] = [];
+                        continue;
+                    }
+                    $relations = [];
+                    foreach ($items as $value) {
+                        if (isset($itemMap[$value])) {
+                            $relations[] = $itemMap[$value];
+                        } else {
+                            $relations[] = [
+                                'value' => $value,
+                                'label' => $value,
+                            ];
+                        }
+                    }
+                    $record[$column['columnName']] = $relations;
+                }
+                unset($record);
+            }
+        }
     }
 
     protected function addGroupRelations(): void
