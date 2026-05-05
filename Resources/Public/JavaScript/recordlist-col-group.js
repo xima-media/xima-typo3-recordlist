@@ -1,11 +1,11 @@
 import DocumentService from "@typo3/core/document-service.js";
 
-class RecordlistColSelect {
+class RecordlistColGroup {
 
   constructor() {
     DocumentService.ready().then(() => {
       this.init()
-    })
+    });
   }
 
   init() {
@@ -14,12 +14,14 @@ class RecordlistColSelect {
       return
     }
 
-    document.querySelectorAll('a.badge.badge-pill.select-badge').forEach(link => {
+    document.querySelectorAll('a.badge.badge-pill.group-badge').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault()
 
         const fieldName = link.dataset.fieldName
-        const value = link.dataset.value
+        const tableName = link.dataset.table
+        const uid = link.dataset.uid
+        const combinedValue = `${tableName}_${uid}`
 
         const selectInput = searchForm.querySelector(`select[name="filter[${fieldName}][value]"]`)
         if (!selectInput) {
@@ -27,10 +29,10 @@ class RecordlistColSelect {
         }
 
         // Toggle: clicking an already-active badge clears the filter
-        if (selectInput.value === value) {
+        if (selectInput.value === combinedValue) {
           selectInput.value = ''
         } else {
-          selectInput.value = value
+          selectInput.value = combinedValue
         }
 
         searchForm.requestSubmit()
@@ -39,4 +41,4 @@ class RecordlistColSelect {
   }
 }
 
-new RecordlistColSelect()
+new RecordlistColGroup()

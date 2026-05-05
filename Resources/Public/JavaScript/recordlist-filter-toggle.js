@@ -1,5 +1,7 @@
 import UserSettings from "./user-settings.js";
 
+import DocumentService from "@typo3/core/document-service.js";
+
 export default class RecordlistFilterToggle {
 
   typo3version = null;
@@ -14,8 +16,11 @@ export default class RecordlistFilterToggle {
 
   constructor(typo3version) {
     this.typo3version = typo3version;
-    this.cacheDom();
-    this.bindEvents();
+
+    DocumentService.ready().then(() => {
+      this.cacheDom();
+      this.bindEvents();
+    });
   }
 
   cacheDom() {

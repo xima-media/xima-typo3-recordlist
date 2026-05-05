@@ -4,35 +4,31 @@
     xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-group.js'}" />
+
 <span class="badge-container group-badge-container">
     <f:if condition="{item.{colConfig.columnName}}">
         <f:for each="{item.{colConfig.columnName}}" as="fieldValues" key="tableName">
             <f:for each="{fieldValues}" as="fieldValue">
-                <f:if condition="{colConfig.filter.items.{tableName}.{fieldValue}}">
+                <f:if condition="{item.editable}">
                     <f:then>
-                        <f:if condition="{item.editable}">
-                            <f:then>
-                                <xm:link.editRecord
-                                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
-                                    returnUrl="{f:be.uri(route: moduleName)}"
-                                    table="{table}"
-                                    uid="{item.uid}"
-                                    class="badge badge-pill group-badge"
-                                    workspaceId="{workspaceId}">
-                                    <f:if condition="{colConfig.filter.tables.{tableName}.iconIdentifier}">
-                                        <core:icon identifier="{colConfig.filter.tables.{tableName}.iconIdentifier}" size="small" />
-                                    </f:if>
-                                    {colConfig.filter.items.{tableName}.{fieldValue}.label->f:format.crop(maxCharacters: 20)}
-                                </xm:link.editRecord>
-                            </f:then>
-                            <f:else>
-                                {colConfig.filter.items.{tableName}.{fieldValue}.label}
-                            </f:else>
-                        </f:if>
+                        <f:variable name="combinedValue" value="{tableName}_{fieldValue.value}" />
+                        <a
+                            href="#"
+                            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+                            data-table="{tableName}"
+                            data-uid="{fieldValue.value}"
+                            class="badge badge-pill group-badge {f:if(condition: '{colConfig.filter.value} == {combinedValue}', then: ' badge-primary')}"
+                            data-workspaceId="{workspaceId}"
+                            data-field-name="{colConfig.columnName}">
+                            <f:if condition="{colConfig.filter.tables.{tableName}.iconIdentifier}">
+                                <core:icon identifier="{colConfig.filter.tables.{tableName}.iconIdentifier}" size="small" />
+                            </f:if>
+                            {fieldValue.label->f:format.crop(maxCharacters: 20)}
+                        </a>
                     </f:then>
                     <f:else>
-                        <f:comment>Fallback, should not happen</f:comment>
-                        {fieldValue}
+                        {fieldValue.label}
                     </f:else>
                 </f:if>
             </f:for>

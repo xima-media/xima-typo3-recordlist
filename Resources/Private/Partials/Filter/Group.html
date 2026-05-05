@@ -2,11 +2,8 @@
     <f:variable name="fieldName" value="filter[{colConfig.columnName}][value]" />
     <f:variable name="fieldValue" value="{colConfig.filter.value}" />
     <f:variable name="label" value="{colConfig.label}" />
-
     <f:variable name="optionValueField" value="value" />
     <f:variable name="optionLabelField" value="label" />
-
-    <f:form.hidden name="filter[{colConfig.columnName}][expr]" value="eq" />
 </f:if>
 
 <div class="row">
@@ -17,9 +14,7 @@
             class="form-select"
             name="{fieldName}"
             prependOptionValue=""
-            prependOptionLabel=""
-            optionValueField="{optionValueField}"
-            optionLabelField="{optionLabelField}">
+            prependOptionLabel="">
             <f:for each="{colConfig.filter.items}" as="tableItems" key="tableName">
                 <f:form.select.optgroup label="{colConfig.filter.tables.{tableName}.label}">
                     <f:for each="{tableItems}" as="item" key="itemKey">
@@ -31,7 +26,8 @@
     </div>
     <f:if condition="{colConfig}">
         <div class="col col-2">
-            <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'eq', 1: 'neq', 2: 'gt', 3: 'lt'}}" />
+            <f:form.hidden name="filter[{colConfig.columnName}][mm]" value="1" />
+            <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'in', 1: 'notIn', 2: 'eq', 3: 'neq'}}" />
         </div>
     </f:if>
 </div>

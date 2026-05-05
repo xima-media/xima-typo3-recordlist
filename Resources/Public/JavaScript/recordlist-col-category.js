@@ -1,7 +1,14 @@
+import DocumentService from "@typo3/core/document-service.js";
+
 class RecordlistColCategory {
 
-
   constructor() {
+    DocumentService.ready().then(() => {
+      this.init()
+    })
+  }
+
+  init() {
     const searchForm = document.querySelector('#recordlist-search-form')
 
     document.querySelectorAll('a.badge.badge-pill.category-badge').forEach(link => {

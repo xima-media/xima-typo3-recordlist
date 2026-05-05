@@ -586,16 +586,66 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     continue;
                 }
                 if (isset($data['mm']) && $data['mm'] === '1') {
+                    $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config'] ?? [];
+                    $mmTable = $columnConfig['MM'] ?? '';
+
+                    if (($columnConfig['type'] ?? '') === 'group' && $mmTable) {
+                        // Group: value is "tableName_uid" — split on last underscore to handle tables with underscores
+                        $lastUnderscore = strrpos($data['value'], '_');
+                        if ($lastUnderscore === false) {
+                            continue;
+                        }
+                        $filterTableName = substr($data['value'], 0, $lastUnderscore);
+                        $filterUid = (int)substr($data['value'], $lastUnderscore + 1);
+
+                        $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
+                        $isOpposite = !empty($columnConfig['MM_opposite_field']);
+                        $allowed = $columnConfig['allowed'] ?? '';
+                        $isMultiTable = $allowed === '*' || str_contains($allowed, ',');
+
+                        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
+                        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+
+                        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+                        $qb->select($localField)
+                            ->from($mmTable)
+                            ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
+
+                        if ($isMultiTable) {
+                            $qb->andWhere($qb->expr()->eq('tablenames', $qb->createNamedParameter($filterTableName)));
+                        }
+
+                        foreach ($mmMatchFields as $matchField => $matchValue) {
+                            $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
+                        }
+
+                        $parentUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
+
+                        if (empty($parentUids)) {
+                            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+                        } elseif (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
+                            $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                                't1.uid',
+                                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
+                            );
+                        } else {
+                            $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                                't1.uid',
+                                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
+                            );
+                        }
+                        continue;
+                    }
+
+                    // Category-style MM: value is comma-separated local UIDs, result is foreign UIDs (= record UIDs)
+                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
                     $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
-                    $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM'] ?? '';
-                    $mmMatchFields = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM_match_fields'] ?? [];
                     $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
                     $qb->select('uid_foreign')
                         ->from($mmTable)
-                        ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'])))
+                        ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'] ?? '')))
                         ->andWhere($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($recordsUids)));
                     $uids = $qb->executeQuery()->fetchAllNumeric();
-                    // prepare for in constraint
                     $data['value'] = array_map('current', $uids);
                     if (empty($data['value'])) {
                         $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
@@ -1306,7 +1356,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     foreach ($records as $record) {
                         $column['filter']['items'][$allowedTable][$record['uid']] = [
                             'label' => $record[$foreignTableLabel],
-                            'value' => $record['uid'],
+                            'value' => $allowedTable . '_' . $record['uid'],
                         ];
                     }
                     $column['filter']['tables'][$allowedTable] ??= [];
@@ -2146,30 +2196,39 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             $multiTable = count($allowedTables) > 1 || $allowed === '*';
-
-            $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-            $selectFields = [$localField, $foreignField];
-            if ($multiTable) {
-                $selectFields[] = 'tablenames';
-            }
-            $qb->select(...$selectFields)
-                ->from($mmTable)
-                ->where($qb->expr()->in($localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
-
-            foreach ($mmMatchFields as $matchField => $matchValue) {
-                $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-            }
-
-            $rows = $qb->executeQuery()->fetchAllAssociative();
-
+            $tablesToQuery = $multiTable ? $allowedTables : [$allowedTables[0] ?? ''];
             $groupedRelations = [];
-            foreach ($rows as $row) {
-                $parentUid = (int)$row[$localField];
-                $tableName = $multiTable ? ($row['tablenames'] ?? '') : ($allowedTables[0] ?? '');
-                if (!$tableName) {
+
+            foreach ($tablesToQuery as $relatedTable) {
+                if (!$relatedTable || !isset($GLOBALS['TCA'][$relatedTable])) {
                     continue;
                 }
-                $groupedRelations[$parentUid][$tableName][] = (int)$row[$foreignField];
+                $labelField = $GLOBALS['TCA'][$relatedTable]['ctrl']['label'] ?? 'uid';
+                $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+                $qb->select(
+                    'mm.' . $localField,
+                    'ft.uid as foreign_uid',
+                    'ft.' . $labelField . ' as label'
+                )
+                ->from($mmTable, 'mm')
+                ->join('mm', $relatedTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
+                ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
+
+                if ($multiTable) {
+                    $qb->andWhere($qb->expr()->eq('mm.tablenames', $qb->createNamedParameter($relatedTable)));
+                }
+
+                foreach ($mmMatchFields as $matchField => $matchValue) {
+                    $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
+                }
+
+                foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+                    $parentUid = (int)$row[$localField];
+                    $groupedRelations[$parentUid][$relatedTable][] = [
+                        'value' => (int)$row['foreign_uid'],
+                        'label' => $row['label'] ?? '',
+                    ];
+                }
             }
 
             foreach ($this->records as &$record) {
