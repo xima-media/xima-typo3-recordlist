@@ -1124,6 +1124,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
+            if ($config['config']['type'] === 'inline') {
+                $partial = 'Inline';
+                $filter = [
+                    'partial' => 'Inline',
+                ];
+            }
+
             if (in_array($config['config']['type'], ['select', 'category']) && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
                 $partial = 'Category';
                 $filter = [
@@ -1304,6 +1311,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $column['filter']['tables'][$allowedTable]['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$allowedTable]['ctrl']['title'] ?? '');
                 }
             }
+
+            if ($column['filter']['partial'] === 'Inline') {
+                // Labels are resolved in addInlineRelations() from already-fetched child records.
+            }
         }
         unset($column);
 
@@ -1358,6 +1369,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addPreviewButton();
         $this->addSysCategories();
         $this->addGroupRelations();
+        $this->addInlineRelations();
     }
 
     protected function addTranslationButtons(): void
@@ -2138,6 +2150,68 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     }
                 }
             }
+        }
+    }
+
+    protected function addInlineRelations(): void
+    {
+        $recordUids = array_column($this->records, 'uid');
+        if (empty($recordUids)) {
+            return;
+        }
+
+        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
+            if (!($column['active'] ?? false)) {
+                continue;
+            }
+
+            if ($column['partial'] !== 'Inline') {
+                continue;
+            }
+
+            $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config'] ?? [];
+            $foreignTable = $columnConfig['foreign_table'] ?? '';
+            $foreignField = $columnConfig['foreign_field'] ?? '';
+            $foreignTableField = $columnConfig['foreign_table_field'] ?? '';
+
+            if (!$foreignTable || !$foreignField) {
+                continue;
+            }
+
+            $foreignTableLabel = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
+
+            $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qb->select($foreignField, 'uid', $foreignTableLabel)
+                ->from($foreignTable)
+                ->where(
+                    $qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($recordUids))
+                );
+
+            if ($foreignTableField) {
+                $qb->andWhere(
+                    $qb->expr()->eq($foreignTableField, $qb->createNamedParameter($this->getTableName()))
+                );
+            }
+
+            $childRecords = $qb->executeQuery()->fetchAllAssociative();
+
+            $groupedRelations = [];
+            foreach ($childRecords as $childRecord) {
+                $parentUid = (int)$childRecord[$foreignField];
+                $groupedRelations[$parentUid][] = [
+                    'uid' => (int)$childRecord['uid'],
+                    'label' => $childRecord[$foreignTableLabel],
+                ];
+            }
+
+            foreach ($this->records as &$record) {
+                if (isset($groupedRelations[$record['uid']])) {
+                    $record[$column['columnName']] = [
+                        $foreignTable => $groupedRelations[$record['uid']],
+                    ];
+                }
+            }
+            unset($record);
         }
     }
 }

@@ -1,0 +1,31 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:xm="http://typo3.org/ns/Xima/XimaTypo3Recordlist/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+<span class="badge-container inline-badge-container">
+    <f:if condition="{item.{colConfig.columnName}}">
+        <f:for each="{item.{colConfig.columnName}}" as="relations" key="tableName">
+            <f:for each="{relations}" as="relation">
+                <f:if condition="{item.editable}">
+                    <f:then>
+                        <xm:link.editRecord
+                            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+                            returnUrl="{f:be.uri(route: moduleName)}"
+                            table="{tableName}"
+                            uid="{relation.uid}"
+                            class="badge badge-pill inline-badge"
+                            workspaceId="{workspaceId}">
+                            {relation.label->f:format.crop(maxCharacters: 20)}
+                        </xm:link.editRecord>
+                    </f:then>
+                    <f:else>
+                        {relation.label}
+                    </f:else>
+                </f:if>
+            </f:for>
+        </f:for>
+    </f:if>
+</span>
+</html>
