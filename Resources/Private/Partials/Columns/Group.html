@@ -1,0 +1,41 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:xm="http://typo3.org/ns/Xima/XimaTypo3Recordlist/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+<span class="category-badge-container">
+    <f:if condition="{item.{colConfig.columnName}}">
+        <f:for each="{item.{colConfig.columnName}}" as="fieldValues" key="tableName">
+            <f:for each="{fieldValues}" as="fieldValue">
+                <f:if condition="{colConfig.filter.items.{tableName}.{fieldValue}}">
+                    <f:then>
+                        <f:if condition="{item.editable}">
+                            <f:then>
+                                <span class="category-badge-container">
+                                    <xm:link.editRecord
+                                        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+                                        returnUrl="{f:be.uri(route: moduleName)}"
+                                        table="{table}"
+                                        uid="{item.uid}"
+                                        class="badge badge-pill category-badge"
+                                        workspaceId="{workspaceId}">
+                                        {colConfig.filter.items.{tableName}.{fieldValue}.label->f:format.crop(maxCharacters: 20)}
+                                    </xm:link.editRecord>
+                                </span>
+                            </f:then>
+                            <f:else>
+                                <span class="category-badge-container">{colConfig.filter.items.{tableName}.{fieldValue}.label}</span>
+                            </f:else>
+                        </f:if>
+                    </f:then>
+                    <f:else>
+                        <f:comment>Fallback, should not happen</f:comment>
+                        {fieldValue}
+                    </f:else>
+                </f:if>
+            </f:for>
+        </f:for>
+    </f:if>
+</span>
+</html>

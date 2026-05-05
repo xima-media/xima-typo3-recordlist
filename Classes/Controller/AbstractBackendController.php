@@ -1117,6 +1117,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
+            if ($config['config']['type'] === 'group') {
+                $partial = 'Group';
+                $filter = [
+                    'partial' => 'Group',
+                ];
+            }
+
             if (in_array($config['config']['type'], ['select', 'category']) && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
                 $partial = 'Category';
                 $filter = [
@@ -1248,6 +1255,50 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             // set active state
             $column['active'] = in_array($columnName, $activeColumns, true);
+
+            if (!$column['active'] || !isset($column['filter']['partial'])) {
+                continue;
+            }
+
+            $config = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName] ?? [];
+            if ($column['filter']['partial'] === 'Select') {
+                if ($config['config']['foreign_table'] ?? '') {
+                    $foreignTable = $config['config']['foreign_table'];
+                    $foreignTableLabel = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
+                    $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+                    $records = $qb->select('uid', $foreignTableLabel)
+                        ->from($foreignTable)
+                        ->executeQuery()
+                        ->fetchAllAssociative();
+                    foreach ($records as $record) {
+                        $column['filter']['items'][$record['uid']] = [
+                            'label' => $record[$foreignTableLabel],
+                            'value' => $record['uid'],
+                        ];
+                    }
+                }
+            }
+
+            if ($column['filter']['partial'] === 'Group') {
+                $allowedTables = GeneralUtility::trimExplode(',', $config['config']['allowed'] ?? []);
+                if ($config['config']['foreign_table'] ?? false) {
+                    $allowedTables[] = $config['config']['foreign_table'];
+                }
+                foreach ($allowedTables as $allowedTable) {
+                    $foreignTableLabel = $GLOBALS['TCA'][$allowedTable]['ctrl']['label'] ?? 'uid';
+                    $qb = $this->connectionPool->getQueryBuilderForTable($allowedTable);
+                    $records = $qb->select('uid', $foreignTableLabel)
+                        ->from($allowedTable)
+                        ->executeQuery()
+                        ->fetchAllAssociative();
+                    foreach ($records as $record) {
+                        $column['filter']['items'][$allowedTable][$record['uid']] = [
+                            'label' => $record[$foreignTableLabel],
+                            'value' => $record['uid'],
+                        ];
+                    }
+                }
+            }
         }
         unset($column);
 
@@ -1301,6 +1352,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addSysFiles();
         $this->addPreviewButton();
         $this->addSysCategories();
+        $this->addGroupRelations();
     }
 
     protected function addTranslationButtons(): void
@@ -2035,5 +2087,52 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
             ],
         ];
+    }
+
+    protected function addGroupRelations(): void
+    {
+        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
+            if (!($column['active'] ?? false)) {
+                continue;
+            }
+
+            if ($column['partial'] !== 'Group') {
+                continue;
+            }
+
+            $recordUids = array_column($this->records, 'uid');
+            if (empty($recordUids)) {
+                continue;
+            }
+
+            $allowedTables = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['allowed'] ?? '');
+            if (count($allowedTables) > 1) {
+                // @TODO: Resolve multiple table relations
+                continue;
+            }
+
+            $foreignTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['foreign_table'] ?? null;
+            $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['MM'] ?? null;
+            $mmOppositeField = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['MM_opposite_field'] ?? null;
+            if ($foreignTable) {
+                $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+                $relations = $qb->select('uid_foreign')
+                    ->addSelectLiteral('GROUP_CONCAT(uid_local) as uids')
+                    ->from($mmTable)
+                    ->where(
+                        $qb->expr()->in('uid_foreign', $qb->quoteArrayBasedValueListToIntegerList($recordUids))
+                    )
+                    ->groupBy('uid_foreign')
+                    ->executeQuery()
+                    ->fetchAllAssociativeIndexed();
+
+                foreach ($this->records as &$record) {
+                    if (isset($relations[$record['uid']])) {
+                        $record[$column['columnName']] = [];
+                        $record[$column['columnName']][$foreignTable] = GeneralUtility::intExplode(',', $relations[$record['uid']]['uids'], true);
+                    }
+                }
+            }
+        }
     }
 }

@@ -1,22 +1,30 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
-<f:variable name="fieldValue">{item.{colConfig.columnName}}</f:variable>
-<f:if condition="{colConfig.filter.items.{fieldValue}.label}">
-    <f:variable name="fieldValue">{colConfig.filter.items.{fieldValue}.label}</f:variable>
-</f:if>
-
-<f:if condition="{item.editable}">
-    <f:then>
-        <xm:link.editRecord
-            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
-            returnUrl="{f:be.uri(route: moduleName)}"
-            table="{table}"
-            uid="{item.uid}"
-            workspaceId="{workspaceId}">
-            <span class="workspace-state-{item.state}">{fieldValue}</span>
-        </xm:link.editRecord>
-    </f:then>
-    <f:else>
-        <span class="workspace-state-{item.state}">{fieldValue}</span>
-    </f:else>
-</f:if>
+<span class="category-badge-container">
+    <f:if condition="{item.{colConfig.columnName}}">
+    <f:for each="{item.{colConfig.columnName} -> f:split(separator: ',')}" as="fieldValue">
+        <f:for each="{colConfig.filter.items}" as="filterItem" key="filterValue">
+            <f:if condition="{filterValue} == {fieldValue}">
+                <f:if condition="{item.editable}">
+                    <f:then>
+                        <span class="category-badge-container">
+                            <xm:link.editRecord
+                                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+                                returnUrl="{f:be.uri(route: moduleName)}"
+                                table="{table}"
+                                uid="{item.uid}"
+                                class="badge badge-pill category-badge"
+                                workspaceId="{workspaceId}">
+                                {filterItem.label}
+                            </xm:link.editRecord>
+                        </span>
+                    </f:then>
+                    <f:else>
+                        <span class="category-badge-container">{filterItem.label}</span>
+                    </f:else>
+                </f:if>
+            </f:if>
+        </f:for>
+    </f:for>
+    </f:if>
+</span>
