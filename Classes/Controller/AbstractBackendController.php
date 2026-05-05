@@ -1289,11 +1289,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             if ($column['filter']['partial'] === 'Group') {
-                $allowedTables = GeneralUtility::trimExplode(',', $config['config']['allowed'] ?? '');
-                if ($config['config']['foreign_table'] ?? false) {
-                    $allowedTables[] = $config['config']['foreign_table'];
-                }
+                $allowed = $config['config']['allowed'] ?? '';
+                $allowedTables = $allowed === '*'
+                    ? array_keys($config['config']['MM_oppositeUsage'] ?? [])
+                    : GeneralUtility::trimExplode(',', $allowed, true);
                 foreach ($allowedTables as $allowedTable) {
+                    if (!isset($GLOBALS['TCA'][$allowedTable])) {
+                        continue;
+                    }
                     $foreignTableLabel = $GLOBALS['TCA'][$allowedTable]['ctrl']['label'] ?? 'uid';
                     $qb = $this->connectionPool->getQueryBuilderForTable($allowedTable);
                     $records = $qb->select('uid', $foreignTableLabel)
@@ -2108,6 +2111,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addGroupRelations(): void
     {
+        $recordUids = array_column($this->records, 'uid');
+        if (empty($recordUids)) {
+            return;
+        }
+
         foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
             if (!($column['active'] ?? false)) {
                 continue;
@@ -2117,39 +2125,59 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $recordUids = array_column($this->records, 'uid');
-            if (empty($recordUids)) {
+            $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config'] ?? [];
+            $mmTable = $columnConfig['MM'] ?? '';
+            if (!$mmTable) {
                 continue;
             }
 
-            $allowedTables = GeneralUtility::trimExplode(',', $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['allowed'] ?? '');
-            if (count($allowedTables) > 1) {
-                // @TODO: Resolve multiple table relations
-                continue;
+            $allowed = $columnConfig['allowed'] ?? '';
+            $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
+
+            // MM_opposite_field means our records sit on uid_foreign side of the MM table
+            $isOpposite = !empty($columnConfig['MM_opposite_field']);
+            $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
+            $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+
+            if ($allowed === '*') {
+                $allowedTables = array_keys($columnConfig['MM_oppositeUsage'] ?? []);
+            } else {
+                $allowedTables = GeneralUtility::trimExplode(',', $allowed, true);
             }
 
-            $foreignTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['foreign_table'] ?? null;
-            $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['MM'] ?? null;
-            $mmOppositeField = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config']['MM_opposite_field'] ?? null;
-            if ($foreignTable) {
-                $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-                $relations = $qb->select('uid_foreign')
-                    ->addSelectLiteral('GROUP_CONCAT(uid_local) as uids')
-                    ->from($mmTable)
-                    ->where(
-                        $qb->expr()->in('uid_foreign', $qb->quoteArrayBasedValueListToIntegerList($recordUids))
-                    )
-                    ->groupBy('uid_foreign')
-                    ->executeQuery()
-                    ->fetchAllAssociativeIndexed();
+            $multiTable = count($allowedTables) > 1 || $allowed === '*';
 
-                foreach ($this->records as &$record) {
-                    if (isset($relations[$record['uid']])) {
-                        $record[$column['columnName']] = [];
-                        $record[$column['columnName']][$foreignTable] = GeneralUtility::intExplode(',', $relations[$record['uid']]['uids'], true);
-                    }
+            $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+            $selectFields = [$localField, $foreignField];
+            if ($multiTable) {
+                $selectFields[] = 'tablenames';
+            }
+            $qb->select(...$selectFields)
+                ->from($mmTable)
+                ->where($qb->expr()->in($localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
+
+            foreach ($mmMatchFields as $matchField => $matchValue) {
+                $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
+            }
+
+            $rows = $qb->executeQuery()->fetchAllAssociative();
+
+            $groupedRelations = [];
+            foreach ($rows as $row) {
+                $parentUid = (int)$row[$localField];
+                $tableName = $multiTable ? ($row['tablenames'] ?? '') : ($allowedTables[0] ?? '');
+                if (!$tableName) {
+                    continue;
+                }
+                $groupedRelations[$parentUid][$tableName][] = (int)$row[$foreignField];
+            }
+
+            foreach ($this->records as &$record) {
+                if (isset($groupedRelations[$record['uid']])) {
+                    $record[$column['columnName']] = $groupedRelations[$record['uid']];
                 }
             }
+            unset($record);
         }
     }
 
