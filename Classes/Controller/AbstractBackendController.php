@@ -2202,7 +2202,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
                 foreach ($this->records as &$record) {
                     if (isset($groupedRelations[$record['uid']])) {
-                        $record[$column['columnName']] = $groupedRelations[$record['uid']];
+                        $record['_' . $column['columnName']] = $groupedRelations[$record['uid']];
                     }
                 }
                 unset($record);
@@ -2254,7 +2254,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         }
                     }
                     if (!empty($relations)) {
-                        $record[$column['columnName']] = $relations;
+                        $record['_' . $column['columnName']] = $relations;
                     }
                 }
                 unset($record);
@@ -2272,7 +2272,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 foreach ($this->records as &$record) {
                     $items = GeneralUtility::trimExplode(',', (string)($record[$column['columnName']] ?? ''), true);
                     if (empty($items)) {
-                        $record[$column['columnName']] = [];
                         continue;
                     }
                     $relations = [];
@@ -2286,7 +2285,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                             ];
                         }
                     }
-                    $record[$column['columnName']] = $relations;
+                    $record['_' . $column['columnName']] = $relations;
                 }
                 unset($record);
             }
@@ -2367,7 +2366,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             foreach ($this->records as &$record) {
                 if (isset($groupedRelations[$record['uid']])) {
-                    $record[$column['columnName']] = $groupedRelations[$record['uid']];
+                    $record['_' . $column['columnName']] = $groupedRelations[$record['uid']];
                 }
             }
             unset($record);
@@ -2427,7 +2426,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             foreach ($this->records as &$record) {
                 if (isset($groupedRelations[$record['uid']])) {
-                    $record[$column['columnName']] = [
+                    $record['_' . $column['columnName']] = [
                         $foreignTable => $groupedRelations[$record['uid']],
                     ];
                 }

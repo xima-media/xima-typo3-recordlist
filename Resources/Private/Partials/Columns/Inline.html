@@ -5,8 +5,8 @@
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
 <span class="badge-container inline-badge-container">
-    <f:if condition="{item.{colConfig.columnName}}">
-        <f:for each="{item.{colConfig.columnName}}" as="relations" key="tableName">
+    <f:if condition="{item._{colConfig.columnName}}">
+        <f:for each="{item._{colConfig.columnName}}" as="relations" key="tableName">
             <f:for each="{relations}" as="relation">
                 <f:if condition="{item.editable}">
                     <f:then>

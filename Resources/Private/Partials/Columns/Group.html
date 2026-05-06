@@ -7,8 +7,8 @@
 <f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-group.js'}" />
 
 <span class="badge-container group-badge-container">
-    <f:if condition="{item.{colConfig.columnName}}">
-        <f:for each="{item.{colConfig.columnName}}" as="fieldValues" key="tableName">
+    <f:if condition="{item._{colConfig.columnName}}">
+        <f:for each="{item._{colConfig.columnName}}" as="fieldValues" key="tableName">
             <f:for each="{fieldValues}" as="fieldValue">
                 <f:if condition="{item.editable}">
                     <f:then>
