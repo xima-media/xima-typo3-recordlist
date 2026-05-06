@@ -16,11 +16,20 @@
             prependOptionValue=""
             prependOptionLabel="">
             <f:for each="{colConfig.filter.items}" as="tableItems" key="tableName">
-                <f:form.select.optgroup label="{colConfig.filter.tables.{tableName}.label}">
-                    <f:for each="{tableItems}" as="item" key="itemKey">
-                        <f:form.select.option value="{item.{optionValueField}}" label="{item.{optionLabelField}}" />
-                    </f:for>
-                </f:form.select.optgroup>
+                <f:if condition="{colConfig.filter.items -> f:count()} > 1">
+                    <f:then>
+                        <f:form.select.optgroup label="{colConfig.filter.tables.{tableName}.label}">
+                            <f:for each="{tableItems}" as="item" key="itemKey">
+                                <f:form.select.option value="{item.{optionValueField}}" label="{item.{optionLabelField}}" />
+                            </f:for>
+                        </f:form.select.optgroup>
+                    </f:then>
+                    <f:else>
+                        <f:for each="{tableItems}" as="item" key="itemKey">
+                            <f:form.select.option value="{item.{optionValueField}}" label="{item.{optionLabelField}}" />
+                        </f:for>
+                    </f:else>
+                </f:if>
             </f:for>
         </f:form.select>
     </div>

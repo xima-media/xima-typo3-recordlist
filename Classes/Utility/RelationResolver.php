@@ -120,6 +120,56 @@ class RelationResolver
         return new RelationFilterResult(isEmpty: true);
     }
 
+    /**
+     * Build filter dropdown items for a group field, keyed by table name.
+     *
+     * Item values match the actual DB storage format so that FIND_IN_SET
+     * and MM lookups align with what was submitted from the column badge click:
+     *   - GROUP_CSV, default table  →  bare UID string ("26")
+     *   - GROUP_CSV, other tables   →  "tableName_uid" ("pages_5")
+     *   - GROUP_MM (any table)      →  "tableName_uid" (needed for MM lookup split)
+     *
+     * @return array<string, list<array{value: string, label: string}>>
+     */
+    public function resolveGroupFilterItems(string $parentTable, string $columnName): array
+    {
+        $config = $GLOBALS['TCA'][$parentTable]['columns'][$columnName]['config'] ?? [];
+        $allowed = $config['allowed'] ?? '';
+        $mmTable = $config['MM'] ?? '';
+
+        $allowedTables = $allowed === '*'
+            ? array_keys($config['MM_oppositeUsage'] ?? [])
+            : GeneralUtility::trimExplode(',', $allowed, true);
+
+        // For GROUP_CSV (no MM) the first table is the default — its records are stored as bare UIDs
+        $defaultTable = !$mmTable ? ($allowedTables[0] ?? '') : '';
+
+        $result = [];
+        foreach ($allowedTables as $table) {
+            if (!isset($GLOBALS['TCA'][$table])) {
+                continue;
+            }
+            $labelField = $GLOBALS['TCA'][$table]['ctrl']['label'] ?? 'uid';
+            $qb = $this->connectionPool->getQueryBuilderForTable($table);
+            $rows = $qb->select('uid', $labelField)
+                ->from($table)
+                ->executeQuery()
+                ->fetchAllAssociative();
+
+            foreach ($rows as $row) {
+                $uid = (int)$row['uid'];
+                // Bare UID for default table in CSV storage; prefixed for all others
+                $value = ($table === $defaultTable) ? (string)$uid : $table . '_' . $uid;
+                $result[$table][] = [
+                    'value' => $value,
+                    'label' => (string)($row[$labelField] ?? ''),
+                ];
+            }
+        }
+
+        return $result;
+    }
+
     // -------------------------------------------------------------------------
     // Display — private helpers
     // -------------------------------------------------------------------------
@@ -288,8 +338,10 @@ class RelationResolver
 
             foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
                 $parentUid = (int)$row[$localField];
+                $uid = (int)$row['foreign_uid'];
                 $result[$parentUid][$relatedTable][] = [
-                    'value' => (string)(int)$row['foreign_uid'],
+                    'value' => (string)$uid,
+                    'storedValue' => $relatedTable . '_' . $uid,
                     'label' => (string)($row['label'] ?? ''),
                 ];
             }
@@ -313,7 +365,9 @@ class RelationResolver
         // The first table in the allowed list is the implicit default for bare UID entries
         $defaultTable = GeneralUtility::trimExplode(',', $allowed, true)[0] ?? '';
 
-        // Parse all entries, collect UIDs per table
+        // Parse all entries, collect UIDs per table.
+        // $recordParsed stores [{uid, storedValue}] per parent+table so the original
+        // DB token (bare "26" or prefixed "pages_123") is preserved for FIND_IN_SET.
         $tableUids = [];
         $recordParsed = [];
 
@@ -328,7 +382,7 @@ class RelationResolver
                     $uid = (int)$entry;
                     if ($uid > 0 && $defaultTable !== '') {
                         $tableUids[$defaultTable][$uid] = true;
-                        $recordParsed[(int)$record['uid']][$defaultTable][] = $uid;
+                        $recordParsed[(int)$record['uid']][$defaultTable][] = ['uid' => $uid, 'storedValue' => (string)$uid];
                     }
                     continue;
                 }
@@ -344,7 +398,7 @@ class RelationResolver
                     continue;
                 }
                 $tableUids[$tableName][$uid] = true;
-                $recordParsed[(int)$record['uid']][$tableName][] = $uid;
+                $recordParsed[(int)$record['uid']][$tableName][] = ['uid' => $uid, 'storedValue' => $entry];
             }
         }
 
@@ -369,13 +423,15 @@ class RelationResolver
         // Build result indexed by parent UID
         $result = [];
         foreach ($recordParsed as $parentUid => $tableData) {
-            foreach ($tableData as $tableName => $uids) {
-                foreach ($uids as $uid) {
+            foreach ($tableData as $tableName => $entries) {
+                foreach ($entries as $entry) {
+                    $uid = $entry['uid'];
                     if (!isset($labelMaps[$tableName][$uid])) {
                         continue;
                     }
                     $result[$parentUid][$tableName][] = [
                         'value' => (string)$uid,
+                        'storedValue' => $entry['storedValue'],
                         'label' => $labelMaps[$tableName][$uid],
                     ];
                 }

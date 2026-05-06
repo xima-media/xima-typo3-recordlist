@@ -19,9 +19,7 @@ class RecordlistColGroup {
         e.preventDefault()
 
         const fieldName = link.dataset.fieldName
-        const tableName = link.dataset.table
-        const uid = link.dataset.uid
-        const combinedValue = `${tableName}_${uid}`
+        const storedValue = link.dataset.storedValue
 
         const selectInput = searchForm.querySelector(`select[name="filter[${fieldName}][value]"]`)
         if (!selectInput) {
@@ -29,10 +27,10 @@ class RecordlistColGroup {
         }
 
         // Toggle: clicking an already-active badge clears the filter
-        if (selectInput.value === combinedValue) {
+        if (selectInput.value === storedValue) {
           selectInput.value = ''
         } else {
-          selectInput.value = combinedValue
+          selectInput.value = storedValue
         }
 
         searchForm.requestSubmit()

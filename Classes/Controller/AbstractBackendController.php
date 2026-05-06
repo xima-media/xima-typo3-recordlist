@@ -1324,6 +1324,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             if ($column['filter']['partial'] === 'Group') {
+                $column['filter']['items'] = $this->relationResolver->resolveGroupFilterItems($tableName, $columnName);
                 $allowed = $config['config']['allowed'] ?? '';
                 $allowedTables = $allowed === '*'
                     ? array_keys($config['config']['MM_oppositeUsage'] ?? [])
@@ -1331,18 +1332,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 foreach ($allowedTables as $allowedTable) {
                     if (!isset($GLOBALS['TCA'][$allowedTable])) {
                         continue;
-                    }
-                    $foreignTableLabel = $GLOBALS['TCA'][$allowedTable]['ctrl']['label'] ?? 'uid';
-                    $qb = $this->connectionPool->getQueryBuilderForTable($allowedTable);
-                    $records = $qb->select('uid', $foreignTableLabel)
-                        ->from($allowedTable)
-                        ->executeQuery()
-                        ->fetchAllAssociative();
-                    foreach ($records as $record) {
-                        $column['filter']['items'][$allowedTable][$record['uid']] = [
-                            'label' => $record[$foreignTableLabel],
-                            'value' => $allowedTable . '_' . $record['uid'],
-                        ];
                     }
                     $column['filter']['tables'][$allowedTable] ??= [];
                     $column['filter']['tables'][$allowedTable]['iconIdentifier'] = $GLOBALS['TCA'][$allowedTable]['ctrl']['typeicon_classes']['default'] ?? '';
