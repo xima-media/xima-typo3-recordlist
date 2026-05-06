@@ -590,7 +590,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $columnType = $columnConfig['type'] ?? '';
                 $mmTable = $columnConfig['MM'] ?? '';
 
-                if ($columnType === 'group' && $mmTable) {
+                if ($columnType === 'group') {
                     // Group: value is "tableName_uid" — split on last underscore to handle tables with underscores
                     $lastUnderscore = strrpos($data['value'], '_');
                     if ($lastUnderscore === false) {
@@ -598,6 +598,24 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     }
                     $filterTableName = substr($data['value'], 0, $lastUnderscore);
                     $filterUid = (int)substr($data['value'], $lastUnderscore + 1);
+
+                    if (!$mmTable) {
+                        // No MM table: UIDs stored as CSV directly in the field
+                        if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
+                            $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                                'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($filterUid, Connection::PARAM_INT) . ', t1.' . $field . ')',
+                                '=',
+                                '0'
+                            );
+                        } else {
+                            $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                                'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($filterUid, Connection::PARAM_INT) . ', t1.' . $field . ')',
+                                '>',
+                                '0'
+                            );
+                        }
+                        continue;
+                    }
 
                     $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
                     $isOpposite = !empty($columnConfig['MM_opposite_field']);
@@ -2389,11 +2407,68 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config'] ?? [];
             $mmTable = $columnConfig['MM'] ?? '';
+            $allowed = $columnConfig['allowed'] ?? '';
+
             if (!$mmTable) {
+                // No MM table: UIDs stored as CSV in the field; single allowed table assumed
+                $singleTable = GeneralUtility::trimExplode(',', $allowed, true)[0] ?? '';
+                if (!$singleTable || !isset($GLOBALS['TCA'][$singleTable])) {
+                    continue;
+                }
+
+                $allUids = [];
+                foreach ($this->records as $record) {
+                    $raw = (string)($record[$column['columnName']] ?? '');
+                    if ($raw === '') {
+                        continue;
+                    }
+                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
+                        if (MathUtility::canBeInterpretedAsInteger($uid)) {
+                            $allUids[] = (int)$uid;
+                        }
+                    }
+                }
+                $allUids = array_unique($allUids);
+                if (empty($allUids)) {
+                    continue;
+                }
+
+                $labelField = $GLOBALS['TCA'][$singleTable]['ctrl']['label'] ?? 'uid';
+                $qb = $this->connectionPool->getQueryBuilderForTable($singleTable);
+                $rows = $qb->select('uid', $labelField)
+                    ->from($singleTable)
+                    ->where($qb->expr()->in('uid', $qb->quoteArrayBasedValueListToIntegerList($allUids)))
+                    ->executeQuery()
+                    ->fetchAllAssociative();
+
+                $labelMap = [];
+                foreach ($rows as $row) {
+                    $labelMap[(int)$row['uid']] = $row[$labelField] ?? '';
+                }
+
+                foreach ($this->records as &$record) {
+                    $raw = (string)($record[$column['columnName']] ?? '');
+                    if ($raw === '') {
+                        continue;
+                    }
+                    $relations = [];
+                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
+                        $uid = (int)$uid;
+                        if (isset($labelMap[$uid])) {
+                            $relations[] = [
+                                'value' => $uid,
+                                'label' => $labelMap[$uid],
+                            ];
+                        }
+                    }
+                    if (!empty($relations)) {
+                        $record['_' . $column['columnName']] = [$singleTable => $relations];
+                    }
+                }
+                unset($record);
                 continue;
             }
 
-            $allowed = $columnConfig['allowed'] ?? '';
             $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
 
             // MM_opposite_field means our records sit on uid_foreign side of the MM table
