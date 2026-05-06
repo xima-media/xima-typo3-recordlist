@@ -26,7 +26,6 @@
     </div>
     <f:if condition="{colConfig}">
         <div class="col col-2">
-            <f:form.hidden name="filter[{colConfig.columnName}][mm]" value="1" />
             <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'in', 1: 'notIn', 2: 'eq', 3: 'neq'}}" />
         </div>
     </f:if>

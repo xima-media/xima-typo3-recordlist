@@ -585,67 +585,153 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 if (!isset($data['value']) || $data['value'] === '') {
                     continue;
                 }
-                if (isset($data['mm']) && $data['mm'] === '1') {
-                    $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config'] ?? [];
-                    $mmTable = $columnConfig['MM'] ?? '';
-                    $field = 'uid';
 
-                    if (($columnConfig['type'] ?? '') === 'group' && $mmTable) {
-                        // Group: value is "tableName_uid" — split on last underscore to handle tables with underscores
-                        $lastUnderscore = strrpos($data['value'], '_');
-                        if ($lastUnderscore === false) {
-                            continue;
-                        }
-                        $filterTableName = substr($data['value'], 0, $lastUnderscore);
-                        $filterUid = (int)substr($data['value'], $lastUnderscore + 1);
+                $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config'] ?? [];
+                $columnType = $columnConfig['type'] ?? '';
+                $mmTable = $columnConfig['MM'] ?? '';
 
-                        $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-                        $isOpposite = !empty($columnConfig['MM_opposite_field']);
-                        $allowed = $columnConfig['allowed'] ?? '';
-                        $isMultiTable = $allowed === '*' || str_contains($allowed, ',');
-
-                        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-                        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
-
-                        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                        $qb->select($localField)
-                            ->from($mmTable)
-                            ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
-
-                        if ($isMultiTable) {
-                            $qb->andWhere($qb->expr()->eq('tablenames', $qb->createNamedParameter($filterTableName)));
-                        }
-
-                        foreach ($mmMatchFields as $matchField => $matchValue) {
-                            $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-                        }
-
-                        $parentUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
-
-                        if (empty($parentUids)) {
-                            // no records found: cause empty result set
-                            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                            continue;
-                        }
-                        $data['value'] = $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids);
-                    } else {
-                        // Category-style MM: value is comma-separated local UIDs, result is foreign UIDs (= record UIDs)
-                        $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-                        $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
-                        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                        $qb->select('uid_foreign')
-                            ->from($mmTable)
-                            ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'] ?? '')))
-                            ->andWhere($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($recordsUids)));
-                        $uids = $qb->executeQuery()->fetchAllNumeric();
-                        $data['value'] = array_map('current', $uids);
-                        if (empty($data['value'])) {
-                            // no records found: cause empty result set
-                            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                            continue;
-                        }
+                if ($columnType === 'group' && $mmTable) {
+                    // Group: value is "tableName_uid" — split on last underscore to handle tables with underscores
+                    $lastUnderscore = strrpos($data['value'], '_');
+                    if ($lastUnderscore === false) {
+                        continue;
                     }
+                    $filterTableName = substr($data['value'], 0, $lastUnderscore);
+                    $filterUid = (int)substr($data['value'], $lastUnderscore + 1);
+
+                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
+                    $isOpposite = !empty($columnConfig['MM_opposite_field']);
+                    $allowed = $columnConfig['allowed'] ?? '';
+                    $isMultiTable = $allowed === '*' || str_contains($allowed, ',');
+
+                    $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
+                    $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+
+                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+                    $qb->select($localField)
+                        ->from($mmTable)
+                        ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
+
+                    if ($isMultiTable) {
+                        $qb->andWhere($qb->expr()->eq('tablenames', $qb->createNamedParameter($filterTableName)));
+                    }
+
+                    foreach ($mmMatchFields as $matchField => $matchValue) {
+                        $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
+                    }
+
+                    $parentUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
+
+                    if (empty($parentUids)) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+                        continue;
+                    }
+
+                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                            't1.uid',
+                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
+                        );
+                    } else {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                            't1.uid',
+                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
+                        );
+                    }
+                    continue;
                 }
+
+                if ($columnType === 'category' && $mmTable) {
+                    // Category: value is comma-separated category UIDs; find records that have those categories
+                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
+                    $categoryUids = GeneralUtility::trimExplode(',', $data['value'], true);
+
+                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+                    $qb->select('uid_foreign')
+                        ->from($mmTable)
+                        ->where($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($categoryUids)));
+
+                    foreach ($mmMatchFields as $matchField => $matchValue) {
+                        $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
+                    }
+
+                    $recordUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
+
+                    if (empty($recordUids)) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+                        continue;
+                    }
+
+                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                            't1.uid',
+                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($recordUids)
+                        );
+                    } else {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                            't1.uid',
+                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($recordUids)
+                        );
+                    }
+                    continue;
+                }
+
+                if ($columnType === 'select' && $mmTable) {
+                    // Select with MM: value is a single foreign UID
+                    $filterUid = (int)$data['value'];
+                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
+                    $isOpposite = !empty($columnConfig['MM_opposite_field']);
+                    $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
+                    $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+
+                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+                    $qb->select($localField)
+                        ->from($mmTable)
+                        ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
+
+                    foreach ($mmMatchFields as $matchField => $matchValue) {
+                        $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
+                    }
+
+                    $parentUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
+
+                    if (empty($parentUids)) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+                        continue;
+                    }
+
+                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                            't1.uid',
+                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
+                        );
+                    } else {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                            't1.uid',
+                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
+                        );
+                    }
+                    continue;
+                }
+
+                if ($columnType === 'select') {
+                    // Select CSV/static: FIND_IN_SET works for both single-value and multi-value CSV storage
+                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                            'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($data['value']) . ', t1.' . $field . ')',
+                            '=',
+                            '0'
+                        );
+                    } else {
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                            'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($data['value']) . ', t1.' . $field . ')',
+                            '>',
+                            '0'
+                        );
+                    }
+                    continue;
+                }
+
                 if (isset($data['dataType']) && $data['dataType'] === 'date') {
                     $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
                     $date = date('Y-m-d', strtotime($data['value']));
