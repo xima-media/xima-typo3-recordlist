@@ -2357,19 +2357,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
                 foreach ($this->records as &$record) {
                     $items = GeneralUtility::trimExplode(',', (string)($record[$column['columnName']] ?? ''), true);
-                    if (empty($items)) {
-                        continue;
-                    }
                     $relations = [];
                     foreach ($items as $value) {
-                        if (isset($itemMap[$value])) {
-                            $relations[] = $itemMap[$value];
-                        } else {
-                            $relations[] = [
-                                'value' => $value,
-                                'label' => $value,
-                            ];
-                        }
+                        $relations[] = [
+                            'value' => $value,
+                            'label' => $itemMap[$value] ?? $value,
+                        ];
                     }
                     $record['_' . $column['columnName']] = $relations;
                 }
