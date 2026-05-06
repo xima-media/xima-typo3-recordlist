@@ -44,6 +44,8 @@ use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
+use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
+use Xima\XimaTypo3Recordlist\Utility\RelationResolver;
 
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
@@ -109,6 +111,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected LanguageServiceFactory $languageServiceFactory;
 
+    protected RelationResolver $relationResolver;
+
     public function injectConnectionPool(ConnectionPool $connectionPool): void
     {
         $this->connectionPool = $connectionPool;
@@ -142,6 +146,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public function injectLanguageServiceFactory(LanguageServiceFactory $languageServiceFactory): void
     {
         $this->languageServiceFactory = $languageServiceFactory;
+    }
+
+    public function injectRelationResolver(RelationResolver $relationResolver): void
+    {
+        $this->relationResolver = $relationResolver;
     }
 
     /**
@@ -586,167 +595,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     continue;
                 }
 
-                $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config'] ?? [];
-                $columnType = $columnConfig['type'] ?? '';
-                $mmTable = $columnConfig['MM'] ?? '';
+                $columnType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['type'] ?? '';
 
-                if ($columnType === 'group') {
-                    // Group: value is "tableName_uid" — split on last underscore to handle tables with underscores
-                    $lastUnderscore = strrpos($data['value'], '_');
-                    if ($lastUnderscore === false) {
-                        continue;
-                    }
-                    $filterTableName = substr($data['value'], 0, $lastUnderscore);
-                    $filterUid = (int)substr($data['value'], $lastUnderscore + 1);
-
-                    if (!$mmTable) {
-                        // No MM table: UIDs stored as CSV directly in the field
-                        if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
-                            $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
-                                'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($filterUid, Connection::PARAM_INT) . ', t1.' . $field . ')',
-                                '=',
-                                '0'
-                            );
-                        } else {
-                            $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
-                                'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($filterUid, Connection::PARAM_INT) . ', t1.' . $field . ')',
-                                '>',
-                                '0'
-                            );
-                        }
-                        continue;
-                    }
-
-                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-                    $isOpposite = !empty($columnConfig['MM_opposite_field']);
-                    $allowed = $columnConfig['allowed'] ?? '';
-                    $isMultiTable = $allowed === '*' || str_contains($allowed, ',');
-
-                    $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-                    $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
-
-                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                    $qb->select($localField)
-                        ->from($mmTable)
-                        ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
-
-                    if ($isMultiTable) {
-                        $qb->andWhere($qb->expr()->eq('tablenames', $qb->createNamedParameter($filterTableName)));
-                    }
-
-                    foreach ($mmMatchFields as $matchField => $matchValue) {
-                        $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-                    }
-
-                    $parentUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
-
-                    if (empty($parentUids)) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                        continue;
-                    }
-
-                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
-                            't1.uid',
-                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
-                        );
-                    } else {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
-                            't1.uid',
-                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
-                        );
-                    }
-                    continue;
-                }
-
-                if ($columnType === 'category' && $mmTable) {
-                    // Category: value is comma-separated category UIDs; find records that have those categories
-                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-                    $categoryUids = GeneralUtility::trimExplode(',', $data['value'], true);
-
-                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                    $qb->select('uid_foreign')
-                        ->from($mmTable)
-                        ->where($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($categoryUids)));
-
-                    foreach ($mmMatchFields as $matchField => $matchValue) {
-                        $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-                    }
-
-                    $recordUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
-
-                    if (empty($recordUids)) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                        continue;
-                    }
-
-                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
-                            't1.uid',
-                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($recordUids)
-                        );
-                    } else {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
-                            't1.uid',
-                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($recordUids)
-                        );
-                    }
-                    continue;
-                }
-
-                if ($columnType === 'select' && $mmTable) {
-                    // Select with MM: value is a single foreign UID
-                    $filterUid = (int)$data['value'];
-                    $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-                    $isOpposite = !empty($columnConfig['MM_opposite_field']);
-                    $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-                    $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
-
-                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                    $qb->select($localField)
-                        ->from($mmTable)
-                        ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
-
-                    foreach ($mmMatchFields as $matchField => $matchValue) {
-                        $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-                    }
-
-                    $parentUids = array_column($qb->executeQuery()->fetchAllNumeric(), 0);
-
-                    if (empty($parentUids)) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                        continue;
-                    }
-
-                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
-                            't1.uid',
-                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
-                        );
-                    } else {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
-                            't1.uid',
-                            $this->queryBuilder->quoteArrayBasedValueListToIntegerList($parentUids)
-                        );
-                    }
-                    continue;
-                }
-
-                if ($columnType === 'select') {
-                    // Select CSV/static: FIND_IN_SET works for both single-value and multi-value CSV storage
-                    if (in_array($data['expr'] ?? '', ['notIn', 'neq'], true)) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
-                            'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($data['value']) . ', t1.' . $field . ')',
-                            '=',
-                            '0'
-                        );
-                    } else {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
-                            'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($data['value']) . ', t1.' . $field . ')',
-                            '>',
-                            '0'
-                        );
-                    }
+                if (in_array($columnType, ['select', 'category', 'group'], true)) {
+                    $filterResult = $this->relationResolver->resolveForFilter(
+                        $this->getTableName(),
+                        $field,
+                        $data['value']
+                    );
+                    $this->applyRelationFilterResult($filterResult, $data['expr'] ?? '', $field);
                     continue;
                 }
 
@@ -808,6 +665,37 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ),
                 };
             }
+        }
+    }
+
+    private function applyRelationFilterResult(RelationFilterResult $result, string $expr, string $field): void
+    {
+        $isNegated = in_array($expr, ['notIn', 'neq'], true);
+
+        if ($result->isEmpty) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+            return;
+        }
+
+        if ($result->useFindInSet) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($result->findInSetValue) . ', t1.' . $field . ')',
+                $isNegated ? '=' : '>',
+                '0'
+            );
+            return;
+        }
+
+        if ($isNegated) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                't1.uid',
+                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($result->parentUids)
+            );
+        } else {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                't1.uid',
+                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($result->parentUids)
+            );
         }
     }
 
@@ -1517,10 +1405,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addSysFileReferences();
         $this->addSysFiles();
         $this->addPreviewButton();
-        $this->addSysCategories();
-        $this->addSelectRelations();
-        $this->addGroupRelations();
-        $this->addInlineRelations();
+        $this->addRelations();
     }
 
     protected function addTranslationButtons(): void
@@ -1577,8 +1462,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $record['possible_translations'] ??= [];
                 $record['possible_translations'][$languageUid] = $targetUrl;
 
-                if (ExtensionManagementUtility::isLoaded('deepltranslate_core') &&
-                    \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
+                if (ExtensionManagementUtility::isLoaded('deepltranslate_core')
+                    && \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
                 ) {
                     $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
                         'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
@@ -1684,72 +1569,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $record['url'] .= '&workspaceId=' . $this::WORKSPACE_ID;
                 // restore user workspace
                 $this->getBackendAuthentication()->workspace = $currentWorkspace;
-            }
-        }
-    }
-
-    protected function addSysCategories(): void
-    {
-        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
-            if (($column['partial'] ?? '') !== 'Category') {
-                continue;
-            }
-
-            $recordUids = array_column($this->records, 'uid');
-            if (empty($recordUids)) {
-                continue;
-            }
-
-            $qb = $this->connectionPool->getQueryBuilderForTable('sys_category');
-            $categoryRelations = $qb->select('mm.uid_foreign')
-                ->addSelectLiteral('GROUP_CONCAT(c.uid) as category_uids')
-                ->from('sys_category', 'c')
-                ->innerJoin('c', 'sys_category_record_mm', 'mm', $qb->expr()->and(
-                    $qb->expr()->eq('mm.uid_local', 'c.uid'),
-                    $qb->expr()->eq('mm.tablenames', $qb->createNamedParameter($this->getTableName())),
-                    $qb->expr()->eq('mm.fieldname', $qb->createNamedParameter($column['columnName'])),
-                    $qb->expr()->in('mm.uid_foreign', $qb->quoteArrayBasedValueListToIntegerList($recordUids))
-                ))
-                ->groupBy('mm.uid_foreign')
-                ->executeQuery()
-                ->fetchAllKeyValue();
-
-            $categoryUids = [];
-            foreach ($categoryRelations as &$relation) {
-                $relation = GeneralUtility::intExplode(',', $relation, true);
-                $categoryUids = array_merge($categoryUids, $relation);
-            }
-
-            if (empty($categoryUids)) {
-                continue;
-            }
-
-            $queryBuilder = $this->connectionPool->getQueryBuilderForTable('sys_category');
-            $categories = $queryBuilder->select('uid', 'title')
-                ->from('sys_category')
-                ->where(
-                    $queryBuilder->expr()->in(
-                        'uid',
-                        $queryBuilder->quoteArrayBasedValueListToIntegerList(array_unique($categoryUids))
-                    )
-                )
-                ->executeQuery()
-                ->fetchAllKeyValue();
-
-            foreach ($categoryRelations as &$categoryUids) {
-                foreach ($categoryUids as &$categoryUid) {
-                    $categoryUid = [
-                        'uid' => $categoryUid,
-                        'title' => $categories[$categoryUid] ?? '',
-                    ];
-                }
-            }
-
-            foreach ($this->records as &$record) {
-                if (!isset($categoryRelations[$record['uid']])) {
-                    continue;
-                }
-                $record['_' . $column['columnName']] = $categoryRelations[$record['uid']];
             }
         }
     }
@@ -2257,332 +2076,26 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ];
     }
 
-    protected function addSelectRelations(): void
+    protected function addRelations(): void
     {
-        $recordUids = array_column($this->records, 'uid');
-        if (empty($recordUids)) {
+        if (empty($this->records)) {
             return;
         }
 
         foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
-            if (!($column['active'] ?? false)) {
+            if (!($column['active'] ?? false) || !in_array($column['partial'] ?? '', ['Select', 'Group', 'Inline', 'Category'], true)) {
                 continue;
             }
 
-            if ($column['partial'] !== 'Select') {
-                continue;
-            }
-
-            $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config'] ?? [];
-            $foreignTable = $columnConfig['foreign_table'] ?? '';
-            $mmTable = $columnConfig['MM'] ?? '';
-
-            if ($foreignTable && isset($GLOBALS['TCA'][$foreignTable]) && $mmTable) {
-                // Case: foreign_table + MM — resolve via MM table JOIN (same pattern as addGroupRelations)
-                $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-                $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-                $isOpposite = !empty($columnConfig['MM_opposite_field']);
-                $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-                $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
-
-                $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
-                    ->from($mmTable, 'mm')
-                    ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
-                    ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
-
-                foreach ($mmMatchFields as $matchField => $matchValue) {
-                    $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
-                }
-
-                $groupedRelations = [];
-                foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-                    $parentUid = (int)$row[$localField];
-                    $groupedRelations[$parentUid][] = [
-                        'value' => (string)(int)$row['foreign_uid'],
-                        'label' => $row['label'] ?? '',
-                    ];
-                }
-
-                foreach ($this->records as &$record) {
-                    if (isset($groupedRelations[$record['uid']])) {
-                        $record['_' . $column['columnName']] = $groupedRelations[$record['uid']];
-                    }
-                }
-                unset($record);
-            } elseif ($foreignTable && isset($GLOBALS['TCA'][$foreignTable])) {
-                // Case: foreign_table without MM — UIDs stored as CSV in the field
-                $allUids = [];
-                foreach ($this->records as $record) {
-                    $raw = (string)($record[$column['columnName']] ?? '');
-                    if ($raw === '') {
-                        continue;
-                    }
-                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
-                        if (MathUtility::canBeInterpretedAsInteger($uid)) {
-                            $allUids[] = (int)$uid;
-                        }
-                    }
-                }
-                $allUids = array_unique($allUids);
-                if (empty($allUids)) {
-                    continue;
-                }
-
-                $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-                $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-                $rows = $qb->select('uid', $labelField)
-                    ->from($foreignTable)
-                    ->where($qb->expr()->in('uid', $qb->quoteArrayBasedValueListToIntegerList($allUids)))
-                    ->executeQuery()
-                    ->fetchAllAssociative();
-
-                $labelMap = [];
-                foreach ($rows as $row) {
-                    $labelMap[(int)$row['uid']] = $row[$labelField] ?? '';
-                }
-
-                foreach ($this->records as &$record) {
-                    $raw = (string)($record[$column['columnName']] ?? '');
-                    if ($raw === '') {
-                        continue;
-                    }
-                    $relations = [];
-                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
-                        $uid = (int)$uid;
-                        if (isset($labelMap[$uid])) {
-                            $relations[] = [
-                                'value' => (string)$uid,
-                                'label' => $labelMap[$uid],
-                            ];
-                        }
-                    }
-                    if (!empty($relations)) {
-                        $record['_' . $column['columnName']] = $relations;
-                    }
-                }
-                unset($record);
-            } else {
-                // Case: static items — values stored as CSV, labels from TCA config
-                $itemMap = [];
-                foreach ($columnConfig['items'] ?? [] as $item) {
-                    $value = (string)($item['value'] ?? '');
-                    $label = (string)($item['label'] ?? '');
-                    if ($value !== '') {
-                        $itemMap[$value] = $this->getLanguageService()->sL($label) ?: $label;
-                    }
-                }
-
-                foreach ($this->records as &$record) {
-                    $items = GeneralUtility::trimExplode(',', (string)($record[$column['columnName']] ?? ''), true);
-                    $relations = [];
-                    foreach ($items as $value) {
-                        $relations[] = [
-                            'value' => $value,
-                            'label' => $itemMap[$value] ?? $value,
-                        ];
-                    }
-                    $record['_' . $column['columnName']] = $relations;
-                }
-                unset($record);
-            }
-        }
-    }
-
-    protected function addGroupRelations(): void
-    {
-        $recordUids = array_column($this->records, 'uid');
-        if (empty($recordUids)) {
-            return;
-        }
-
-        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
-            if (!($column['active'] ?? false)) {
-                continue;
-            }
-
-            if ($column['partial'] !== 'Group') {
-                continue;
-            }
-
-            $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config'] ?? [];
-            $mmTable = $columnConfig['MM'] ?? '';
-            $allowed = $columnConfig['allowed'] ?? '';
-
-            if (!$mmTable) {
-                // No MM table: UIDs stored as CSV in the field; single allowed table assumed
-                $singleTable = GeneralUtility::trimExplode(',', $allowed, true)[0] ?? '';
-                if (!$singleTable || !isset($GLOBALS['TCA'][$singleTable])) {
-                    continue;
-                }
-
-                $allUids = [];
-                foreach ($this->records as $record) {
-                    $raw = (string)($record[$column['columnName']] ?? '');
-                    if ($raw === '') {
-                        continue;
-                    }
-                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
-                        if (MathUtility::canBeInterpretedAsInteger($uid)) {
-                            $allUids[] = (int)$uid;
-                        }
-                    }
-                }
-                $allUids = array_unique($allUids);
-                if (empty($allUids)) {
-                    continue;
-                }
-
-                $labelField = $GLOBALS['TCA'][$singleTable]['ctrl']['label'] ?? 'uid';
-                $qb = $this->connectionPool->getQueryBuilderForTable($singleTable);
-                $rows = $qb->select('uid', $labelField)
-                    ->from($singleTable)
-                    ->where($qb->expr()->in('uid', $qb->quoteArrayBasedValueListToIntegerList($allUids)))
-                    ->executeQuery()
-                    ->fetchAllAssociative();
-
-                $labelMap = [];
-                foreach ($rows as $row) {
-                    $labelMap[(int)$row['uid']] = $row[$labelField] ?? '';
-                }
-
-                foreach ($this->records as &$record) {
-                    $raw = (string)($record[$column['columnName']] ?? '');
-                    if ($raw === '') {
-                        continue;
-                    }
-                    $relations = [];
-                    foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
-                        $uid = (int)$uid;
-                        if (isset($labelMap[$uid])) {
-                            $relations[] = [
-                                'value' => $uid,
-                                'label' => $labelMap[$uid],
-                            ];
-                        }
-                    }
-                    if (!empty($relations)) {
-                        $record['_' . $column['columnName']] = [$singleTable => $relations];
-                    }
-                }
-                unset($record);
-                continue;
-            }
-
-            $mmMatchFields = $columnConfig['MM_match_fields'] ?? [];
-
-            // MM_opposite_field means our records sit on uid_foreign side of the MM table
-            $isOpposite = !empty($columnConfig['MM_opposite_field']);
-            $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-            $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
-
-            if ($allowed === '*') {
-                $allowedTables = array_keys($columnConfig['MM_oppositeUsage'] ?? []);
-            } else {
-                $allowedTables = GeneralUtility::trimExplode(',', $allowed, true);
-            }
-
-            $multiTable = count($allowedTables) > 1 || $allowed === '*';
-            $tablesToQuery = $multiTable ? $allowedTables : [$allowedTables[0] ?? ''];
-            $groupedRelations = [];
-
-            foreach ($tablesToQuery as $relatedTable) {
-                if (!$relatedTable || !isset($GLOBALS['TCA'][$relatedTable])) {
-                    continue;
-                }
-                $labelField = $GLOBALS['TCA'][$relatedTable]['ctrl']['label'] ?? 'uid';
-                $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                $qb->select(
-                    'mm.' . $localField,
-                    'ft.uid as foreign_uid',
-                    'ft.' . $labelField . ' as label'
-                )
-                ->from($mmTable, 'mm')
-                ->join('mm', $relatedTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
-                ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
-
-                if ($multiTable) {
-                    $qb->andWhere($qb->expr()->eq('mm.tablenames', $qb->createNamedParameter($relatedTable)));
-                }
-
-                foreach ($mmMatchFields as $matchField => $matchValue) {
-                    $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
-                }
-
-                foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-                    $parentUid = (int)$row[$localField];
-                    $groupedRelations[$parentUid][$relatedTable][] = [
-                        'value' => (int)$row['foreign_uid'],
-                        'label' => $row['label'] ?? '',
-                    ];
-                }
-            }
+            $relations = $this->relationResolver->resolveForDisplay(
+                $this->getTableName(),
+                $column['columnName'],
+                $this->records
+            );
 
             foreach ($this->records as &$record) {
-                if (isset($groupedRelations[$record['uid']])) {
-                    $record['_' . $column['columnName']] = $groupedRelations[$record['uid']];
-                }
-            }
-            unset($record);
-        }
-    }
-
-    protected function addInlineRelations(): void
-    {
-        $recordUids = array_column($this->records, 'uid');
-        if (empty($recordUids)) {
-            return;
-        }
-
-        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
-            if (!($column['active'] ?? false)) {
-                continue;
-            }
-
-            if ($column['partial'] !== 'Inline') {
-                continue;
-            }
-
-            $columnConfig = $GLOBALS['TCA'][$this->getTableName()]['columns'][$column['columnName']]['config'] ?? [];
-            $foreignTable = $columnConfig['foreign_table'] ?? '';
-            $foreignField = $columnConfig['foreign_field'] ?? '';
-            $foreignTableField = $columnConfig['foreign_table_field'] ?? '';
-
-            if (!$foreignTable || !$foreignField) {
-                continue;
-            }
-
-            $foreignTableLabel = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-
-            $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-            $qb->select($foreignField, 'uid', $foreignTableLabel)
-                ->from($foreignTable)
-                ->where(
-                    $qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($recordUids))
-                );
-
-            if ($foreignTableField) {
-                $qb->andWhere(
-                    $qb->expr()->eq($foreignTableField, $qb->createNamedParameter($this->getTableName()))
-                );
-            }
-
-            $childRecords = $qb->executeQuery()->fetchAllAssociative();
-
-            $groupedRelations = [];
-            foreach ($childRecords as $childRecord) {
-                $parentUid = (int)$childRecord[$foreignField];
-                $groupedRelations[$parentUid][] = [
-                    'uid' => (int)$childRecord['uid'],
-                    'label' => $childRecord[$foreignTableLabel],
-                ];
-            }
-
-            foreach ($this->records as &$record) {
-                if (isset($groupedRelations[$record['uid']])) {
-                    $record['_' . $column['columnName']] = [
-                        $foreignTable => $groupedRelations[$record['uid']],
-                    ];
+                if (isset($relations[$record['uid']])) {
+                    $record['_' . $column['columnName']] = $relations[$record['uid']];
                 }
             }
             unset($record);

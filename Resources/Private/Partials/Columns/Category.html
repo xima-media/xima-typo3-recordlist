@@ -7,12 +7,12 @@
             <a
                 href="#"
                 title="{f:translate(key: 'filter.category.label')}"
-                class="badge badge-pill category-badge {category.uid -> xm:categoryActiveClass(activeCategories: colConfig.filter.value)}"
-                data-category-uid="{category.uid}"
+                class="badge badge-pill category-badge {category.value -> xm:categoryActiveClass(activeCategories: colConfig.filter.value)}"
+                data-category-uid="{category.value}"
                 data-field-name="{colConfig.columnName}"
                 data-bs-toggle="tooltip">
                 <core:icon identifier="mimetypes-x-sys_category" size="small" />
-                {category.title}
+                {category.label}
             </a>
         </f:for>
     </span>
