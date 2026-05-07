@@ -25,7 +25,7 @@
                         </xm:link.editRecord>
                     </f:then>
                     <f:else>
-                        {relation.label}
+                        {relation.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
                     </f:else>
                 </f:if>
             </f:for>

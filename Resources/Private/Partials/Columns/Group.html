@@ -10,29 +10,22 @@
     <f:if condition="{item._{colConfig.columnName}}">
         <f:for each="{item._{colConfig.columnName}}" as="fieldValues" key="tableName">
             <f:for each="{fieldValues}" as="fieldValue" iteration="i">
-                <f:if condition="{item.editable}">
-                    <f:then>
-                        <f:variable name="combinedValue" value="{tableName}_{fieldValue.value}" />
-                        <a
-                            href="#"
-                            title="{fieldValue.label}"
-                            data-table="{tableName}"
-                            data-bs-toggle="tooltip"
-                            data-uid="{fieldValue.value}"
-                            data-stored-value="{fieldValue.storedValue}"
-                            class="badge badge-pill group-badge {f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: 'badge-hidden ')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: 'badge-over-limit ')}{f:if(condition: '{colConfig.filter.value} == {fieldValue.storedValue}', then: ' badge-primary')}"
-                            data-workspaceId="{workspaceId}"
-                            data-field-name="{colConfig.columnName}">
-                            <f:if condition="{colConfig.filter.tables.{tableName}.iconIdentifier}">
-                                <core:icon identifier="{colConfig.filter.tables.{tableName}.iconIdentifier}" size="small" />
-                            </f:if>
-                            {fieldValue.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
-                        </a>
-                    </f:then>
-                    <f:else>
-                        {fieldValue.label}
-                    </f:else>
-                </f:if>
+                <f:variable name="combinedValue" value="{tableName}_{fieldValue.value}" />
+                <a
+                    href="#"
+                    title="{fieldValue.label}"
+                    data-table="{tableName}"
+                    data-bs-toggle="tooltip"
+                    data-uid="{fieldValue.value}"
+                    data-stored-value="{fieldValue.storedValue}"
+                    class="badge badge-pill group-badge {f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: 'badge-hidden ')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: 'badge-over-limit ')}{f:if(condition: '{colConfig.filter.value} == {fieldValue.storedValue}', then: ' badge-primary')}"
+                    data-workspaceId="{workspaceId}"
+                    data-field-name="{colConfig.columnName}">
+                    <f:if condition="{colConfig.filter.tables.{tableName}.iconIdentifier}">
+                        <core:icon identifier="{colConfig.filter.tables.{tableName}.iconIdentifier}" size="small" />
+                    </f:if>
+                    {fieldValue.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
+                </a>
             </f:for>
             <f:variable name="count">{fieldValues -> f:count()}</f:variable>
             <f:if condition="{count} > {colConfig.badgeLimit}}">
