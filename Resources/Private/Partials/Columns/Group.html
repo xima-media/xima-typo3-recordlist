@@ -28,7 +28,7 @@
                 </a>
             </f:for>
             <f:variable name="count">{fieldValues -> f:count()}</f:variable>
-            <f:if condition="{count} > {colConfig.badgeLimit}}">
+            <f:if condition="{count} > {colConfig.badgeLimit}">
                 <button
                     type="button"
                     title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:badge.showMore')}"
