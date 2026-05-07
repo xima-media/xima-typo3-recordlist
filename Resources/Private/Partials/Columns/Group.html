@@ -4,28 +4,29 @@
     xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
     xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
 
-<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-group.js'}" />
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-group.js', 1: '@xima/recordlist/recordlist-badge-limit.js'}" />
 
-<span class="badge-container group-badge-container">
+<span class="badge-container group-badge-container" data-column-name="{colConfig.columnName}">
     <f:if condition="{item._{colConfig.columnName}}">
         <f:for each="{item._{colConfig.columnName}}" as="fieldValues" key="tableName">
-            <f:for each="{fieldValues}" as="fieldValue">
+            <f:for each="{fieldValues}" as="fieldValue" iteration="i">
                 <f:if condition="{item.editable}">
                     <f:then>
                         <f:variable name="combinedValue" value="{tableName}_{fieldValue.value}" />
                         <a
                             href="#"
-                            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
+                            title="{fieldValue.label}"
                             data-table="{tableName}"
+                            data-bs-toggle="tooltip"
                             data-uid="{fieldValue.value}"
                             data-stored-value="{fieldValue.storedValue}"
-                            class="badge badge-pill group-badge {f:if(condition: '{colConfig.filter.value} == {fieldValue.storedValue}', then: ' badge-primary')}"
+                            class="badge badge-pill group-badge {f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: 'badge-hidden ')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: 'badge-over-limit ')}{f:if(condition: '{colConfig.filter.value} == {fieldValue.storedValue}', then: ' badge-primary')}"
                             data-workspaceId="{workspaceId}"
                             data-field-name="{colConfig.columnName}">
                             <f:if condition="{colConfig.filter.tables.{tableName}.iconIdentifier}">
                                 <core:icon identifier="{colConfig.filter.tables.{tableName}.iconIdentifier}" size="small" />
                             </f:if>
-                            {fieldValue.label->f:format.crop(maxCharacters: 20)}
+                            {fieldValue.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
                         </a>
                     </f:then>
                     <f:else>
@@ -33,6 +34,23 @@
                     </f:else>
                 </f:if>
             </f:for>
+            <f:variable name="count">{fieldValues -> f:count()}</f:variable>
+            <f:if condition="{count} > {colConfig.badgeLimit}}">
+                <button
+                    type="button"
+                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:badge.showMore')}"
+                    data-bs-toggle="tooltip"
+                    class="badge badge-pill badge-show-more {f:if(condition: colConfig.badgesExpanded, then: 'badge-hidden')}">
+                    + {count - colConfig.badgeLimit}
+                </button>
+                <button
+                    type="button"
+                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:badge.showLess')}"
+                    data-bs-toggle="tooltip"
+                    class="badge badge-pill badge-show-less {f:if(condition: colConfig.badgesExpanded, else: 'badge-hidden')}">
+                    -
+                </button>
+            </f:if>
         </f:for>
     </f:if>
 </span>

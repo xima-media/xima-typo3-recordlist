@@ -51,6 +51,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 {
     public const WORKSPACE_ID = 0;
     protected const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100, 200, 500];
+    protected const BADGE_LIMIT = 5;
+    protected const BADGE_MAX_CHARACTERS = 20;
     protected const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
     protected const VERSION_STATE_DELETED = 2;
     protected const DOWNLOAD_FORMATS = [
@@ -1297,6 +1299,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             // set active state
             $column['active'] = in_array($columnName, $activeColumns, true);
+
+            // set per-column badge length & limit
+            $column['badgeMaxCharacters'] = $column['badgeMaxCharacters'] ?? $this::BADGE_MAX_CHARACTERS;
+            $column['badgeLimit'] = $column['badgeLimit'] ?? $this::BADGE_LIMIT;
+            $isBadgeExpanded = $this->getModuleDataSetting('badge_limits_expanded.' . $tableName . '.' . $columnName) ?? false;
+            $column['badgesExpanded'] = $isBadgeExpanded === true || $isBadgeExpanded === 'true';
 
             if (!$column['active'] || !isset($column['filter']['partial'])) {
                 continue;

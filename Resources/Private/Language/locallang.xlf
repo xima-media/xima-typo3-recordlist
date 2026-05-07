@@ -327,6 +327,12 @@
 			<trans-unit id="ajax.error.recordNotFound">
 				<source>Record not found</source>
 			</trans-unit>
+			<trans-unit id="badge.showMore">
+				<source>Show more</source>
+			</trans-unit>
+			<trans-unit id="badge.showLess">
+				<source>Show less</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

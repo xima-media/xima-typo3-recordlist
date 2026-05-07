@@ -435,6 +435,14 @@
 				<source />
 				<target>Datensatz nicht gefunden</target>
 			</trans-unit>
+			<trans-unit id="badge.showMore">
+				<source />
+				<target>Mehr anzeigen</target>
+			</trans-unit>
+			<trans-unit id="badge.showLess">
+				<source />
+				<target>Weniger anzeigen</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

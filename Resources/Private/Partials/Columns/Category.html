@@ -1,19 +1,36 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
-<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-category.js'}" />
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-col-category.js', 1: '@xima/recordlist/recordlist-badge-limit.js'}" />
 
 <f:if condition="{item._{colConfig.columnName}}">
-    <span class="category-badge-container badge-container">
-        <f:for each="{item._{colConfig.columnName}}" as="category">
+    <f:variable name="count">{item._{colConfig.columnName} -> f:count()}</f:variable>
+    <span class="category-badge-container badge-container" data-column-name="{colConfig.columnName}">
+        <f:for each="{item._{colConfig.columnName}}" as="category" iteration="i">
             <a
                 href="#"
-                title="{f:translate(key: 'filter.category.label')}"
-                class="badge badge-pill category-badge {category.value -> xm:categoryActiveClass(activeCategories: colConfig.filter.value)}"
+                title="{category.label}"
+                class="badge badge-pill category-badge {f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: 'badge-hidden ')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: 'badge-over-limit ')}{category.value -> xm:categoryActiveClass(activeCategories: colConfig.filter.value)}"
                 data-category-uid="{category.value}"
                 data-field-name="{colConfig.columnName}"
                 data-bs-toggle="tooltip">
                 <core:icon identifier="mimetypes-x-sys_category" size="small" />
-                {category.label}
+                {category.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
             </a>
         </f:for>
+        <f:if condition="{count} > {colConfig.badgeLimit}">
+            <button
+                type="button"
+                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:badge.showMore')}"
+                data-bs-toggle="tooltip"
+                class="badge badge-pill badge-show-more {f:if(condition: colConfig.badgesExpanded, then: 'badge-hidden')}">
+                + {count - colConfig.badgeLimit}
+            </button>
+            <button
+                type="button"
+                title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:badge.showLess')}"
+                data-bs-toggle="tooltip"
+                class="badge badge-pill badge-show-less {f:if(condition: colConfig.badgesExpanded, else: 'badge-hidden')}">
+                -
+            </button>
+        </f:if>
     </span>
 </f:if>

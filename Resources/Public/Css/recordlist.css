@@ -59,6 +59,23 @@ main.recordlist ul.pagination input.form-control {
     gap: 6px;
 }
 
+.badge-hidden {
+    display: none !important;
+}
+
+.badge-show-more,
+.badge-show-less {
+    border: 1px dashed currentColor;
+    background: transparent;
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.badge-show-more:hover,
+.badge-show-less:hover {
+    opacity: 1;
+}
+
 .recordlist table.table tr[data-state="new"]:not(.active) td {
     background-color: color-mix(in srgb, var(--typo3-badge-success-bg) 15%, transparent) !important;
 }
