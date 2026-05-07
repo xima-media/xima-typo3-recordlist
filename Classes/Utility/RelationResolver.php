@@ -117,6 +117,19 @@ class RelationResolver
             return new RelationFilterResult(useFindInSet: true, findInSetValue: $filterValue);
         }
 
+        $foreignTable = $config['foreign_table'] ?? '';
+        $foreignField = $config['foreign_field'] ?? '';
+
+        // inline + MM  →  search foreign table via searchFields, MM lookup, return parentUids
+        if ($type === 'inline' && $mmTable && $foreignTable && isset($GLOBALS['TCA'][$foreignTable])) {
+            return $this->resolveInlineMMFilter($config, $mmTable, $foreignTable, $filterValue);
+        }
+
+        // inline + FK  →  search foreign table via searchFields, FK lookup, return parentUids
+        if ($type === 'inline' && $foreignField && $foreignTable && isset($GLOBALS['TCA'][$foreignTable])) {
+            return $this->resolveInlineFKFilter($foreignTable, $foreignField, $filterValue);
+        }
+
         return new RelationFilterResult(isEmpty: true);
     }
 
@@ -584,6 +597,112 @@ class RelationResolver
         }
 
         return new RelationFilterResult(parentUids: $parentUids);
+    }
+
+    /**
+     * inline + FK filter: single query against foreign table using searchFields LIKE, selecting foreign_field directly.
+     */
+    private function resolveInlineFKFilter(string $foreignTable, string $foreignField, string $filterValue): RelationFilterResult
+    {
+        $searchFields = $this->getTcaSearchFields($foreignTable);
+        if (empty($searchFields)) {
+            return new RelationFilterResult(isEmpty: true);
+        }
+
+        $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+        $likeValue = $qb->createNamedParameter('%' . $qb->escapeLikeWildcards($filterValue) . '%');
+
+        $orConstraints = [];
+        foreach ($searchFields as $field) {
+            $orConstraints[] = $qb->expr()->like($field, $likeValue);
+        }
+
+        $parentUids = array_unique(array_map('intval', array_column(
+            $qb->select($foreignField)
+                ->from($foreignTable)
+                ->where($qb->expr()->or(...$orConstraints))
+                ->executeQuery()
+                ->fetchAllNumeric(),
+            0
+        )));
+
+        if (empty($parentUids)) {
+            return new RelationFilterResult(isEmpty: true);
+        }
+
+        return new RelationFilterResult(parentUids: $parentUids);
+    }
+
+    /**
+     * inline + MM filter: search foreign table via TCA searchFields, return parent UIDs via MM table.
+     */
+    private function resolveInlineMMFilter(array $config, string $mmTable, string $foreignTable, string $filterValue): RelationFilterResult
+    {
+        $childUids = $this->searchForeignTableBySearchFields($foreignTable, $filterValue);
+        if (empty($childUids)) {
+            return new RelationFilterResult(isEmpty: true);
+        }
+
+        $mmMatchFields = $config['MM_match_fields'] ?? [];
+        $isOpposite = !empty($config['MM_opposite_field']);
+        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
+        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+
+        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+        $qb->select($localField)
+            ->from($mmTable)
+            ->where($qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($childUids)));
+
+        foreach ($mmMatchFields as $matchField => $matchValue) {
+            $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
+        }
+
+        $parentUids = array_unique(array_map('intval', array_column($qb->executeQuery()->fetchAllNumeric(), 0)));
+
+        if (empty($parentUids)) {
+            return new RelationFilterResult(isEmpty: true);
+        }
+
+        return new RelationFilterResult(parentUids: $parentUids);
+    }
+
+    /**
+     * Search a table using its TCA searchFields with a LIKE %value% query on each field (OR).
+     * Returns an array of matching UIDs, or an empty array if no searchFields are defined.
+     *
+     * @return list<int>
+     */
+    private function searchForeignTableBySearchFields(string $table, string $filterValue): array
+    {
+        $searchFields = $this->getTcaSearchFields($table);
+        if (empty($searchFields)) {
+            return [];
+        }
+
+        $qb = $this->connectionPool->getQueryBuilderForTable($table);
+        $likeValue = $qb->createNamedParameter('%' . $qb->escapeLikeWildcards($filterValue) . '%');
+
+        $orConstraints = [];
+        foreach ($searchFields as $field) {
+            $orConstraints[] = $qb->expr()->like($field, $likeValue);
+        }
+
+        $rows = $qb->select('uid')
+            ->from($table)
+            ->where($qb->expr()->or(...$orConstraints))
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return array_map('intval', array_column($rows, 'uid'));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getTcaSearchFields(string $table): array
+    {
+        $searchFields = GeneralUtility::trimExplode(',', ($GLOBALS['TCA'][$table]['ctrl']['searchFields'] ?? ''), true);
+        return empty($searchFields) ? [$GLOBALS['TCA'][$table]['ctrl']['label']] : $searchFields;
     }
 
     private function getLanguageService(): LanguageService

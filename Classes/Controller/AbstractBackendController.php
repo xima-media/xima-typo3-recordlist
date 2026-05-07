@@ -599,7 +599,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
                 $columnType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['type'] ?? '';
 
-                if (in_array($columnType, ['select', 'category', 'group'], true)) {
+                if (in_array($columnType, ['select', 'category', 'group', 'inline'], true)) {
                     $filterResult = $this->relationResolver->resolveForFilter(
                         $this->getTableName(),
                         $field,

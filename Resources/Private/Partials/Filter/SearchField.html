@@ -2,10 +2,6 @@
     {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.label.search')}
 </label>
 <div class="input-group">
-
-    <button class="btn btn-default" type="submit" name="search">
-        <core:icon identifier="actions-search" size="small" />
-    </button>
     <label for="search_field" class="visually-hidden">
         {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}
     </label>
@@ -17,4 +13,7 @@
         title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}"
         id="search_field"
         value="{search_field}" />
+    <button class="btn btn-default" type="submit" name="search">
+        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.label.search')}
+    </button>
 </div>
