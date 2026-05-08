@@ -603,7 +603,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $filterResult = $this->relationResolver->resolveForFilter(
                         $this->getTableName(),
                         $field,
-                        $data['value']
+                        $data['value'],
+                        $this::WORKSPACE_ID
                     );
                     $this->applyRelationFilterResult($filterResult, $data['expr'] ?? '', $field);
                     continue;
@@ -1332,7 +1333,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             if ($column['filter']['partial'] === 'Group') {
-                $column['filter']['items'] = $this->relationResolver->resolveGroupFilterItems($tableName, $columnName);
+                $column['filter']['items'] = $this->relationResolver->resolveGroupFilterItems($tableName, $columnName, $this::WORKSPACE_ID);
                 $allowed = $config['config']['allowed'] ?? '';
                 $allowedTables = $allowed === '*'
                     ? array_keys($config['config']['MM_oppositeUsage'] ?? [])
@@ -2087,12 +2088,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $relations = $this->relationResolver->resolveForDisplay(
                 $this->getTableName(),
                 $column['columnName'],
-                $this->records
+                $this->records,
+                $this::WORKSPACE_ID
             );
 
             foreach ($this->records as &$record) {
-                if (isset($relations[$record['uid']])) {
-                    $record['_' . $column['columnName']] = $relations[$record['uid']];
+                $uid = ($record['t3ver_oid'] ?? 0) ?: $record['uid'];
+                if (isset($relations[$uid])) {
+                    $record['_' . $column['columnName']] = $relations[$uid];
                 }
             }
             unset($record);

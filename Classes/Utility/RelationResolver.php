@@ -2,8 +2,11 @@
 
 namespace Xima\XimaTypo3Recordlist\Utility;
 
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -17,6 +20,8 @@ class RelationResolver
     ) {
     }
 
+    private int $workspaceId = 0;
+
     /**
      * Resolve related records for display, indexed by parent UID.
      *
@@ -28,8 +33,10 @@ class RelationResolver
      * @param array $records Full record arrays (must contain 'uid' and the column field value)
      * @return array<int, mixed> Indexed by parent UID
      */
-    public function resolveForDisplay(string $parentTable, string $columnName, array $records): array
+    public function resolveForDisplay(string $parentTable, string $columnName, array $records, int $workspaceId = 0): array
     {
+        $this->workspaceId = $workspaceId;
+
         if (empty($records)) {
             return [];
         }
@@ -41,7 +48,10 @@ class RelationResolver
         $allowed = $config['allowed'] ?? '';
         $foreignField = $config['foreign_field'] ?? '';
 
-        $recordUids = array_column($records, 'uid');
+        // Use uid of original version if in a workspace, otherwise uid
+        $recordUids = array_map(function ($recordUid) {
+            return $recordUid['t3ver_oid'] ?: $recordUid['uid'];
+        }, $records);
 
         // select / category + MM  →  MM branch (flat list per parent)
         if (in_array($type, ['select', 'category'], true) && $mmTable && $foreignTable && isset($GLOBALS['TCA'][$foreignTable])) {
@@ -89,8 +99,10 @@ class RelationResolver
      *   - useFindInSet    →  FIND_IN_SET(findInSetValue, t1.field) > 0
      *   - parentUids      →  t1.uid IN (parentUids)
      */
-    public function resolveForFilter(string $parentTable, string $columnName, string $filterValue): RelationFilterResult
+    public function resolveForFilter(string $parentTable, string $columnName, string $filterValue, int $workspaceId = 0): RelationFilterResult
     {
+        $this->workspaceId = $workspaceId;
+
         $config = $GLOBALS['TCA'][$parentTable]['columns'][$columnName]['config'] ?? [];
         $type = $config['type'] ?? '';
         $mmTable = $config['MM'] ?? '';
@@ -144,8 +156,10 @@ class RelationResolver
      *
      * @return array<string, list<array{value: string, label: string}>>
      */
-    public function resolveGroupFilterItems(string $parentTable, string $columnName): array
+    public function resolveGroupFilterItems(string $parentTable, string $columnName, int $workspaceId = 0): array
     {
+        $this->workspaceId = $workspaceId;
+
         $config = $GLOBALS['TCA'][$parentTable]['columns'][$columnName]['config'] ?? [];
         $allowed = $config['allowed'] ?? '';
         $mmTable = $config['MM'] ?? '';
@@ -163,7 +177,7 @@ class RelationResolver
                 continue;
             }
             $labelField = $GLOBALS['TCA'][$table]['ctrl']['label'] ?? 'uid';
-            $qb = $this->connectionPool->getQueryBuilderForTable($table);
+            $qb = $this->getQueryBuilder($table);
             $rows = $qb->select('uid', $labelField)
                 ->from($table)
                 ->executeQuery()
@@ -200,7 +214,7 @@ class RelationResolver
         $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
         $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
 
-        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+        $qb = $this->getQueryBuilder($mmTable);
         $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
             ->from($mmTable, 'mm')
             ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
@@ -243,7 +257,7 @@ class RelationResolver
         }
 
         $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-        $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+        $qb = $this->getQueryBuilder($foreignTable);
         $rows = $qb->select('uid', $labelField)
             ->from($foreignTable)
             ->where($qb->expr()->in('uid', $qb->quoteArrayBasedValueListToIntegerList($allUids)))
@@ -335,7 +349,7 @@ class RelationResolver
                 continue;
             }
             $labelField = $GLOBALS['TCA'][$relatedTable]['ctrl']['label'] ?? 'uid';
-            $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+            $qb = $this->getQueryBuilder($mmTable);
             $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
                 ->from($mmTable, 'mm')
                 ->join('mm', $relatedTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
@@ -422,7 +436,7 @@ class RelationResolver
                 continue;
             }
             $labelField = $GLOBALS['TCA'][$tableName]['ctrl']['label'] ?? 'uid';
-            $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
+            $qb = $this->getQueryBuilder($tableName);
             $rows = $qb->select('uid', $labelField)
                 ->from($tableName)
                 ->where($qb->expr()->in('uid', $qb->quoteArrayBasedValueListToIntegerList(array_keys($uids))))
@@ -457,7 +471,7 @@ class RelationResolver
     /**
      * inline + MM: JOIN mm + foreign_table, table-keyed output.
      *
-     * @return array<int, array<string, list<array{value: string, label: string}>>>
+     * @return array<int, array<string, list<array{value: string, label: string, state: string}>>>
      */
     private function resolveInlineMM(array $config, string $mmTable, string $foreignTable, array $recordUids): array
     {
@@ -467,7 +481,7 @@ class RelationResolver
         $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
         $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
 
-        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+        $qb = $this->getQueryBuilder($mmTable);
         $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
             ->from($mmTable, 'mm')
             ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
@@ -480,9 +494,28 @@ class RelationResolver
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
             $parentUid = (int)$row[$localField];
+            $foreignUid = (int)$row['foreign_uid'];
+            $state = 'live';
+            $label = (string)($row['label'] ?? '');
+
+            if ($this->workspaceId > 0) {
+                $vRow = BackendUtility::getWorkspaceVersionOfRecord($this->workspaceId, $foreignTable, $foreignUid);
+                if ($vRow !== false) {
+                    $label = (string)($vRow[$labelField] ?? $label);
+                    if ((int)($vRow['t3ver_state'] ?? 0) === 2) {
+                        $state = 'deleted';
+                    } elseif ((int)($vRow['t3ver_stage'] ?? 0) === -10) {
+                        $state = 'pending';
+                    } else {
+                        $state = 'modified';
+                    }
+                }
+            }
+
             $result[$parentUid][$foreignTable][] = [
-                'value' => (string)(int)$row['foreign_uid'],
-                'label' => (string)($row['label'] ?? ''),
+                'value' => (string)$foreignUid,
+                'label' => $label,
+                'state' => $state,
             ];
         }
 
@@ -492,17 +525,29 @@ class RelationResolver
     /**
      * inline + foreign_field (no MM): query child table via foreign_field column.
      *
-     * @return array<int, array<string, list<array{value: string, label: string}>>>
+     * @return array<int, array<string, list<array{value: string, label: string, state: string}>>>
      */
     private function resolveInlineFK(array $config, string $foreignTable, string $foreignField, array $recordUids, string $parentTable): array
     {
         $foreignTableLabel = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
         $foreignTableField = $config['foreign_table_field'] ?? '';
 
+        // Query live records only. When in a workspace, exclude delete placeholders
+        // (t3ver_wsid=wsId, t3ver_state=2) which otherwise appear as a duplicate
+        // alongside the live record being overlaid.
+        $selectFields = [$foreignField, 'uid', $foreignTableLabel];
+        if ($this->workspaceId > 0) {
+            $selectFields = array_merge($selectFields, ['t3ver_oid', 't3ver_state', 't3ver_stage']);
+        }
+
         $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-        $qb->select($foreignField, 'uid', $foreignTableLabel)
+        $qb->select(...$selectFields)
             ->from($foreignTable)
             ->where($qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
+
+        if ($this->workspaceId > 0) {
+            $qb->andWhere($qb->expr()->eq('t3ver_wsid', $qb->createNamedParameter(0, Connection::PARAM_INT)));
+        }
 
         if ($foreignTableField) {
             $qb->andWhere($qb->expr()->eq($foreignTableField, $qb->createNamedParameter($parentTable)));
@@ -510,11 +555,56 @@ class RelationResolver
 
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $state = 'live';
+
+            if ($this->workspaceId > 0) {
+                $vRow = BackendUtility::getWorkspaceVersionOfRecord($this->workspaceId, $foreignTable, $row['uid']);
+                if ($vRow !== false) {
+                    $row = $vRow;
+                    if ((int)($vRow['t3ver_state'] ?? 0) === 2) {
+                        $state = 'deleted';
+                    } elseif ((int)($vRow['t3ver_stage'] ?? 0) === -10) {
+                        $state = 'pending';
+                    } else {
+                        $state = 'modified';
+                    }
+                }
+            }
+
             $parentUid = (int)$row[$foreignField];
             $result[$parentUid][$foreignTable][] = [
-                'value' => (string)(int)$row['uid'],
+                'value' => (string)$row['uid'],
                 'label' => (string)($row[$foreignTableLabel] ?? ''),
+                't3ver_oid' => $row['t3ver_oid'] ?? 0,
+                'state' => $state,
             ];
+        }
+
+        // Workspace-new records: children created in the workspace (t3ver_oid=0, t3ver_wsid=wsId).
+        // These have no live counterpart so they are absent from the live-only query above.
+        if ($this->workspaceId > 0) {
+            $qbNew = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qbNew->select($foreignField, 'uid', $foreignTableLabel)
+                ->from($foreignTable)
+                ->where(
+                    $qbNew->expr()->in($foreignField, $qbNew->quoteArrayBasedValueListToIntegerList($recordUids)),
+                    $qbNew->expr()->eq('t3ver_wsid', $qbNew->createNamedParameter($this->workspaceId, Connection::PARAM_INT)),
+                    $qbNew->expr()->eq('t3ver_oid', $qbNew->createNamedParameter(0, Connection::PARAM_INT))
+                );
+
+            if ($foreignTableField) {
+                $qbNew->andWhere($qbNew->expr()->eq($foreignTableField, $qbNew->createNamedParameter($parentTable)));
+            }
+
+            foreach ($qbNew->executeQuery()->fetchAllAssociative() as $row) {
+                $parentUid = (int)$row[$foreignField];
+                $result[$parentUid][$foreignTable][] = [
+                    'value' => (string)$row['uid'],
+                    'label' => (string)($row[$foreignTableLabel] ?? ''),
+                    't3ver_oid' => 0,
+                    'state' => 'new',
+                ];
+            }
         }
 
         return $result;
@@ -543,7 +633,7 @@ class RelationResolver
         $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
         $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
 
-        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+        $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
             ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
@@ -581,7 +671,7 @@ class RelationResolver
 
         $filterUids = array_map('intval', GeneralUtility::trimExplode(',', $filterValue, true));
 
-        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+        $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
             ->where($qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($filterUids)));
@@ -609,7 +699,7 @@ class RelationResolver
             return new RelationFilterResult(isEmpty: true);
         }
 
-        $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+        $qb = $this->getQueryBuilder($foreignTable);
         $likeValue = $qb->createNamedParameter('%' . $qb->escapeLikeWildcards($filterValue) . '%');
 
         $orConstraints = [];
@@ -648,7 +738,7 @@ class RelationResolver
         $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
         $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
 
-        $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
+        $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
             ->where($qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($childUids)));
@@ -679,7 +769,7 @@ class RelationResolver
             return [];
         }
 
-        $qb = $this->connectionPool->getQueryBuilderForTable($table);
+        $qb = $this->getQueryBuilder($table);
         $likeValue = $qb->createNamedParameter('%' . $qb->escapeLikeWildcards($filterValue) . '%');
 
         $orConstraints = [];
@@ -703,6 +793,13 @@ class RelationResolver
     {
         $searchFields = GeneralUtility::trimExplode(',', ($GLOBALS['TCA'][$table]['ctrl']['searchFields'] ?? ''), true);
         return empty($searchFields) ? [$GLOBALS['TCA'][$table]['ctrl']['label']] : $searchFields;
+    }
+
+    private function getQueryBuilder(string $table): QueryBuilder
+    {
+        $qb = $this->connectionPool->getQueryBuilderForTable($table);
+        $qb->getRestrictions()->add(new WorkspaceRestriction($this->workspaceId));
+        return $qb;
     }
 
     private function getLanguageService(): LanguageService

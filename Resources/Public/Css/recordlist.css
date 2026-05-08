@@ -89,6 +89,30 @@ main.recordlist ul.pagination input.form-control {
 }
 
 /**
+* Inline relation badge workspace state colors
+*/
+.badge.badge-state-new {
+    background-color: var(--typo3-badge-success-bg);
+    color: var(--typo3-badge-success-color);
+}
+
+.badge.badge-state-modified {
+    background-color: var(--typo3-badge-warning-bg);
+    color: var(--typo3-badge-warning-color);
+}
+
+.badge.badge-state-deleted {
+    background-color: var(--typo3-badge-danger-bg);
+    color: var(--typo3-badge-danger-color);
+    text-decoration: line-through;
+}
+
+.badge.badge-state-pending {
+    background-color: var(--typo3-badge-info-bg);
+    color: var(--typo3-badge-info-color);
+}
+
+/**
 * Filter
 */
 #filterInputs .card-footer {
