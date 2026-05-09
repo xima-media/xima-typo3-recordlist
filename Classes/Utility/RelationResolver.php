@@ -50,7 +50,7 @@ class RelationResolver
 
         // Use uid of original version if in a workspace, otherwise uid
         $recordUids = array_map(function ($recordUid) {
-            return $recordUid['t3ver_oid'] ?: $recordUid['uid'];
+            return ($recordUid['t3ver_oid'] ?? 0) ?: $recordUid['uid'];
         }, $records);
 
         // select / category + MM  →  MM branch (flat list per parent)
@@ -86,6 +86,15 @@ class RelationResolver
         // inline + foreign_field (no MM)  →  FK child query
         if ($type === 'inline' && $foreignField && $foreignTable && isset($GLOBALS['TCA'][$foreignTable])) {
             return $this->resolveInlineFK($config, $foreignTable, $foreignField, $recordUids, $parentTable);
+        }
+
+        // file (v13 shorthand for sys_file_reference inline)  →  normalise and resolve as FK child query
+        if ($type === 'file') {
+            $fileConfig = array_merge($config, [
+                'foreign_table_field' => 'tablenames',
+                'foreign_match_fields' => array_merge($config['foreign_match_fields'] ?? [], ['fieldname' => $columnName]),
+            ]);
+            return $this->resolveInlineFK($fileConfig, 'sys_file_reference', 'uid_foreign', $recordUids, $parentTable);
         }
 
         return [];
@@ -531,6 +540,7 @@ class RelationResolver
     {
         $foreignTableLabel = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
         $foreignTableField = $config['foreign_table_field'] ?? '';
+        $matchFields = $config['foreign_match_fields'] ?? [];
 
         // Query live records only. When in a workspace, exclude delete placeholders
         // (t3ver_wsid=wsId, t3ver_state=2) which otherwise appear as a duplicate
@@ -551,6 +561,10 @@ class RelationResolver
 
         if ($foreignTableField) {
             $qb->andWhere($qb->expr()->eq($foreignTableField, $qb->createNamedParameter($parentTable)));
+        }
+
+        foreach ($matchFields as $matchField => $matchValue) {
+            $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter((string)$matchValue)));
         }
 
         $result = [];
@@ -594,6 +608,10 @@ class RelationResolver
 
             if ($foreignTableField) {
                 $qbNew->andWhere($qbNew->expr()->eq($foreignTableField, $qbNew->createNamedParameter($parentTable)));
+            }
+
+            foreach ($matchFields as $matchField => $matchValue) {
+                $qbNew->andWhere($qbNew->expr()->eq($matchField, $qbNew->createNamedParameter((string)$matchValue)));
             }
 
             foreach ($qbNew->executeQuery()->fetchAllAssociative() as $row) {

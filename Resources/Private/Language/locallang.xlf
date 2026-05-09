@@ -54,6 +54,9 @@
 			<trans-unit id="table.label.waiting">
 				<source>Awaiting review</source>
 			</trans-unit>
+			<trans-unit id="table.label.childrenModified">
+				<source>Related records modified</source>
+			</trans-unit>
 			<trans-unit id="table.button.view">
 				<source>Open website</source>
 			</trans-unit>

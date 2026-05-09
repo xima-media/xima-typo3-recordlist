@@ -822,88 +822,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $record['editable'] = true;
             $record['state'] = 'live';
 
-            // if record has a version record => replace with versioned record
+            // Look up the workspace version once. Cache it for addWorkspaceMetadata() so that
+            // only paginated records pay the full overlay + referencesToPublish query cost.
             $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
-            if (is_array($vRecord)) {
-                $record = $vRecord;
-                $record['editable'] = true;
-                $record['state'] = 'modified';
+            $record['_workspaceVersion'] = is_array($vRecord) ? $vRecord : null;
 
-                $workspaceStatus = [];
-                $workspaceStatus['level'] = 'warning';
-                $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.copy');
-
-                // newly created record
-                if ($record['t3ver_oid'] === 0) {
-                    $record['state'] = 'new';
-                }
-
-                // newly deleted record
-                if ($record['t3ver_state'] === self::VERSION_STATE_DELETED) {
-                    $record['state'] = 'deleted';
-                }
-
-                // stage "Ready to publish"
-                if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
-                    $workspaceStatus['level'] = 'success';
-                    $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.waiting');
-                    $record['editable'] = $this->isWorkspaceAdmin();
-                    $record['state'] = 'pending';
-
-                    $referencesToPublish = [];
-                    foreach ($GLOBALS['TCA'][$this->getTableName()]['columns'] as $columnName => $column) {
-                        if (($column['config']['foreign_table'] ?? false) && $column['config']['foreign_table'] === 'sys_file_reference') {
-                            // new/modified records
-                            $references = BackendUtility::resolveFileReferences(
-                                $this->getTableName(),
-                                $columnName,
-                                $record,
-                                $this::WORKSPACE_ID
-                            );
-                            foreach ($references ?? [] as $reference) {
-                                if ($reference->getProperty('t3ver_stage') !== self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
-                                    continue;
-                                }
-                                $referencesToPublish[] = [
-                                    'liveId' => $reference->getProperty('t3ver_oid') ?: $reference->getUid(),
-                                    'table' => 'sys_file_reference',
-                                    'versionId' => $reference->getUid(),
-                                ];
-                            }
-                            // deleted records
-                            $references = BackendUtility::resolveFileReferences($this->getTableName(), $columnName, $record);
-                            foreach ($references ?? [] as $reference) {
-                                $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord(
-                                    $this::WORKSPACE_ID,
-                                    'sys_file_reference',
-                                    $reference->getUid()
-                                );
-                                $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === self::VERSION_STATE_DELETED;
-                                $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
-                                if ($isDeleted || $isModified) {
-                                    $referencesToPublish[] = [
-                                        'liveId' => $referenceOverlay['t3ver_oid'] ?: $referenceOverlay['uid'],
-                                        'table' => 'sys_file_reference',
-                                        'versionId' => $referenceOverlay['uid'],
-                                    ];
-                                }
-                            }
-                        }
-                    }
-                    $record['referencesToPublish'] = $referencesToPublish;
-                }
-
-                $record['status'] ??= [];
-                $record['status'][] = $workspaceStatus;
-            }
-
-            // demand: readyToPublish (2/2)
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish') && (!is_array($vRecord) || $record['t3ver_stage'] !== self::WORKSPACE_STAGE_READY_TO_PUBLISH)) {
+            // demand: readyToPublish
+            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish')
+                && (!is_array($vRecord) || $vRecord['t3ver_stage'] !== self::WORKSPACE_STAGE_READY_TO_PUBLISH)) {
                 $record = null;
                 continue;
             }
 
-            // demand: offline records (2/2)
+            // demand: offline records
             if ($this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords') && !is_array($vRecord)) {
                 $record = null;
                 continue;
@@ -912,6 +843,162 @@ abstract class AbstractBackendController extends ActionController implements Bac
         unset($record);
 
         $this->records = array_filter($this->records);
+    }
+
+    /**
+     * Apply workspace overlay and compute display metadata for the current page of records.
+     * Called as the first step of modifyPaginatedRecords() so subsequent methods receive
+     * workspace-version data (uid, t3ver_oid, state, editable, referencesToPublish).
+     */
+    protected function addWorkspaceMetadata(): void
+    {
+        foreach ($this->records as &$record) {
+            /** @var array<string,mixed>|null $vRecord */
+            $vRecord = $record['_workspaceVersion'] ?? null;
+            unset($record['_workspaceVersion']);
+
+            if (!is_array($vRecord)) {
+                // Live parent: detect workspace-modified children so action buttons appear.
+                if ($this::WORKSPACE_ID > 0) {
+                    $children = $this->collectReferencesToPublish($record);
+                    if ($children !== []) {
+                        $record['referencesToPublish'] = $children;
+                        $record['state'] = 'children-modified';
+                        $record['status'][] = [
+                            'level' => 'info',
+                            'text' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.childrenModified'),
+                        ];
+                    }
+                }
+                continue;
+            }
+
+            // Replace live record data with workspace version data.
+            $record = $vRecord;
+            $record['editable'] = true;
+            $record['state'] = 'modified';
+
+            $workspaceStatus = [
+                'level' => 'warning',
+                'text' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.copy'),
+            ];
+
+            if ($record['t3ver_oid'] === 0) {
+                $record['state'] = 'new';
+            }
+
+            if ($record['t3ver_state'] === self::VERSION_STATE_DELETED) {
+                $record['state'] = 'deleted';
+            }
+
+            if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
+                $workspaceStatus['level'] = 'success';
+                $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.waiting');
+                $record['editable'] = $this->isWorkspaceAdmin();
+                $record['state'] = 'pending';
+            }
+
+            $record['referencesToPublish'] = $this->collectReferencesToPublish($record);
+
+            $record['status'] ??= [];
+            $record['status'][] = $workspaceStatus;
+        }
+        unset($record);
+    }
+
+    /**
+     * Collect workspace-versioned related records for approve / send-to-stage / discard / publish.
+     *
+     * Handles both type='inline' and type='file' (v13 shorthand), including sys_file_reference.
+     * foreign_match_fields are applied so that per-column filtering is correct.
+     *
+     * @param array<string,mixed> $record Workspace-overlaid parent record
+     * @return list<array{liveId: int, table: string, versionId: int}>
+     */
+    protected function collectReferencesToPublish(array $record): array
+    {
+        $referencesToPublish = [];
+        $liveParentUid = (int)($record['t3ver_oid'] ?: $record['uid']);
+
+        foreach ($GLOBALS['TCA'][$this->getTableName()]['columns'] as $columnName => $column) {
+            $colConfig = $column['config'] ?? [];
+            $colType = $colConfig['type'] ?? '';
+
+            // Normalise type='file' (v13) to the same shape as type='inline'.
+            if ($colType === 'file') {
+                $colConfig = array_merge($colConfig, [
+                    'foreign_table' => 'sys_file_reference',
+                    'foreign_field' => 'uid_foreign',
+                    'foreign_table_field' => 'tablenames',
+                    'foreign_match_fields' => array_merge($colConfig['foreign_match_fields'] ?? [], ['fieldname' => $columnName]),
+                ]);
+                $colType = 'inline';
+            }
+
+            if ($colType !== 'inline') {
+                continue;
+            }
+
+            $foreignTable = $colConfig['foreign_table'] ?? '';
+            $foreignField = $colConfig['foreign_field'] ?? '';
+            if ($foreignTable === '' || $foreignField === '') {
+                continue;
+            }
+
+            $foreignTableField = $colConfig['foreign_table_field'] ?? '';
+            $matchFields = $colConfig['foreign_match_fields'] ?? [];
+
+            // Live children with a workspace overlay (modified or deleted)
+            $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qb->select('uid')
+                ->from($foreignTable)
+                ->where(
+                    $qb->expr()->eq($foreignField, $qb->createNamedParameter($liveParentUid, Connection::PARAM_INT)),
+                    $qb->expr()->eq('t3ver_wsid', $qb->createNamedParameter(0, Connection::PARAM_INT))
+                );
+            if ($foreignTableField) {
+                $qb->andWhere($qb->expr()->eq($foreignTableField, $qb->createNamedParameter($this->getTableName())));
+            }
+            foreach ($matchFields as $matchField => $matchValue) {
+                $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter((string)$matchValue)));
+            }
+            foreach ($qb->executeQuery()->fetchAllAssociative() as $child) {
+                $childOverlay = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $foreignTable, (int)$child['uid']);
+                if (!is_array($childOverlay)) {
+                    continue;
+                }
+                $referencesToPublish[] = [
+                    'liveId' => (int)($childOverlay['t3ver_oid'] ?: $childOverlay['uid']),
+                    'table' => $foreignTable,
+                    'versionId' => (int)$childOverlay['uid'],
+                ];
+            }
+
+            // Workspace-new children (created in the workspace, no live counterpart)
+            $qbNew = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qbNew->select('uid')
+                ->from($foreignTable)
+                ->where(
+                    $qbNew->expr()->eq($foreignField, $qbNew->createNamedParameter($liveParentUid, Connection::PARAM_INT)),
+                    $qbNew->expr()->eq('t3ver_wsid', $qbNew->createNamedParameter($this::WORKSPACE_ID, Connection::PARAM_INT)),
+                    $qbNew->expr()->eq('t3ver_oid', $qbNew->createNamedParameter(0, Connection::PARAM_INT))
+                );
+            if ($foreignTableField) {
+                $qbNew->andWhere($qbNew->expr()->eq($foreignTableField, $qbNew->createNamedParameter($this->getTableName())));
+            }
+            foreach ($matchFields as $matchField => $matchValue) {
+                $qbNew->andWhere($qbNew->expr()->eq($matchField, $qbNew->createNamedParameter((string)$matchValue)));
+            }
+            foreach ($qbNew->executeQuery()->fetchAllAssociative() as $child) {
+                $referencesToPublish[] = [
+                    'liveId' => (int)$child['uid'],
+                    'table' => $foreignTable,
+                    'versionId' => (int)$child['uid'],
+                ];
+            }
+        }
+
+        return $referencesToPublish;
     }
 
     protected function getLanguageService(): LanguageService
@@ -1398,6 +1485,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function modifyPaginatedRecords(): void
     {
+        $this->addWorkspaceMetadata();
         $this->addTranslationButtons();
         $this->addHiddenToggleButton();
         $this->addSysFileReferences();
