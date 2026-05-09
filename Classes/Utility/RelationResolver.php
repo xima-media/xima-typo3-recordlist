@@ -292,7 +292,7 @@ class RelationResolver
                 }
             }
             if (!empty($relations)) {
-                $result[(int)$record['uid']] = $relations;
+                $result[(int)(($record['t3ver_oid'] ?? 0) ?: $record['uid'])] = $relations;
             }
         }
 
@@ -326,7 +326,7 @@ class RelationResolver
             foreach ($items as $value) {
                 $relations[] = ['value' => $value, 'label' => $itemMap[$value] ?? $value];
             }
-            $result[(int)$record['uid']] = $relations;
+            $result[(int)(($record['t3ver_oid'] ?? 0) ?: $record['uid'])] = $relations;
         }
 
         return $result;
@@ -418,7 +418,7 @@ class RelationResolver
                     $uid = (int)$entry;
                     if ($uid > 0 && $defaultTable !== '') {
                         $tableUids[$defaultTable][$uid] = true;
-                        $recordParsed[(int)$record['uid']][$defaultTable][] = ['uid' => $uid, 'storedValue' => (string)$uid];
+                        $recordParsed[(int)(($record['t3ver_oid'] ?? 0) ?: $record['uid'])][$defaultTable][] = ['uid' => $uid, 'storedValue' => (string)$uid];
                     }
                     continue;
                 }
@@ -434,7 +434,7 @@ class RelationResolver
                     continue;
                 }
                 $tableUids[$tableName][$uid] = true;
-                $recordParsed[(int)$record['uid']][$tableName][] = ['uid' => $uid, 'storedValue' => $entry];
+                $recordParsed[(int)(($record['t3ver_oid'] ?? 0) ?: $record['uid'])][$tableName][] = ['uid' => $uid, 'storedValue' => $entry];
             }
         }
 
