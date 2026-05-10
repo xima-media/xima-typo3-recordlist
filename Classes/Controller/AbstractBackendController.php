@@ -980,6 +980,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             // Live children with a workspace overlay (modified or deleted)
             $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qb->getRestrictions()->removeByType(HiddenRestriction::class);
             $qb->select('uid')
                 ->from($foreignTable)
                 ->where(
@@ -1007,6 +1008,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             // Workspace-new children (created in the workspace, no live counterpart)
             $qbNew = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qbNew->getRestrictions()->removeByType(HiddenRestriction::class);
             $qbNew->select('uid', 't3ver_stage')
                 ->from($foreignTable)
                 ->where(
