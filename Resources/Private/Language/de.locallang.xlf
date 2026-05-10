@@ -71,6 +71,10 @@
 				<source />
 				<target>Wartet auf Freigabe</target>
 			</trans-unit>
+			<trans-unit id="table.label.childrenModified">
+				<source />
+				<target>Geänderte elemente</target>
+			</trans-unit>
 			<trans-unit id="table.button.view" approved="yes">
 				<source />
 				<target>Auf Webseite anzeigen</target>

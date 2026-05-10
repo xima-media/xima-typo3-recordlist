@@ -828,16 +828,39 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $record['_workspaceVersion'] = is_array($vRecord) ? $vRecord : null;
 
             // demand: readyToPublish
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish')
-                && (!is_array($vRecord) || $vRecord['t3ver_stage'] !== self::WORKSPACE_STAGE_READY_TO_PUBLISH)) {
-                $record = null;
-                continue;
+            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish')) {
+                $parentIsReady = is_array($vRecord) && $vRecord['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
+                if (!$parentIsReady) {
+                    // Live parent may still qualify if it has workspace-modified children.
+                    if ($this::WORKSPACE_ID > 0 && !is_array($vRecord)) {
+                        $childRefs = $this->collectReferencesToPublish($record);
+                        if ($childRefs !== []) {
+                            $record['_referencesToPublish'] = $childRefs;
+                        } else {
+                            $record = null;
+                            continue;
+                        }
+                    } else {
+                        $record = null;
+                        continue;
+                    }
+                }
             }
 
             // demand: offline records
             if ($this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords') && !is_array($vRecord)) {
-                $record = null;
-                continue;
+                $hasChildChanges = false;
+                if ($this::WORKSPACE_ID > 0) {
+                    $childRefs = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
+                    if ($childRefs !== []) {
+                        $record['_referencesToPublish'] = $childRefs;
+                        $hasChildChanges = true;
+                    }
+                }
+                if (!$hasChildChanges) {
+                    $record = null;
+                    continue;
+                }
             }
         }
         unset($record);
@@ -859,8 +882,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             if (!is_array($vRecord)) {
                 // Live parent: detect workspace-modified children so action buttons appear.
+                // Reuse pre-computed cache from modifyAllRecords() when the offline/readyToPublish
+                // filter already called collectReferencesToPublish() for this record.
                 if ($this::WORKSPACE_ID > 0) {
-                    $children = $this->collectReferencesToPublish($record);
+                    $children = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
+                    unset($record['_referencesToPublish']);
                     if ($children !== []) {
                         $record['referencesToPublish'] = $children;
                         $record['state'] = 'children-modified';
