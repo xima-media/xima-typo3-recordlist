@@ -255,6 +255,12 @@
 			<trans-unit id="workspace.requestChanges.notification.success.description">
 				<source>The change request has been sent successfully.</source>
 			</trans-unit>
+			<trans-unit id="workspace.discard.error.title">
+				<source>Discard failed</source>
+			</trans-unit>
+			<trans-unit id="workspace.discard.error.message">
+				<source>Some related records could not be discarded.</source>
+			</trans-unit>
 			<trans-unit id="inlineEdit.error.title">
 				<source>Error</source>
 			</trans-unit>

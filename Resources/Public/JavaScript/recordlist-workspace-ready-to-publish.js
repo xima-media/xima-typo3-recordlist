@@ -55,18 +55,24 @@ export default class RecordlistWorkspaceReadyToPublish {
 
           // Discard inline children first.
           const inlineReferences = this.getInlineReferences(tr);
+          const discardErrors = [];
           for (const ref of inlineReferences) {
-            await new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
-              .withQueryArguments({workspaceId: workspaceId})
-              .post({
-                action: "Actions",
-                data: [ref.table, ref.versionId],
-                method: discardMethod,
-                tid: 2,
-                type: "rpc"
-              }, {
-                headers: { "Content-Type": "application/json; charset=utf-8" }
-              });
+            try {
+              await new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+                .withQueryArguments({workspaceId: workspaceId})
+                .post({
+                  action: "Actions",
+                  data: [ref.table, ref.versionId],
+                  method: discardMethod,
+                  tid: 2,
+                  type: "rpc"
+                }, {
+                  headers: { "Content-Type": "application/json; charset=utf-8" }
+                });
+            } catch (error) {
+              console.error("Failed to discard inline reference", ref, error);
+              discardErrors.push(ref);
+            }
           }
 
           // Discard the parent only when it has an actual workspace version.
@@ -82,6 +88,13 @@ export default class RecordlistWorkspaceReadyToPublish {
               }, {
                 headers: { "Content-Type": "application/json; charset=utf-8" }
               });
+          }
+
+          if (discardErrors.length > 0) {
+            Notification.error(
+              TYPO3.lang["workspace.discard.error.title"],
+              TYPO3.lang["workspace.discard.error.message"]
+            );
           }
 
           top?.TYPO3.Backend.ContentContainer.refresh();

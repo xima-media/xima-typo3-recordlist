@@ -339,6 +339,14 @@
 				<source />
 				<target>Die Anfrage für Änderungen wurde erfolgreich übermittelt</target>
 			</trans-unit>
+			<trans-unit id="workspace.discard.error.title" approved="yes">
+				<source />
+				<target>Verwerfen fehlgeschlagen</target>
+			</trans-unit>
+			<trans-unit id="workspace.discard.error.message" approved="yes">
+				<source />
+				<target>Einige verknüpfte Datensätze konnten nicht verworfen werden.</target>
+			</trans-unit>
 			<trans-unit id="inlineEdit.error.title" approved="yes">
 				<source />
 				<target>Fehler</target>
