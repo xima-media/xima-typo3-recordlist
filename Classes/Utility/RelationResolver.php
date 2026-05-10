@@ -14,6 +14,9 @@ use TYPO3\CMS\Core\Utility\MathUtility;
 
 class RelationResolver
 {
+    private const VERSION_STATE_DELETED = 2;
+    private const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
+
     public function __construct(
         private readonly ConnectionPool $connectionPool,
         private readonly LanguageServiceFactory $languageServiceFactory,
@@ -218,20 +221,15 @@ class RelationResolver
     private function resolveSelectMM(array $config, string $mmTable, string $foreignTable, array $recordUids): array
     {
         $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-        $mmMatchFields = $config['MM_match_fields'] ?? [];
-        $isOpposite = !empty($config['MM_opposite_field']);
-        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
             ->from($mmTable, 'mm')
-            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
+            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignFieldName))
             ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
 
-        foreach ($mmMatchFields as $matchField => $matchValue) {
-            $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
-        }
+        $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? []);
 
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
@@ -339,10 +337,7 @@ class RelationResolver
      */
     private function resolveGroupMM(array $config, string $mmTable, string $allowed, array $recordUids): array
     {
-        $mmMatchFields = $config['MM_match_fields'] ?? [];
-        $isOpposite = !empty($config['MM_opposite_field']);
-        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
 
         if ($allowed === '*') {
             $allowedTables = array_keys($config['MM_oppositeUsage'] ?? []);
@@ -361,16 +356,14 @@ class RelationResolver
             $qb = $this->getQueryBuilder($mmTable);
             $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
                 ->from($mmTable, 'mm')
-                ->join('mm', $relatedTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
+                ->join('mm', $relatedTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignFieldName))
                 ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
 
             if ($multiTable) {
                 $qb->andWhere($qb->expr()->eq('mm.tablenames', $qb->createNamedParameter($relatedTable)));
             }
 
-            foreach ($mmMatchFields as $matchField => $matchValue) {
-                $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
-            }
+            $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? []);
 
             foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
                 $parentUid = (int)$row[$localField];
@@ -485,20 +478,15 @@ class RelationResolver
     private function resolveInlineMM(array $config, string $mmTable, string $foreignTable, array $recordUids): array
     {
         $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-        $mmMatchFields = $config['MM_match_fields'] ?? [];
-        $isOpposite = !empty($config['MM_opposite_field']);
-        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
             ->from($mmTable, 'mm')
-            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignField))
+            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignFieldName))
             ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
 
-        foreach ($mmMatchFields as $matchField => $matchValue) {
-            $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
-        }
+        $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? []);
 
         $result = [];
         foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
@@ -511,13 +499,7 @@ class RelationResolver
                 $vRow = BackendUtility::getWorkspaceVersionOfRecord($this->workspaceId, $foreignTable, $foreignUid);
                 if ($vRow !== false) {
                     $label = (string)($vRow[$labelField] ?? $label);
-                    if ((int)($vRow['t3ver_state'] ?? 0) === 2) {
-                        $state = 'deleted';
-                    } elseif ((int)($vRow['t3ver_stage'] ?? 0) === -10) {
-                        $state = 'pending';
-                    } else {
-                        $state = 'modified';
-                    }
+                    $state = $this->resolveWorkspaceState($vRow);
                 }
             }
 
@@ -575,13 +557,7 @@ class RelationResolver
                 $vRow = BackendUtility::getWorkspaceVersionOfRecord($this->workspaceId, $foreignTable, $row['uid']);
                 if ($vRow !== false) {
                     $row = $vRow;
-                    if ((int)($vRow['t3ver_state'] ?? 0) === 2) {
-                        $state = 'deleted';
-                    } elseif ((int)($vRow['t3ver_stage'] ?? 0) === -10) {
-                        $state = 'pending';
-                    } else {
-                        $state = 'modified';
-                    }
+                    $state = $this->resolveWorkspaceState($vRow);
                 }
             }
 
@@ -644,25 +620,20 @@ class RelationResolver
         $filterTableName = substr($filterValue, 0, $lastUnderscore);
         $filterUid = (int)substr($filterValue, $lastUnderscore + 1);
 
-        $mmMatchFields = $config['MM_match_fields'] ?? [];
-        $isOpposite = !empty($config['MM_opposite_field']);
         $allowed = $config['allowed'] ?? '';
         $isMultiTable = $allowed === '*' || str_contains($allowed, ',');
-        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
-            ->where($qb->expr()->eq($foreignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
+            ->where($qb->expr()->eq($foreignFieldName, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
 
         if ($isMultiTable) {
             $qb->andWhere($qb->expr()->eq('tablenames', $qb->createNamedParameter($filterTableName)));
         }
 
-        foreach ($mmMatchFields as $matchField => $matchValue) {
-            $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-        }
+        $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? [], '');
 
         $parentUids = array_map('intval', array_column($qb->executeQuery()->fetchAllNumeric(), 0));
 
@@ -682,21 +653,16 @@ class RelationResolver
      */
     private function resolveSelectMMFilter(array $config, string $mmTable, string $filterValue): RelationFilterResult
     {
-        $mmMatchFields = $config['MM_match_fields'] ?? [];
-        $isOpposite = !empty($config['MM_opposite_field']);
-        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
 
         $filterUids = array_map('intval', GeneralUtility::trimExplode(',', $filterValue, true));
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
-            ->where($qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($filterUids)));
+            ->where($qb->expr()->in($foreignFieldName, $qb->quoteArrayBasedValueListToIntegerList($filterUids)));
 
-        foreach ($mmMatchFields as $matchField => $matchValue) {
-            $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-        }
+        $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? [], '');
 
         $parentUids = array_map('intval', array_column($qb->executeQuery()->fetchAllNumeric(), 0));
 
@@ -751,19 +717,14 @@ class RelationResolver
             return new RelationFilterResult(isEmpty: true);
         }
 
-        $mmMatchFields = $config['MM_match_fields'] ?? [];
-        $isOpposite = !empty($config['MM_opposite_field']);
-        $localField = $isOpposite ? 'uid_foreign' : 'uid_local';
-        $foreignField = $isOpposite ? 'uid_local' : 'uid_foreign';
+        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
-            ->where($qb->expr()->in($foreignField, $qb->quoteArrayBasedValueListToIntegerList($childUids)));
+            ->where($qb->expr()->in($foreignFieldName, $qb->quoteArrayBasedValueListToIntegerList($childUids)));
 
-        foreach ($mmMatchFields as $matchField => $matchValue) {
-            $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter($matchValue)));
-        }
+        $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? [], '');
 
         $parentUids = array_unique(array_map('intval', array_column($qb->executeQuery()->fetchAllNumeric(), 0)));
 
@@ -811,6 +772,47 @@ class RelationResolver
     {
         $searchFields = GeneralUtility::trimExplode(',', ($GLOBALS['TCA'][$table]['ctrl']['searchFields'] ?? ''), true);
         return empty($searchFields) ? [$GLOBALS['TCA'][$table]['ctrl']['label']] : $searchFields;
+    }
+
+    /**
+     * Derive the local/foreign MM field names based on MM_opposite_field.
+     *
+     * @return array{localField: string, foreignField: string}
+     */
+    private function getMmFieldNames(array $config): array
+    {
+        $isOpposite = !empty($config['MM_opposite_field']);
+        return [
+            'localField' => $isOpposite ? 'uid_foreign' : 'uid_local',
+            'foreignField' => $isOpposite ? 'uid_local' : 'uid_foreign',
+        ];
+    }
+
+    /**
+     * Apply MM_match_fields constraints to a query builder.
+     *
+     * @param string $tableAlias Table alias prefix (e.g. 'mm') or empty for unaliased queries
+     */
+    private function applyMmMatchFields(QueryBuilder $qb, array $mmMatchFields, string $tableAlias = 'mm'): void
+    {
+        $prefix = $tableAlias !== '' ? $tableAlias . '.' : '';
+        foreach ($mmMatchFields as $matchField => $matchValue) {
+            $qb->andWhere($qb->expr()->eq($prefix . $matchField, $qb->createNamedParameter($matchValue)));
+        }
+    }
+
+    /**
+     * Derive workspace state string from a workspace version row.
+     */
+    private function resolveWorkspaceState(array $versionRow): string
+    {
+        if ((int)($versionRow['t3ver_state'] ?? 0) === self::VERSION_STATE_DELETED) {
+            return 'deleted';
+        }
+        if ((int)($versionRow['t3ver_stage'] ?? 0) === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
+            return 'pending';
+        }
+        return 'modified';
     }
 
     private function getQueryBuilder(string $table): QueryBuilder
