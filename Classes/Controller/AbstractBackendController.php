@@ -890,6 +890,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     if ($children !== []) {
                         $record['referencesToPublish'] = $children;
                         $record['state'] = 'children-modified';
+                        $stages = array_values(array_unique(array_column($children, 't3ver_stage')));
+                        $record['t3ver_stage'] = ($stages === [self::WORKSPACE_STAGE_READY_TO_PUBLISH])
+                            ? self::WORKSPACE_STAGE_READY_TO_PUBLISH
+                            : 0;
                         $record['status'][] = [
                             'level' => 'info',
                             'text' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.childrenModified'),
@@ -939,7 +943,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
      * foreign_match_fields are applied so that per-column filtering is correct.
      *
      * @param array<string,mixed> $record Workspace-overlaid parent record
-     * @return list<array{liveId: int, table: string, versionId: int}>
+     * @return list<array{liveId: int, table: string, versionId: int, t3ver_stage: int}>
      */
     protected function collectReferencesToPublish(array $record): array
     {
@@ -997,12 +1001,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     'liveId' => (int)($childOverlay['t3ver_oid'] ?: $childOverlay['uid']),
                     'table' => $foreignTable,
                     'versionId' => (int)$childOverlay['uid'],
+                    't3ver_stage' => (int)$childOverlay['t3ver_stage'],
                 ];
             }
 
             // Workspace-new children (created in the workspace, no live counterpart)
             $qbNew = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-            $qbNew->select('uid')
+            $qbNew->select('uid', 't3ver_stage')
                 ->from($foreignTable)
                 ->where(
                     $qbNew->expr()->eq($foreignField, $qbNew->createNamedParameter($liveParentUid, Connection::PARAM_INT)),
@@ -1020,6 +1025,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     'liveId' => (int)$child['uid'],
                     'table' => $foreignTable,
                     'versionId' => (int)$child['uid'],
+                    't3ver_stage' => (int)$child['t3ver_stage'],
                 ];
             }
         }
