@@ -221,12 +221,12 @@ class RelationResolver
     private function resolveSelectMM(array $config, string $mmTable, string $foreignTable, array $recordUids): array
     {
         $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
+        ['localField' => $localField, 'mmForeignField' => $mmForeignField] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
             ->from($mmTable, 'mm')
-            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignFieldName))
+            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $mmForeignField))
             ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
 
         $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? []);
@@ -337,7 +337,7 @@ class RelationResolver
      */
     private function resolveGroupMM(array $config, string $mmTable, string $allowed, array $recordUids): array
     {
-        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
+        ['localField' => $localField, 'mmForeignField' => $mmForeignField] = $this->getMmFieldNames($config);
 
         if ($allowed === '*') {
             $allowedTables = array_keys($config['MM_oppositeUsage'] ?? []);
@@ -356,7 +356,7 @@ class RelationResolver
             $qb = $this->getQueryBuilder($mmTable);
             $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
                 ->from($mmTable, 'mm')
-                ->join('mm', $relatedTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignFieldName))
+                ->join('mm', $relatedTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $mmForeignField))
                 ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
 
             if ($multiTable) {
@@ -478,12 +478,12 @@ class RelationResolver
     private function resolveInlineMM(array $config, string $mmTable, string $foreignTable, array $recordUids): array
     {
         $labelField = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
+        ['localField' => $localField, 'mmForeignField' => $mmForeignField] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select('mm.' . $localField, 'ft.uid as foreign_uid', 'ft.' . $labelField . ' as label')
             ->from($mmTable, 'mm')
-            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $foreignFieldName))
+            ->join('mm', $foreignTable, 'ft', $qb->expr()->eq('ft.uid', 'mm.' . $mmForeignField))
             ->where($qb->expr()->in('mm.' . $localField, $qb->quoteArrayBasedValueListToIntegerList($recordUids)));
 
         $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? []);
@@ -622,12 +622,12 @@ class RelationResolver
 
         $allowed = $config['allowed'] ?? '';
         $isMultiTable = $allowed === '*' || str_contains($allowed, ',');
-        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
+        ['localField' => $localField, 'mmForeignField' => $mmForeignField] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
-            ->where($qb->expr()->eq($foreignFieldName, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
+            ->where($qb->expr()->eq($mmForeignField, $qb->createNamedParameter($filterUid, Connection::PARAM_INT)));
 
         if ($isMultiTable) {
             $qb->andWhere($qb->expr()->eq('tablenames', $qb->createNamedParameter($filterTableName)));
@@ -653,14 +653,14 @@ class RelationResolver
      */
     private function resolveSelectMMFilter(array $config, string $mmTable, string $filterValue): RelationFilterResult
     {
-        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
+        ['localField' => $localField, 'mmForeignField' => $mmForeignField] = $this->getMmFieldNames($config);
 
         $filterUids = array_map('intval', GeneralUtility::trimExplode(',', $filterValue, true));
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
-            ->where($qb->expr()->in($foreignFieldName, $qb->quoteArrayBasedValueListToIntegerList($filterUids)));
+            ->where($qb->expr()->in($mmForeignField, $qb->quoteArrayBasedValueListToIntegerList($filterUids)));
 
         $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? [], '');
 
@@ -717,12 +717,12 @@ class RelationResolver
             return new RelationFilterResult(isEmpty: true);
         }
 
-        ['localField' => $localField, 'foreignField' => $foreignFieldName] = $this->getMmFieldNames($config);
+        ['localField' => $localField, 'mmForeignField' => $mmForeignField] = $this->getMmFieldNames($config);
 
         $qb = $this->getQueryBuilder($mmTable);
         $qb->select($localField)
             ->from($mmTable)
-            ->where($qb->expr()->in($foreignFieldName, $qb->quoteArrayBasedValueListToIntegerList($childUids)));
+            ->where($qb->expr()->in($mmForeignField, $qb->quoteArrayBasedValueListToIntegerList($childUids)));
 
         $this->applyMmMatchFields($qb, $config['MM_match_fields'] ?? [], '');
 
@@ -777,14 +777,14 @@ class RelationResolver
     /**
      * Derive the local/foreign MM field names based on MM_opposite_field.
      *
-     * @return array{localField: string, foreignField: string}
+     * @return array{localField: string, mmForeignField: string}
      */
     private function getMmFieldNames(array $config): array
     {
         $isOpposite = !empty($config['MM_opposite_field']);
         return [
             'localField' => $isOpposite ? 'uid_foreign' : 'uid_local',
-            'foreignField' => $isOpposite ? 'uid_local' : 'uid_foreign',
+            'mmForeignField' => $isOpposite ? 'uid_local' : 'uid_foreign',
         ];
     }
 
