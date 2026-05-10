@@ -279,7 +279,7 @@ export default class RecordlistWorkspaceReadyToPublish {
       return [];
     }
     try {
-      return JSON.parse(raw).filter(ref => ref.table && ref.table !== "sys_file_reference");
+      return JSON.parse(raw).filter(ref => ref.table);
     } catch {
       return [];
     }
