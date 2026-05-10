@@ -1,9 +1,12 @@
 import UserSettings from "./user-settings.js";
+import DocumentService from "@typo3/core/document-service.js";
 
 export default class RecordlistTemplateSelection {
 
   constructor() {
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {

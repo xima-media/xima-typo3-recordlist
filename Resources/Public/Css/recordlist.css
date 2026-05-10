@@ -46,17 +46,34 @@ main.recordlist ul.pagination input.form-control {
     min-width: unset;
 }
 
-.category-badge {
+.badge-container .badge {
     font-weight: normal;
     display: inline-flex;
     line-height: 1.4;
     gap: 4px;
 }
 
-.category-badge-container {
+.badge-container {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+
+.badge-hidden {
+    display: none !important;
+}
+
+.badge-show-more,
+.badge-show-less {
+    border: 1px dashed currentColor;
+    background: transparent;
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.badge-show-more:hover,
+.badge-show-less:hover {
+    opacity: 1;
 }
 
 .recordlist table.table tr[data-state="new"]:not(.active) td {
@@ -69,6 +86,30 @@ main.recordlist ul.pagination input.form-control {
 
 .recordlist table.table tr[data-state="deleted"]:not(.active) td {
     background-color: color-mix(in srgb, var(--typo3-badge-danger-bg) 15%, transparent) !important;
+}
+
+/**
+* Inline relation badge workspace state colors
+*/
+.badge.badge-state-new {
+    background-color: var(--typo3-badge-success-bg);
+    color: var(--typo3-badge-success-color);
+}
+
+.badge.badge-state-modified {
+    background-color: var(--typo3-badge-warning-bg);
+    color: var(--typo3-badge-warning-color);
+}
+
+.badge.badge-state-deleted {
+    background-color: var(--typo3-badge-danger-bg);
+    color: var(--typo3-badge-danger-color);
+    text-decoration: line-through;
+}
+
+.badge.badge-state-pending {
+    background-color: var(--typo3-badge-info-bg);
+    color: var(--typo3-badge-info-color);
 }
 
 /**

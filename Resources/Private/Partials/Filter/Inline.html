@@ -1,18 +1,18 @@
-<label class="form-label" for="search_field">
-    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.label.search')}
+<label class="form-label" for="filter[{colConfig.columnName}][value]">
+    {colConfig.label}
 </label>
 <div class="input-group">
-    <label for="search_field" class="visually-hidden">
-        {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}
+    <label for="filter[{colConfig.columnName}][value]" class="visually-hidden">
+        {colConfig.label}
     </label>
     <f:form.textfield
-        name="search_field"
+        name="filter[{colConfig.columnName}][value]"
         class="form-control"
         type="search"
         placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}"
         title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}"
-        id="search_field"
-        value="{search_field}" />
+        id="filter[{colConfig.columnName}][value]"
+        value="{colConfig.filter.value}" />
     <button class="btn btn-default" type="submit" name="search">
         {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.label.search')}
     </button>

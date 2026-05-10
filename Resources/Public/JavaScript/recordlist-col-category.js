@@ -1,8 +1,18 @@
+import DocumentService from "@typo3/core/document-service.js";
+
 class RecordlistColCategory {
 
-
   constructor() {
+    DocumentService.ready().then(() => {
+      this.init()
+    })
+  }
+
+  init() {
     const searchForm = document.querySelector('#recordlist-search-form')
+    if (!searchForm) {
+      return
+    }
 
     document.querySelectorAll('a.badge.badge-pill.category-badge').forEach(link => {
       link.addEventListener('click', (e) => {
@@ -13,7 +23,13 @@ class RecordlistColCategory {
 
         const treewrapperid = `tree_filter[${fieldName}][value]`
         const categoryFilterInput = searchForm.querySelector(`typo3-formengine-element-category[treewrapperid="${treewrapperid}"]`)
+        if (!categoryFilterInput) {
+          return
+        }
         const input = categoryFilterInput.querySelector('input[type="hidden"]')
+        if (!input) {
+          return
+        }
         const value = input.value
         const overrideValues = input.dataset.overridevalues ? input.dataset.overridevalues : '[]'
         const overrideValuesArray = JSON.parse(overrideValues)
