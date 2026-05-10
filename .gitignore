@@ -10,3 +10,5 @@ Tests/Playwright/playwright-report
 Tests/Playwright/test-results
 var/
 vendor/
+php-cs-fixer.xml
+phpstan.xml
