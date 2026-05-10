@@ -17,7 +17,7 @@
                             returnUrl="{f:be.uri(route: moduleName)}"
                             table="{tableName}"
                             uid="{relation.value}"
-                            class="badge badge-pill inline-badge{f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: ' badge-hidden')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: ' badge-over-limit')}"
+                            class="badge badge-pill inline-badge badge-state-{relation.state}{f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: ' badge-hidden')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: ' badge-over-limit')}"
                             workspaceId="{workspaceId}"
                             data-bs-toggle="tooltip">
                             <core:icon identifier="actions-open" size="small" />
