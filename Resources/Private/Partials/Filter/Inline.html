@@ -1,8 +1,8 @@
-<label class="form-label" for="{colConfig.columnName}">
+<label class="form-label" for="filter[{colConfig.columnName}][value]">
     {colConfig.label}
 </label>
 <div class="input-group">
-    <label for="{colConfig.columnName}" class="visually-hidden">
+    <label for="filter[{colConfig.columnName}][value]" class="visually-hidden">
         {colConfig.label}
     </label>
     <f:form.textfield
@@ -11,7 +11,7 @@
         type="search"
         placeholder="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}"
         title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.searchField')}"
-        id="{colConfig.columnName}"
+        id="filter[{colConfig.columnName}][value]"
         value="{colConfig.filter.value}" />
     <button class="btn btn-default" type="submit" name="search">
         {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.label.search')}
