@@ -19,7 +19,7 @@
                     data-uid="{fieldValue.value}"
                     data-stored-value="{fieldValue.storedValue}"
                     class="badge badge-pill group-badge {f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: 'badge-hidden ')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: 'badge-over-limit ')}{f:if(condition: '{colConfig.filter.value} == {fieldValue.storedValue}', then: ' badge-primary')}"
-                    data-workspaceId="{workspaceId}"
+                    data-workspace-id="{workspaceId}"
                     data-field-name="{colConfig.columnName}">
                     <f:if condition="{colConfig.filter.tables.{tableName}.iconIdentifier}">
                         <core:icon identifier="{colConfig.filter.tables.{tableName}.iconIdentifier}" size="small" />
