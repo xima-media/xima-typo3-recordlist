@@ -834,8 +834,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     // Live parent may still qualify if it has workspace-modified children.
                     if ($this::WORKSPACE_ID > 0 && !is_array($vRecord)) {
                         $childRefs = $this->collectReferencesToPublish($record);
-                        if ($childRefs !== []) {
-                            $record['_referencesToPublish'] = $childRefs;
+                        $readyChildRefs = array_values(array_filter(
+                            $childRefs,
+                            fn (array $ref): bool => $ref['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH
+                        ));
+                        if ($readyChildRefs !== []) {
+                            $record['_referencesToPublish'] = $readyChildRefs;
                         } else {
                             $record = null;
                             continue;
