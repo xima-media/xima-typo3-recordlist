@@ -1541,7 +1541,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->where(
                 $queryBuilder->expr()->in(
                     $transOrigPointerField,
-                    $queryBuilder->quoteArrayBasedValueListToIntegerList(array_column($this->records, 'uid'))
+                    $queryBuilder->quoteArrayBasedValueListToIntegerList(
+                        array_map(fn (array $r): int => (int)(($r['t3ver_oid'] ?? 0) ?: $r['uid']), $this->records)
+                    )
                 )
             )
             ->andWhere($queryBuilder->expr()->neq('sys_language_uid', 0))
@@ -1556,7 +1558,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $existingTranslations = GeneralUtility::intExplode(',', $translations[$record['uid']] ?? '', true);
+            $liveUid = (int)(($record['t3ver_oid'] ?? 0) ?: $record['uid']);
+            $existingTranslations = GeneralUtility::intExplode(',', $translations[$liveUid] ?? '', true);
             $possibleTranslations = array_diff(
                 $availableLanguages,
                 $existingTranslations
@@ -1569,7 +1572,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     [
                         'cmd' => [
                             $this->getTableName() => [
-                                $record['uid'] => [
+                                $liveUid => [
                                     'localize' => $languageUid,
                                 ],
                             ],
@@ -1585,12 +1588,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ) {
                     $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
                         'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
-                            'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
+                            'justLocalized' => $this->getTableName() . ':' . $liveUid . ':' . $languageUid,
                             'returnUrl' => $redirectUrl,
                         ]),
                         'cmd' => [
                             $this->getTableName() => [
-                                $record['uid'] => [
+                                $liveUid => [
                                     'deepltranslate' => $languageUid,
                                 ],
                             ],
