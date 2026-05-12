@@ -63,13 +63,8 @@ class RelationResolver
             return $this->resolveSelectCsvUid($foreignTable, $records, $columnName);
         }
 
-        // select (no foreign_table, no MM)  →  static TCA items
-        if ($type === 'select') {
-            return $this->resolveSelectCsvStatic($config, $records, $columnName);
-        }
-
-        // radio  →  static TCA items (same storage format as static select)
-        if ($type === 'radio') {
+        // select (no foreign_table, no MM) / radio  →  static TCA items
+        if (in_array($type, ['select', 'radio'], true)) {
             return $this->resolveSelectCsvStatic($config, $records, $columnName);
         }
 
@@ -138,13 +133,8 @@ class RelationResolver
             return $this->resolveSelectMMFilter($config, $mmTable, $filterValue);
         }
 
-        // select (no MM, CSV or static)  →  FIND_IN_SET with raw filter value
-        if ($type === 'select') {
-            return new RelationFilterResult(useFindInSet: true, findInSetValue: $filterValue);
-        }
-
-        // radio  →  FIND_IN_SET with raw filter value (same as static select)
-        if ($type === 'radio') {
+        // select (no MM, CSV or static) / radio  →  FIND_IN_SET with raw filter value
+        if (in_array($type, ['select', 'radio'], true)) {
             return new RelationFilterResult(useFindInSet: true, findInSetValue: $filterValue);
         }
 
