@@ -10,13 +10,13 @@
                 uid="{item.uid}"
                 workspaceId="{workspaceId}">
                 <span class="workspace-state-{item.state}">
-                    <f:format.date format="d.m.Y">{item.{colConfig.columnName}}</f:format.date>
+                    <f:format.date format="{colConfig.dateFormat}">{item.{colConfig.columnName}}</f:format.date>
                 </span>
             </xm:link.editRecord>
         </f:then>
         <f:else>
             <span class="workspace-state-{item.state}">
-                <f:format.date format="d.m.Y">{item.{colConfig.columnName}}</f:format.date>
+                <f:format.date format="{colConfig.dateFormat}">{item.{colConfig.columnName}}</f:format.date>
             </span>
         </f:else>
     </f:if>

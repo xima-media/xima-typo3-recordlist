@@ -1244,6 +1244,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             if ($config['config']['type'] === 'datetime') {
                 $partial = 'DateTime';
+                $column['dateFormat'] = match ($config['config']['format'] ?? 'date') {
+                    'datetime' => 'd.m.Y H:i',
+                    'time' => 'H:i',
+                    'timesec' => 'H:i:s',
+                    default => 'd.m.Y',
+                };
                 $filter = [
                     'partial' => 'DateTime',
                 ];
