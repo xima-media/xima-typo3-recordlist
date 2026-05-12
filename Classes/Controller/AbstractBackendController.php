@@ -1249,6 +1249,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
+            if ($config['config']['type'] === 'password') {
+                $partial = 'Password';
+                $filter = [];
+            }
+
             if ($config['config']['type'] === 'check') {
                 $partial = 'Boolean';
                 $filter = [
