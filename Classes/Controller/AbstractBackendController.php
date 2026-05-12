@@ -1276,6 +1276,21 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
+            if ($config['config']['type'] === 'radio') {
+                $partial = 'Select';
+                $items = [];
+                foreach ($config['config']['items'] ?? [] as $item) {
+                    $items[$item['value']] = [
+                        'label' => $this->getLanguageService()->sL($item['label']),
+                        'value' => $item['value'],
+                    ];
+                }
+                $filter = [
+                    'partial' => 'Select',
+                    'items' => $items,
+                ];
+            }
+
             if ($config['config']['type'] === 'group') {
                 $partial = 'Group';
                 $filter = [

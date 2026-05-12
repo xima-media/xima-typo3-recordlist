@@ -68,6 +68,11 @@ class RelationResolver
             return $this->resolveSelectCsvStatic($config, $records, $columnName);
         }
 
+        // radio  →  static TCA items (same storage format as static select)
+        if ($type === 'radio') {
+            return $this->resolveSelectCsvStatic($config, $records, $columnName);
+        }
+
         // group + MM  →  MM branch (table-keyed per parent)
         if ($type === 'group' && $mmTable) {
             return $this->resolveGroupMM($config, $mmTable, $allowed, $recordUids);
@@ -135,6 +140,11 @@ class RelationResolver
 
         // select (no MM, CSV or static)  →  FIND_IN_SET with raw filter value
         if ($type === 'select') {
+            return new RelationFilterResult(useFindInSet: true, findInSetValue: $filterValue);
+        }
+
+        // radio  →  FIND_IN_SET with raw filter value (same as static select)
+        if ($type === 'radio') {
             return new RelationFilterResult(useFindInSet: true, findInSetValue: $filterValue);
         }
 
