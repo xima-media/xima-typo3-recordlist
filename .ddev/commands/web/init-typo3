@@ -45,6 +45,11 @@ _progress "Setting up TYPO3 installation"
     "$typo3Binary" setup --no-interaction --force --quiet
 _done
 
+# Remove setup-created backend users to avoid duplicate fixture imports
+_progress "Reset backend users"
+    mysql -e "DELETE FROM be_users" $dbCredentials "$dbName"
+_done
+
 # Import DB fixtures
 for file in "$fixturePath"/*.sql; do
     _progress "Importing DB fixture \"$(basename "$file")\""
