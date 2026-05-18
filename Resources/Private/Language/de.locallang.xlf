@@ -259,6 +259,14 @@
 				<source />
 				<target>Aktualisieren</target>
 			</trans-unit>
+			<trans-unit id="filter.checkbox.yes">
+				<source />
+				<target>Ja</target>
+			</trans-unit>
+			<trans-unit id="filter.checkbox.no">
+				<source />
+				<target>Nein</target>
+			</trans-unit>
 			<trans-unit id="filter.expr.label" approved="yes">
 				<source />
 				<target>Art</target>

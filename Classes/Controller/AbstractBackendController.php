@@ -1252,7 +1252,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if ($config['config']['type'] === 'check') {
                 $partial = 'Boolean';
                 $filter = [
-                    'partial' => 'Checkbox',
+                    'partial' => 'Select',
+                    'items' => [
+                        0 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.yes'), 'value' => 1],
+                        1 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.no'), 'value' => 0],
+                    ],
                 ];
             }
 

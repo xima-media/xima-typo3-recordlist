@@ -195,6 +195,12 @@
 			<trans-unit id="showColumns.refresh">
 				<source>Refresh</source>
 			</trans-unit>
+			<trans-unit id="filter.checkbox.yes">
+				<source>Yes</source>
+			</trans-unit>
+			<trans-unit id="filter.checkbox.no">
+				<source>No</source>
+			</trans-unit>
 			<trans-unit id="filter.expr.label">
 				<source>Type</source>
 			</trans-unit>
