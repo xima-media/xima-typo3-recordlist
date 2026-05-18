@@ -1226,6 +1226,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $columns = [];
         foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
             $partial = 'Text';
+            $dateFormat = null;
             $filter = [
                 'partial' => 'Text',
             ];
@@ -1244,11 +1245,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             if ($config['config']['type'] === 'datetime') {
                 $partial = 'DateTime';
-                $column['dateFormat'] = match ($config['config']['format'] ?? 'date') {
-                    'datetime' => 'd.m.Y H:i',
+                $dateFormat = match ($config['config']['format'] ?? 'datetime') {
+                    'date' => 'd.m.Y',
                     'time' => 'H:i',
                     'timesec' => 'H:i:s',
-                    default => 'd.m.Y',
+                    'datetimesec' => 'd.m.Y H:i:s',
+                    default => 'd.m.Y H:i',
                 };
                 $filter = [
                     'partial' => 'DateTime',
@@ -1350,6 +1352,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'active' => false,
                 'filter' => $filter,
                 'defaultPosition' => 0,
+                'dateFormat' => $dateFormat,
             ];
 
             if ($columnName === $defaultColumn) {
