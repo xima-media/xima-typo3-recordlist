@@ -89,71 +89,38 @@ export class EditablePageTree extends PageTree {
     let targetUid: string = '0';
     let parentUid: string = '0';
     let pidValue: string = '0';
-    let sortingValue: number = 256; // Default sorting value
     const tableName = 'sys_category'; // Use sys_category instead of pages
 
     if (data.target) {
       targetUid = data.target.identifier;
-      const targetSorting = (data.target as any).sorting || 0;
       const targetParentId = data.target.parentIdentifier || '0';
-
-      // Get all siblings (nodes with same parent)
-      const siblings = this.nodes.filter(n => (n.parentIdentifier || '0') === targetParentId);
-      const sortedSiblings = siblings.sort((a, b) => ((a as any).sorting || 0) - ((b as any).sorting || 0));
 
       if (data.position === TreeNodePositionEnum.BEFORE) {
         const previousNode = this.getPreviousNode(data.target);
         targetUid = ((previousNode.depth === data.target.depth) ? '-' : '') + previousNode.identifier;
-        // For categories, parent is the parent of the target node
         parentUid = targetParentId;
-        // Siblings share the same pid as the target node
+        // BEFORE is only reached for MOVE/COPY, not NEW — pidValue unused for those
         pidValue = (data.target as any).storagePid || '0';
-        // Find previous sibling by sorting
-        const prevSibling = sortedSiblings.filter(n => ((n as any).sorting || 0) < targetSorting).pop();
-        const prevSorting = prevSibling ? ((prevSibling as any).sorting || 0) : 0;
-        sortingValue = Math.floor((prevSorting + targetSorting) / 2);
-        if (sortingValue <= prevSorting || sortingValue >= targetSorting) {
-          sortingValue = Math.max(1, targetSorting - 1);
-        }
       } else if (data.position === TreeNodePositionEnum.AFTER) {
         targetUid = '-' + targetUid;
-        // For categories, parent is the parent of the target node
         parentUid = targetParentId;
-        // Siblings share the same pid as the target node
-        pidValue = (data.target as any).storagePid || '0';
-        // Find next sibling by sorting
-        const nextSibling = sortedSiblings.find(n => ((n as any).sorting || 0) > targetSorting);
-        if (nextSibling) {
-          const nextSorting = (nextSibling as any).sorting || 0;
-          sortingValue = Math.floor((targetSorting + nextSorting) / 2);
-          if (sortingValue <= targetSorting || sortingValue >= nextSorting) {
-            sortingValue = targetSorting + 1;
-          }
-        } else {
-          sortingValue = targetSorting + 128;
-        }
+        // Negative pid tells DataHandler to insert after this record and calculate
+        // the correct sorting value automatically. A positive pid (storagePid) would
+        // make DataHandler append at max_sorting+256 regardless of any submitted
+        // sorting value, since 'sorting' is not a TCA column and fillInFieldArray
+        // skips it (confirmed in DataHandler::resolveSortingAndPidForNewRecord).
+        pidValue = '-' + data.target.identifier;
       } else {
-        // INSIDE position - parent is the target node itself
+        // INSIDE — new node becomes a child of the target
         parentUid = targetUid;
-        // Child category gets same pid as parent category
         pidValue = (data.target as any).storagePid || '0';
-        // For inside, place at the very start (before first child)
-        const childNodes = this.nodes.filter(n => n.parentIdentifier === data.target.identifier);
-        if (childNodes.length > 0) {
-          const minChildSorting = Math.min(...childNodes.map(n => (n as any).sorting || 0));
-          sortingValue = Math.max(1, Math.floor(minChildSorting / 2));
-        } else {
-          sortingValue = 256;
-        }
       }
     }
 
     if (data.command === TreeNodeCommandEnum.NEW) {
       const newData = data as NodeNewOptions;
-      // For categories, we need pid (storage page), parent (hierarchy), and sorting
       params = '&data[' + tableName + '][' + data.node.identifier + '][pid]=' + encodeURIComponent(pidValue) +
         '&data[' + tableName + '][' + data.node.identifier + '][parent]=' + encodeURIComponent(parentUid) +
-        '&data[' + tableName + '][' + data.node.identifier + '][sorting]=' + encodeURIComponent(sortingValue.toString()) +
         '&data[' + tableName + '][' + data.node.identifier + '][title]=' + encodeURIComponent(newData.title);
       const typeField = this.settings?.typeField;
       if (typeField && newData.doktype !== undefined && newData.doktype !== 0 && newData.doktype !== null) {
