@@ -83,11 +83,13 @@ class CategoryTreeController
 
     public function fetchConfigurationAction(): ResponseInterface
     {
-        $doktypes = $this->getRecordTypes();
+        $recordTypeField = $GLOBALS['TCA']['sys_category']['ctrl']['type'] ?? '';
+        $doktypes = $this->getRecordTypes($recordTypeField);
 
         $configuration = [
             'allowDragMove' => true,
             'doktypes' => $doktypes,
+            'typeField' => $recordTypeField,
             'displayDeleteConfirmation' => $this->getBackendUser()->jsConfirmation(JsConfirmation::DELETE),
             'temporaryMountPoint' => null,
             'showIcons' => true,
@@ -100,21 +102,12 @@ class CategoryTreeController
         return new JsonResponse($configuration);
     }
 
-    protected function getRecordTypes(): array
+    protected function getRecordTypes(string $recordTypeField = ''): array
     {
-        $backendUser = $this->getBackendUser();
-        $recordTypeField = $GLOBALS['TCA']['sys_category']['ctrl']['type'] ?? '';
-
-        // If sys_category doesn't have a type field yet, return default category icon for drag-and-drop
+        // No type field — return a single default category entry
         if (empty($recordTypeField)) {
-            $iconIdentifier = 'mimetypes-x-sys_category';
-            // Try to get the actual icon from TCA
-            if (!empty($GLOBALS['TCA']['sys_category']['ctrl']['iconfile'])) {
-                $iconIdentifier = $GLOBALS['TCA']['sys_category']['ctrl']['iconfile'];
-            }
-
+            $iconIdentifier = $GLOBALS['TCA']['sys_category']['ctrl']['iconfile'] ?? 'mimetypes-x-sys_category';
             $title = $this->getLanguageService()->sL($GLOBALS['TCA']['sys_category']['ctrl']['title'] ?? 'Category');
-
             return [
                 [
                     'nodeType' => 0,
@@ -124,36 +117,19 @@ class CategoryTreeController
             ];
         }
 
-        $recordLabelMap = [];
-        foreach ($GLOBALS['TCA']['sys_category']['columns'][$recordTypeField]['config']['items'] ?? [] as $doktypeItemConfig) {
-            $selectionItem = SelectItem::fromTcaItemArray($doktypeItemConfig);
+        // Type field configured — return one drag item per type value
+        $output = [];
+        foreach ($GLOBALS['TCA']['sys_category']['columns'][$recordTypeField]['config']['items'] ?? [] as $itemConfig) {
+            $selectionItem = SelectItem::fromTcaItemArray($itemConfig);
             if ($selectionItem->isDivider()) {
                 continue;
             }
-            $recordLabelMap[$selectionItem->getValue()] = $selectionItem->getLabel();
-        }
-
-        $recordTypes = GeneralUtility::intExplode(
-            ',',
-            (string)($backendUser->getTSConfig()['options.']['pageTree.']['doktypesToShowInNewPageDragArea'] ?? ''),
-            true
-        );
-        $recordTypes = array_unique($recordTypes);
-        $output = [];
-        $allowedDoktypes = GeneralUtility::intExplode(',', (string)($backendUser->groupData['pagetypes_select'] ?? ''), true);
-        $isAdmin = $backendUser->isAdmin();
-        // Early return if backend user may not create any doktype
-        if (!$isAdmin && empty($allowedDoktypes)) {
-            return $output;
-        }
-        foreach ($recordTypes as $recordType) {
-            if (!isset($recordLabelMap[$recordType]) || (!$isAdmin && !in_array($recordType, $allowedDoktypes, true))) {
-                continue;
-            }
-            $label = htmlspecialchars($this->getLanguageService()->sL($recordLabelMap[$recordType]));
+            $typeValue = $selectionItem->getValue();
+            $label = htmlspecialchars($this->getLanguageService()->sL($selectionItem->getLabel()));
+            $iconIdentifier = $GLOBALS['TCA']['sys_category']['ctrl']['typeicon_classes'][$typeValue] ?? 'mimetypes-x-sys_category';
             $output[] = [
-                'nodeType' => $recordType,
-                'icon' => $GLOBALS['TCA']['sys_category']['ctrl']['typeicon_classes'][$recordType] ?? '',
+                'nodeType' => $typeValue,
+                'icon' => $iconIdentifier,
                 'title' => $label,
             ];
         }
@@ -194,9 +170,28 @@ class CategoryTreeController
 
             $this->levelsToFetch = $originalLevelsToFetch;
         } else {
-            // Root level item
+            // Root element — resets category filter when clicked
+            $allCategoriesTitle = $this->getLanguageService()->sL(
+                'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:tree.allCategories'
+            ) ?: 'All categories';
+            $items[] = [[
+                'identifier' => '0',
+                'parentIdentifier' => '',
+                'recordType' => 'sys_category',
+                'name' => $allCategoriesTitle,
+                'depth' => 0,
+                'icon' => 'apps-pagetree-root',
+                'hasChildren' => !empty($categories),
+                'loaded' => !empty($categories),
+                'doktype' => 0,
+                'nameSourceField' => 'title',
+                'mountPoint' => 0,
+                'workspaceId' => 0,
+                'storagePid' => 0,
+                'sorting' => 0,
+            ]];
             foreach ($categories as $category) {
-                $items[] = $this->categoryToFlatArray($category, 0, 0);
+                $items[] = $this->categoryToFlatArray($category, 0, 1);
             }
         }
         $items = array_merge(...$items);
@@ -354,7 +349,7 @@ class CategoryTreeController
 
         $item = [
             'identifier' => (string)$categoryId,
-            'parentIdentifier' => (string)(($category['parent'] ?? 0) === 0 ? ($category['pid'] ?? '') : $category['parent']),
+            'parentIdentifier' => $category['parent'] ? (string)$category['parent'] : '0',
             'recordType' => 'sys_category',
             'name' => htmlspecialchars($category['title'] ?? ''),
             'depth' => $depth,

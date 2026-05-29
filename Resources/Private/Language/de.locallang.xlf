@@ -415,6 +415,10 @@
 				<source />
 				<target>Kategorie filtern</target>
 			</trans-unit>
+			<trans-unit id="tree.allCategories" approved="yes">
+				<source />
+				<target>Alle Kategorien</target>
+			</trans-unit>
 			<trans-unit id="ajax.error.noPermissionsToDelete" approved="yes">
 				<source />
 				<target>Keine Berechtigung zum Löschen von Datensätzen</target>

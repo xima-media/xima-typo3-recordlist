@@ -155,6 +155,10 @@ export class EditablePageTree extends PageTree {
         '&data[' + tableName + '][' + data.node.identifier + '][parent]=' + encodeURIComponent(parentUid) +
         '&data[' + tableName + '][' + data.node.identifier + '][sorting]=' + encodeURIComponent(sortingValue.toString()) +
         '&data[' + tableName + '][' + data.node.identifier + '][title]=' + encodeURIComponent(newData.title);
+      const typeField = this.settings?.typeField;
+      if (typeField && newData.doktype !== undefined && newData.doktype !== 0 && newData.doktype !== null) {
+        params += '&data[' + tableName + '][' + data.node.identifier + '][' + typeField + ']=' + encodeURIComponent(String(newData.doktype));
+      }
     } else if (data.command === TreeNodeCommandEnum.EDIT) {
       params = '&data[' + tableName + '][' + data.node.identifier + '][title]=' + encodeURIComponent(data.title);
     } else if (data.command === TreeNodeCommandEnum.DELETE) {
@@ -518,10 +522,10 @@ export class PageTreeNavigationComponent extends TreeModuleState(LitElement) {
 
     contentUrl += contentUrl.includes('?') ? '&' : '?';
 
-    // Add category parameter and preserve id if it exists
-    let params = 'category=' + node.identifier;
+    // Root node (identifier 0) resets the category filter
+    let params = node.identifier !== '0' ? 'category=' + node.identifier : '';
     if (currentId) {
-      params += '&id=' + currentId;
+      params += (params ? '&' : '') + 'id=' + currentId;
     }
 
     top.TYPO3.Backend.ContentContainer.setUrl(contentUrl + params);
