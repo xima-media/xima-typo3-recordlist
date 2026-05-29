@@ -37,15 +37,17 @@ export TYPO3_DB_PASSWORD="$dbPassword"
 export TYPO3_DB_PORT=3306
 export TYPO3_DB_HOST="$dbHost"
 export TYPO3_DB_DBNAME="$dbName"
-export TYPO3_SETUP_ADMIN_EMAIL=admin@example.com
-export TYPO3_SETUP_ADMIN_USERNAME=admin
-export TYPO3_SETUP_ADMIN_PASSWORD=Passw0rd!
 export TYPO3_SERVER_TYPE=apache
 export TYPO3_PROJECT_NAME="EXT:xima_typo3_recordlist"
 
 # Set up environment
 _progress "Setting up TYPO3 installation"
     "$typo3Binary" setup --no-interaction --force --quiet
+_done
+
+# Remove setup-created backend users to avoid duplicate fixture imports
+_progress "Reset backend users"
+    mysql -e "DELETE FROM be_users" $dbCredentials "$dbName"
 _done
 
 # Import DB fixtures

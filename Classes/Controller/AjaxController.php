@@ -37,7 +37,7 @@ class AjaxController
     }
 
     /**
-     * @param array<string, array<string, string|int>> $postBody
+     * @param array<string, array<string, string|int>|null> $postBody
      */
     protected function updateUserSettings(array $postBody): void
     {
@@ -146,7 +146,7 @@ class AjaxController
         try {
             $file = $this->resourceFactory->getFileObject($sysFileUid);
             $storage = $file->getStorage();
-            $isAllowedToDelete = $storage->checkFileActionPermission('delete', $file) ?? false;
+            $isAllowedToDelete = $storage->checkFileActionPermission('delete', $file);
         } catch (\Exception) {
             return $this->responseFactory->createResponse(
                 501,

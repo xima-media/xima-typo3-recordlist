@@ -1,5 +1,6 @@
 import Modal from '@typo3/backend/modal.js';
 import {SeverityEnum} from '@typo3/backend/enum/severity.js'
+import DocumentService from '@typo3/core/document-service.js'
 
 export default class RecordlistDownloadButton {
 
@@ -10,11 +11,12 @@ export default class RecordlistDownloadButton {
         this.table = table
         this.columnConfiguration = columnsConfiguration
 
-        if (!this.cacheDom()) {
-            return
-        }
-
-        this.initEventListener()
+        DocumentService.ready().then(() => {
+            if (!this.cacheDom()) {
+                return
+            }
+            this.initEventListener()
+        })
     }
 
     cacheDom() {

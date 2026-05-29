@@ -11,6 +11,7 @@
 /renovate.json                         export-ignore
 /config/system/additional.php          export-ignore
 /Classes/Controller/Example            export-ignore
+/ContentBlocks                         export-ignore
 /Configuration/Backend/Modules.php     export-ignore
 /Configuration/page.tsconfig           export-ignore
 /Configuration/Icons.php               export-ignore

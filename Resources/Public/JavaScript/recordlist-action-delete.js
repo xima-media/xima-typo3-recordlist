@@ -2,10 +2,13 @@ import AjaxRequest from "@typo3/core/ajax/ajax-request.js";
 import Modal from "@typo3/backend/modal.js";
 import Notification from "@typo3/backend/notification.js";
 import { SeverityEnum } from "@typo3/backend/enum/severity.js";
+import DocumentService from "@typo3/core/document-service.js";
 
 export default class RecordlistActionDelete {
   constructor() {
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {

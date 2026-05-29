@@ -1,0 +1,52 @@
+<html
+    data-namespace-typo3-fluid="true"
+    xmlns:xm="http://typo3.org/ns/Xima/XimaTypo3Recordlist/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-badge-limit.js'}" />
+
+<span class="badge-container inline-badge-container" data-column-name="{colConfig.columnName}">
+    <f:if condition="{item._{colConfig.columnName}}">
+        <f:for each="{item._{colConfig.columnName}}" as="relations" key="tableName">
+            <f:for each="{relations}" as="relation" iteration="i">
+                <f:if condition="{item.editable}">
+                    <f:then>
+                        <xm:link.editRecord
+                            title="{relation.label}"
+                            returnUrl="{f:be.uri(route: moduleName)}"
+                            table="{tableName}"
+                            uid="{relation.value}"
+                            class="badge badge-pill inline-badge badge-state-{relation.state}{f:if(condition: '!{colConfig.badgesExpanded} && {i.index} >= {colConfig.badgeLimit}', then: ' badge-hidden')}{f:if(condition: '{i.index} >= {colConfig.badgeLimit}', then: ' badge-over-limit')}"
+                            workspaceId="{workspaceId}"
+                            data-bs-toggle="tooltip">
+                            <core:icon identifier="actions-open" size="small" />
+                            {relation.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
+                        </xm:link.editRecord>
+                    </f:then>
+                    <f:else>
+                        {relation.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
+                    </f:else>
+                </f:if>
+            </f:for>
+            <f:variable name="count">{relations -> f:count()}</f:variable>
+            <f:if condition="{count} > {colConfig.badgeLimit}">
+                <button
+                    type="button"
+                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:badge.showMore')}"
+                    data-bs-toggle="tooltip"
+                    class="badge badge-pill badge-show-more {f:if(condition: colConfig.badgesExpanded, then: 'badge-hidden')}">
+                    + {count - colConfig.badgeLimit}
+                </button>
+                <button
+                    type="button"
+                    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:badge.showLess')}"
+                    data-bs-toggle="tooltip"
+                    class="badge badge-pill badge-show-less {f:if(condition: colConfig.badgesExpanded, else: 'badge-hidden')}">
+                    -
+                </button>
+            </f:if>
+        </f:for>
+    </f:if>
+</span>
+</html>

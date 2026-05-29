@@ -3,13 +3,16 @@ import AjaxRequest from '@typo3/core/ajax/ajax-request.js'
 import Notification from "@typo3/backend/notification.js";
 import Modal from '@typo3/backend/modal.js';
 import {SeverityEnum} from '@typo3/backend/enum/severity.js'
+import DocumentService from '@typo3/core/document-service.js'
 
 class RecordlistActionDeleteFile {
 
     saveClick = false
 
     constructor() {
-        this.bindEvents();
+        DocumentService.ready().then(() => {
+            this.bindEvents();
+        });
     }
 
     bindEvents() {

@@ -2,17 +2,20 @@ import Modal from '@typo3/backend/modal.js';
 import {SeverityEnum} from '@typo3/backend/enum/severity.js'
 import UserSettings from "./user-settings.js";
 import Sortable from '@xima/recordlist/contrib/sortable.esm.js';
+import DocumentService from "@typo3/core/document-service.js";
 
 export default class RecordlistDocShowColumns {
 
   modal = null
 
   constructor() {
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {
-    document.querySelectorAll(".showColumnsButton").forEach(link => {
+    document.querySelectorAll('*[data-doc-button="showColumnsButton"]').forEach(link => {
       link.addEventListener("click", this.onShowColumnsClick.bind(this));
     });
   }

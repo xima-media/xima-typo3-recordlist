@@ -3,11 +3,9 @@
 namespace Xima\XimaTypo3Recordlist\Controller;
 
 use Doctrine\DBAL\Driver\Exception;
-use Doctrine\DBAL\Result;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Backend\Configuration\TranslationConfigurationProvider;
 use TYPO3\CMS\Backend\Module\ExtbaseModule;
@@ -15,7 +13,6 @@ use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\PreviewUriBuilder;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
-use TYPO3\CMS\Backend\Template\Components\Buttons\GenericButton;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
@@ -31,6 +28,7 @@ use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Page\JavaScriptModuleInstruction;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
@@ -46,11 +44,15 @@ use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
+use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
+use Xima\XimaTypo3Recordlist\Utility\RelationResolver;
 
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
     public const WORKSPACE_ID = 0;
     protected const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100, 200, 500];
+    protected const BADGE_LIMIT = 5;
+    protected const BADGE_MAX_CHARACTERS = 20;
     protected const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
     protected const VERSION_STATE_DELETED = 2;
     protected const DOWNLOAD_FORMATS = [
@@ -76,6 +78,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         'xlsx' => [],
     ];
 
+    protected const TRANSLATION_PATH = 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:';
+
     protected ModuleTemplate $moduleTemplate;
 
     protected Site $site;
@@ -93,15 +97,62 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected EditableArrayPaginator $paginator;
 
-    public function __construct(
-        protected ConnectionPool $connectionPool,
-        protected IconFactory $iconFactory,
-        protected PageRenderer $pageRenderer,
-        protected UriBuilder $backendUriBuilder,
-        protected ContainerInterface $container,
-        protected ModuleTemplateFactory $moduleTemplateFactory,
-        protected ResourceFactory $resourceFactory,
-    ) {
+    protected array $viewDropdownButtons = [];
+
+    protected ConnectionPool $connectionPool;
+
+    protected IconFactory $iconFactory;
+
+    protected PageRenderer $pageRenderer;
+
+    protected UriBuilder $backendUriBuilder;
+
+    protected ModuleTemplateFactory $moduleTemplateFactory;
+
+    protected ResourceFactory $resourceFactory;
+
+    protected LanguageServiceFactory $languageServiceFactory;
+
+    protected RelationResolver $relationResolver;
+
+    public function injectConnectionPool(ConnectionPool $connectionPool): void
+    {
+        $this->connectionPool = $connectionPool;
+    }
+
+    public function injectIconFactory(IconFactory $iconFactory): void
+    {
+        $this->iconFactory = $iconFactory;
+    }
+
+    public function injectPageRenderer(PageRenderer $pageRenderer): void
+    {
+        $this->pageRenderer = $pageRenderer;
+    }
+
+    public function injectBackendUriBuilder(UriBuilder $backendUriBuilder): void
+    {
+        $this->backendUriBuilder = $backendUriBuilder;
+    }
+
+    public function injectModuleTemplateFactory(ModuleTemplateFactory $moduleTemplateFactory): void
+    {
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
+    public function injectResourceFactory(ResourceFactory $resourceFactory): void
+    {
+        $this->resourceFactory = $resourceFactory;
+    }
+
+    public function injectLanguageServiceFactory(LanguageServiceFactory $languageServiceFactory): void
+    {
+        $this->languageServiceFactory = $languageServiceFactory;
+    }
+
+    public function injectRelationResolver(RelationResolver $relationResolver): void
+    {
+        $this->relationResolver = $relationResolver;
     }
 
     /**
@@ -130,7 +181,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-order-links.js')
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
-            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-search-toggle.js')
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-filter-toggle.js')->instance($this->getTypo3Version())
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-pagination.js')
@@ -156,6 +207,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // build and execute query
         $this->createQueryBuilder();
         $this->addSearchConstraint();
+        $this->addFilterConstraint();
         $this->addLanguageConstraint();
         $this->addCategoryConstraint();
         $this->addAdditionalConstraints();
@@ -182,6 +234,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->modifyPaginatedRecords();
         $this->setPaginatorItems();
 
+        $this->configureViewDropdownButtons();
         $this->configureModuleTemplateDocHeader();
         return $this->moduleTemplate->renderResponse($this->getTemplateName());
     }
@@ -306,7 +359,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if (isset($body['reset'])) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
-                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
+                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.isFilterButtonActive'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
@@ -518,7 +571,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         if (isset($body['search_field']) && $body['search_field']) {
             $searchInput = $body['search_field'];
             $escapedSearchInput = addcslashes($searchInput, '%_');
-            $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? '';
+            $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'];
             $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
             $searchConstraints = [];
             foreach ($searchFieldArray as $fieldName) {
@@ -530,7 +583,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->additionalConstraints[] = $this->queryBuilder->expr()->or(...$searchConstraints);
             $this->moduleTemplate->assign('search_field', $searchInput);
         }
+    }
 
+    protected function addFilterConstraint(): void
+    {
+        $body = $this->request->getParsedBody();
         if (!empty($body['filter'])) {
             foreach ($body['filter'] as $field => $data) {
                 // Validate field name against TCA
@@ -540,26 +597,42 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 if (!isset($data['value']) || $data['value'] === '') {
                     continue;
                 }
-                if (isset($data['mm']) && $data['mm'] === '1') {
-                    $recordsUids = GeneralUtility::trimExplode(',', $data['value'], true);
-                    $mmTable = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM'] ?? '';
-                    $mmMatchFields = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['MM_match_fields'] ?? [];
-                    $qb = $this->connectionPool->getQueryBuilderForTable($mmTable);
-                    $qb->select('uid_foreign')
-                        ->from($mmTable)
-                        ->where($qb->expr()->eq('tablenames', $qb->createNamedParameter($mmMatchFields['tablenames'])))
-                        ->andWhere($qb->expr()->in('uid_local', $qb->quoteArrayBasedValueListToStringList($recordsUids)));
-                    $uids = $qb->executeQuery()->fetchAllNumeric();
-                    // prepare for in constraint
-                    $data['value'] = array_map('current', $uids);
-                    if (empty($data['value'])) {
-                        $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
-                        continue;
-                    }
-                    $field = 'uid';
+
+                $columnType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['type'] ?? '';
+
+                if (in_array($columnType, ['select', 'category', 'group', 'inline'], true)) {
+                    $filterResult = $this->relationResolver->resolveForFilter(
+                        $this->getTableName(),
+                        $field,
+                        $data['value'],
+                        $this::WORKSPACE_ID
+                    );
+                    $this->applyRelationFilterResult($filterResult, $data['expr'] ?? '', $field);
+                    continue;
                 }
+
                 if (isset($data['dataType']) && $data['dataType'] === 'date') {
-                    $data['value'] = strtotime($data['value']);
+                    $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
+                    $date = date('Y-m-d', strtotime($data['value']));
+                    if ($dbType === 'date' || $dbType === 'datetime') {
+                        $leftExpr = 'DATE(t1.' . $field . ')';
+                    } else {
+                        $leftExpr = 'DATE(FROM_UNIXTIME(NULLIF(t1.' . $field . ', 0)))';
+                    }
+                    $operator = match ($data['expr'] ?? '') {
+                        'neq' => '!=',
+                        'lt' => '<',
+                        'gt' => '>',
+                        'gte' => '>=',
+                        'lte' => '<=',
+                        default => '=',
+                    };
+                    $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                        $leftExpr,
+                        $operator,
+                        $this->queryBuilder->createNamedParameter($date)
+                    );
+                    continue;
                 }
                 match ($data['expr'] ?? '') {
                     'neq' => $this->additionalConstraints[] = $this->queryBuilder->expr()->neq(
@@ -596,6 +669,37 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ),
                 };
             }
+        }
+    }
+
+    private function applyRelationFilterResult(RelationFilterResult $result, string $expr, string $field): void
+    {
+        $isNegated = in_array($expr, ['notIn', 'neq'], true);
+
+        if ($result->isEmpty) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->eq('t1.uid', 0);
+            return;
+        }
+
+        if ($result->useFindInSet) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->comparison(
+                'FIND_IN_SET(' . $this->queryBuilder->createNamedParameter($result->findInSetValue) . ', t1.' . $field . ')',
+                $isNegated ? '=' : '>',
+                '0'
+            );
+            return;
+        }
+
+        if ($isNegated) {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->notIn(
+                't1.uid',
+                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($result->parentUids)
+            );
+        } else {
+            $this->additionalConstraints[] = $this->queryBuilder->expr()->in(
+                't1.uid',
+                $this->queryBuilder->quoteArrayBasedValueListToIntegerList($result->parentUids)
+            );
         }
     }
 
@@ -804,91 +908,45 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $record['editable'] = true;
             $record['state'] = 'live';
 
-            // if record has a version record => replace with versioned record
+            // Look up the workspace version once. Cache it for addWorkspaceMetadata() so that
+            // only paginated records pay the full overlay + referencesToPublish query cost.
             $vRecord = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $this->getTableName(), $record['uid']);
-            if (is_array($vRecord)) {
-                $record = $vRecord;
-                $record['editable'] = true;
-                $record['state'] = 'modified';
+            $record['_workspaceVersion'] = is_array($vRecord) ? $vRecord : null;
 
-                $workspaceStatus = [];
-                $workspaceStatus['level'] = 'warning';
-                $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy');
-
-                // newly created record
-                if ($record['t3ver_oid'] === 0) {
-                    $record['state'] = 'new';
-                }
-
-                // newly deleted record
-                if ($record['t3ver_state'] === self::VERSION_STATE_DELETED) {
-                    $record['state'] = 'deleted';
-                }
-
-                // stage "Ready to publish"
-                if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
-                    $workspaceStatus['level'] = 'success';
-                    $workspaceStatus['text'] = $this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting');
-                    $record['editable'] = $this->isWorkspaceAdmin();
-                    $record['state'] = 'pending';
-
-                    $referencesToPublish = [];
-                    foreach ($GLOBALS['TCA'][$this->getTableName()]['columns'] as $columnName => $column) {
-                        if (($column['config']['foreign_table'] ?? false) && $column['config']['foreign_table'] === 'sys_file_reference') {
-                            // new/modified records
-                            $references = BackendUtility::resolveFileReferences(
-                                $this->getTableName(),
-                                $columnName,
-                                $record,
-                                $this::WORKSPACE_ID
-                            );
-                            foreach ($references ?? [] as $reference) {
-                                if ($reference->getProperty('t3ver_stage') !== self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
-                                    continue;
-                                }
-                                $referencesToPublish[] = [
-                                    'liveId' => $reference->getProperty('t3ver_oid') ?: $reference->getUid(),
-                                    'table' => 'sys_file_reference',
-                                    'versionId' => $reference->getUid(),
-                                ];
-                            }
-                            // deleted records
-                            $references = BackendUtility::resolveFileReferences($this->getTableName(), $columnName, $record);
-                            foreach ($references ?? [] as $reference) {
-                                $referenceOverlay = BackendUtility::getWorkspaceVersionOfRecord(
-                                    $this::WORKSPACE_ID,
-                                    'sys_file_reference',
-                                    $reference->getUid()
-                                );
-                                $isDeleted = is_array($referenceOverlay) && $referenceOverlay['t3ver_state'] === self::VERSION_STATE_DELETED;
-                                $isModified = is_array($referenceOverlay) && $referenceOverlay['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
-                                if ($isDeleted || $isModified) {
-                                    $referencesToPublish[] = [
-                                        'liveId' => $referenceOverlay['t3ver_oid'] ?: $referenceOverlay['uid'],
-                                        'table' => 'sys_file_reference',
-                                        'versionId' => $referenceOverlay['uid'],
-                                    ];
-                                }
-                            }
+            // demand: readyToPublish
+            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish')) {
+                $parentIsReady = is_array($vRecord) && $vRecord['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
+                if (!$parentIsReady) {
+                    // Live parent may still qualify if it has workspace-modified children.
+                    if ($this::WORKSPACE_ID > 0 && !is_array($vRecord)) {
+                        $childRefs = $this->collectReferencesToPublish($record);
+                        if ($childRefs !== []) {
+                            $record['_referencesToPublish'] = $childRefs;
+                        } else {
+                            $record = null;
+                            continue;
                         }
+                    } else {
+                        $record = null;
+                        continue;
                     }
-                    $record['referencesToPublish'] = $referencesToPublish;
                 }
-
-                $record['status'] ??= [];
-                $record['status'][] = $workspaceStatus;
             }
 
-            // demand: readyToPublish (2/2)
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish') && (!is_array($vRecord) || $record['t3ver_stage'] !== self::WORKSPACE_STAGE_READY_TO_PUBLISH)) {
-                $record = null;
-                continue;
-            }
-
-            // demand: offline records (2/2)
+            // demand: offline records
             if ($this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords') && !is_array($vRecord)) {
-                $record = null;
-                continue;
+                $hasChildChanges = false;
+                if ($this::WORKSPACE_ID > 0) {
+                    $childRefs = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
+                    if ($childRefs !== []) {
+                        $record['_referencesToPublish'] = $childRefs;
+                        $hasChildChanges = true;
+                    }
+                }
+                if (!$hasChildChanges) {
+                    $record = null;
+                    continue;
+                }
             }
         }
         unset($record);
@@ -896,9 +954,176 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->records = array_filter($this->records);
     }
 
+    /**
+     * Apply workspace overlay and compute display metadata for the current page of records.
+     * Called as the first step of modifyPaginatedRecords() so subsequent methods receive
+     * workspace-version data (uid, t3ver_oid, state, editable, referencesToPublish).
+     */
+    protected function addWorkspaceMetadata(): void
+    {
+        foreach ($this->records as &$record) {
+            /** @var array<string,mixed>|null $vRecord */
+            $vRecord = $record['_workspaceVersion'] ?? null;
+            unset($record['_workspaceVersion']);
+
+            if (!is_array($vRecord)) {
+                // Live parent: detect workspace-modified children so action buttons appear.
+                // Reuse pre-computed cache from modifyAllRecords() when the offline/readyToPublish
+                // filter already called collectReferencesToPublish() for this record.
+                if ($this::WORKSPACE_ID > 0) {
+                    $children = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
+                    unset($record['_referencesToPublish']);
+                    if ($children !== []) {
+                        $record['referencesToPublish'] = $children;
+                        $record['state'] = 'children-modified';
+                        $stages = array_values(array_unique(array_column($children, 't3ver_stage')));
+                        $record['t3ver_stage'] = ($stages === [self::WORKSPACE_STAGE_READY_TO_PUBLISH])
+                            ? self::WORKSPACE_STAGE_READY_TO_PUBLISH
+                            : 0;
+                        $record['status'][] = [
+                            'level' => 'info',
+                            'text' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.childrenModified'),
+                        ];
+                    }
+                }
+                continue;
+            }
+
+            // Replace live record data with workspace version data.
+            $record = $vRecord;
+            $record['editable'] = true;
+            $record['state'] = 'modified';
+
+            $workspaceStatus = [
+                'level' => 'warning',
+                'text' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.copy'),
+            ];
+
+            if ($record['t3ver_oid'] === 0) {
+                $record['state'] = 'new';
+            }
+
+            if ($record['t3ver_state'] === self::VERSION_STATE_DELETED) {
+                $record['state'] = 'deleted';
+            }
+
+            if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
+                $workspaceStatus['level'] = 'success';
+                $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.waiting');
+                $record['editable'] = $this->isWorkspaceAdmin();
+                $record['state'] = 'pending';
+            }
+
+            $record['referencesToPublish'] = $this->collectReferencesToPublish($record);
+
+            $record['status'] ??= [];
+            $record['status'][] = $workspaceStatus;
+        }
+        unset($record);
+    }
+
+    /**
+     * Collect workspace-versioned related records for approve / send-to-stage / discard / publish.
+     *
+     * Handles both type='inline' and type='file' (v13 shorthand), including sys_file_reference.
+     * foreign_match_fields are applied so that per-column filtering is correct.
+     *
+     * @param array<string,mixed> $record Workspace-overlaid parent record
+     * @return list<array{liveId: int, table: string, versionId: int, t3ver_stage: int}>
+     */
+    protected function collectReferencesToPublish(array $record): array
+    {
+        $referencesToPublish = [];
+        $liveParentUid = (int)($record['t3ver_oid'] ?: $record['uid']);
+
+        foreach ($GLOBALS['TCA'][$this->getTableName()]['columns'] as $columnName => $column) {
+            $colConfig = $column['config'] ?? [];
+            $colType = $colConfig['type'] ?? '';
+
+            // Normalise type='file' (v13) to the same shape as type='inline'.
+            if ($colType === 'file') {
+                $colConfig = array_merge($colConfig, [
+                    'foreign_table' => 'sys_file_reference',
+                    'foreign_field' => 'uid_foreign',
+                    'foreign_table_field' => 'tablenames',
+                    'foreign_match_fields' => array_merge($colConfig['foreign_match_fields'] ?? [], ['fieldname' => $columnName]),
+                ]);
+                $colType = 'inline';
+            }
+
+            if ($colType !== 'inline') {
+                continue;
+            }
+
+            $foreignTable = $colConfig['foreign_table'] ?? '';
+            $foreignField = $colConfig['foreign_field'] ?? '';
+            if ($foreignTable === '' || $foreignField === '') {
+                continue;
+            }
+
+            $foreignTableField = $colConfig['foreign_table_field'] ?? '';
+            $matchFields = $colConfig['foreign_match_fields'] ?? [];
+
+            // Live children with a workspace overlay (modified or deleted)
+            $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qb->getRestrictions()->removeByType(HiddenRestriction::class);
+            $qb->select('uid')
+                ->from($foreignTable)
+                ->where(
+                    $qb->expr()->eq($foreignField, $qb->createNamedParameter($liveParentUid, Connection::PARAM_INT)),
+                    $qb->expr()->eq('t3ver_wsid', $qb->createNamedParameter(0, Connection::PARAM_INT))
+                );
+            if ($foreignTableField) {
+                $qb->andWhere($qb->expr()->eq($foreignTableField, $qb->createNamedParameter($this->getTableName())));
+            }
+            foreach ($matchFields as $matchField => $matchValue) {
+                $qb->andWhere($qb->expr()->eq($matchField, $qb->createNamedParameter((string)$matchValue)));
+            }
+            foreach ($qb->executeQuery()->fetchAllAssociative() as $child) {
+                $childOverlay = BackendUtility::getWorkspaceVersionOfRecord($this::WORKSPACE_ID, $foreignTable, (int)$child['uid']);
+                if (!is_array($childOverlay)) {
+                    continue;
+                }
+                $referencesToPublish[] = [
+                    'liveId' => (int)($childOverlay['t3ver_oid'] ?: $childOverlay['uid']),
+                    'table' => $foreignTable,
+                    'versionId' => (int)$childOverlay['uid'],
+                    't3ver_stage' => (int)$childOverlay['t3ver_stage'],
+                ];
+            }
+
+            // Workspace-new children (created in the workspace, no live counterpart)
+            $qbNew = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+            $qbNew->getRestrictions()->removeByType(HiddenRestriction::class);
+            $qbNew->select('uid', 't3ver_stage')
+                ->from($foreignTable)
+                ->where(
+                    $qbNew->expr()->eq($foreignField, $qbNew->createNamedParameter($liveParentUid, Connection::PARAM_INT)),
+                    $qbNew->expr()->eq('t3ver_wsid', $qbNew->createNamedParameter($this::WORKSPACE_ID, Connection::PARAM_INT)),
+                    $qbNew->expr()->eq('t3ver_oid', $qbNew->createNamedParameter(0, Connection::PARAM_INT))
+                );
+            if ($foreignTableField) {
+                $qbNew->andWhere($qbNew->expr()->eq($foreignTableField, $qbNew->createNamedParameter($this->getTableName())));
+            }
+            foreach ($matchFields as $matchField => $matchValue) {
+                $qbNew->andWhere($qbNew->expr()->eq($matchField, $qbNew->createNamedParameter((string)$matchValue)));
+            }
+            foreach ($qbNew->executeQuery()->fetchAllAssociative() as $child) {
+                $referencesToPublish[] = [
+                    'liveId' => (int)$child['uid'],
+                    'table' => $foreignTable,
+                    'versionId' => (int)$child['uid'],
+                    't3ver_stage' => (int)$child['t3ver_stage'],
+                ];
+            }
+        }
+
+        return $referencesToPublish;
+    }
+
     protected function getLanguageService(): LanguageService
     {
-        return $GLOBALS['LANG'];
+        return $this->languageServiceFactory->createFromUserPreferences($this->getBackendAuthentication());
     }
 
     protected function downloadRecords(): ResponseInterface
@@ -1087,6 +1312,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $columns = [];
         foreach ($GLOBALS['TCA'][$tableName]['columns'] as $columnName => $config) {
             $partial = 'Text';
+            $dateFormat = null;
             $filter = [
                 'partial' => 'Text',
             ];
@@ -1105,15 +1331,31 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             if ($config['config']['type'] === 'datetime') {
                 $partial = 'DateTime';
+                $dateFormat = match ($config['config']['format'] ?? 'datetime') {
+                    'date' => 'd.m.Y',
+                    'time' => 'H:i',
+                    'timesec' => 'H:i:s',
+                    'datetimesec' => 'd.m.Y H:i:s',
+                    default => 'd.m.Y H:i',
+                };
                 $filter = [
                     'partial' => 'DateTime',
                 ];
             }
 
+            if ($config['config']['type'] === 'password') {
+                $partial = 'Password';
+                $filter = [];
+            }
+
             if ($config['config']['type'] === 'check') {
                 $partial = 'Boolean';
                 $filter = [
-                    'partial' => 'Checkbox',
+                    'partial' => 'Select',
+                    'items' => [
+                        0 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.yes'), 'value' => 1],
+                        1 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.no'), 'value' => 0],
+                    ],
                 ];
             }
 
@@ -1137,6 +1379,35 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ];
             }
 
+            if ($config['config']['type'] === 'radio') {
+                $partial = 'Select';
+                $items = [];
+                foreach ($config['config']['items'] ?? [] as $item) {
+                    $items[$item['value']] = [
+                        'label' => $this->getLanguageService()->sL($item['label']),
+                        'value' => $item['value'],
+                    ];
+                }
+                $filter = [
+                    'partial' => 'Select',
+                    'items' => $items,
+                ];
+            }
+
+            if ($config['config']['type'] === 'group') {
+                $partial = 'Group';
+                $filter = [
+                    'partial' => 'Group',
+                ];
+            }
+
+            if ($config['config']['type'] === 'inline') {
+                $partial = 'Inline';
+                $filter = [
+                    'partial' => 'Inline',
+                ];
+            }
+
             if (in_array($config['config']['type'], ['select', 'category']) && isset($config['config']['foreign_table']) && $config['config']['foreign_table'] === 'sys_category') {
                 $partial = 'Category';
                 $filter = [
@@ -1149,13 +1420,25 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $filter = [];
             }
 
+            $label = $config['label'] ?? '';
+            if (!str_starts_with($label, 'LLL:')) {
+                foreach ($GLOBALS['TCA'][$tableName]['types'] ?? [] as $type) {
+                    $overrideLabel = $type['columnsOverrides'][$columnName]['label'] ?? '';
+                    if (str_starts_with($overrideLabel, 'LLL:')) {
+                        $label = $overrideLabel;
+                        break;
+                    }
+                }
+            }
+
             $columns[$columnName] = [
                 'columnName' => $columnName,
-                'label' => $config['label'] ?? '',
+                'label' => $label,
                 'partial' => $partial,
                 'active' => false,
                 'filter' => $filter,
                 'defaultPosition' => 0,
+                'dateFormat' => $dateFormat,
             ];
 
             if ($columnName === $defaultColumn) {
@@ -1257,6 +1540,57 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             // set active state
             $column['active'] = in_array($columnName, $activeColumns, true);
+
+            // set per-column badge length & limit
+            $column['badgeMaxCharacters'] = $column['badgeMaxCharacters'] ?? $this::BADGE_MAX_CHARACTERS;
+            $column['badgeLimit'] = $column['badgeLimit'] ?? $this::BADGE_LIMIT;
+            $isBadgeExpanded = $this->getModuleDataSetting('badge_limits_expanded.' . $tableName . '.' . $columnName) ?? false;
+            $column['badgesExpanded'] = $isBadgeExpanded === true || $isBadgeExpanded === 'true';
+
+            if (!$column['active'] || !isset($column['filter']['partial'])) {
+                continue;
+            }
+
+            $config = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName] ?? [];
+            if ($column['filter']['partial'] === 'Select') {
+                if ($config['config']['foreign_table'] ?? '') {
+                    $foreignTable = $config['config']['foreign_table'];
+                    $foreignTableLabel = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
+                    $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+                    $records = $qb->select('uid', $foreignTableLabel)
+                        ->from($foreignTable)
+                        ->executeQuery()
+                        ->fetchAllAssociative();
+                    foreach ($records as $record) {
+                        $column['filter']['items'][$record['uid']] = [
+                            'label' => $record[$foreignTableLabel],
+                            'value' => $record['uid'],
+                        ];
+                    }
+                    $column['filter']['iconIdentifier'] = $GLOBALS['TCA'][$foreignTable]['ctrl']['typeicon_classes']['default'] ?? '';
+                    $column['filter']['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$foreignTable]['ctrl']['title'] ?? '');
+                }
+            }
+
+            if ($column['filter']['partial'] === 'Group') {
+                $column['filter']['items'] = $this->relationResolver->resolveGroupFilterItems($tableName, $columnName, $this::WORKSPACE_ID);
+                $allowed = $config['config']['allowed'] ?? '';
+                $allowedTables = $allowed === '*'
+                    ? array_keys($config['config']['MM_oppositeUsage'] ?? [])
+                    : GeneralUtility::trimExplode(',', $allowed, true);
+                foreach ($allowedTables as $allowedTable) {
+                    if (!isset($GLOBALS['TCA'][$allowedTable])) {
+                        continue;
+                    }
+                    $column['filter']['tables'][$allowedTable] ??= [];
+                    $column['filter']['tables'][$allowedTable]['iconIdentifier'] = $GLOBALS['TCA'][$allowedTable]['ctrl']['typeicon_classes']['default'] ?? '';
+                    $column['filter']['tables'][$allowedTable]['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$allowedTable]['ctrl']['title'] ?? '');
+                }
+            }
+
+            if ($column['filter']['partial'] === 'Inline') {
+                // Labels are resolved in addInlineRelations() from already-fetched child records.
+            }
         }
         unset($column);
 
@@ -1304,12 +1638,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function modifyPaginatedRecords(): void
     {
+        $this->addWorkspaceMetadata();
         $this->addTranslationButtons();
         $this->addHiddenToggleButton();
         $this->addSysFileReferences();
         $this->addSysFiles();
         $this->addPreviewButton();
-        $this->addSysCategories();
+        $this->addRelations();
     }
 
     protected function addTranslationButtons(): void
@@ -1327,7 +1662,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->where(
                 $queryBuilder->expr()->in(
                     $transOrigPointerField,
-                    $queryBuilder->quoteArrayBasedValueListToIntegerList(array_column($this->records, 'uid'))
+                    $queryBuilder->quoteArrayBasedValueListToIntegerList(
+                        array_map(fn (array $r): int => (int)(($r['t3ver_oid'] ?? 0) ?: $r['uid']), $this->records)
+                    )
                 )
             )
             ->andWhere($queryBuilder->expr()->neq('sys_language_uid', 0))
@@ -1342,7 +1679,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $existingTranslations = GeneralUtility::intExplode(',', $translations[$record['uid']] ?? '', true);
+            $liveUid = (int)(($record['t3ver_oid'] ?? 0) ?: $record['uid']);
+            $existingTranslations = GeneralUtility::intExplode(',', $translations[$liveUid] ?? '', true);
             $possibleTranslations = array_diff(
                 $availableLanguages,
                 $existingTranslations
@@ -1355,7 +1693,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     [
                         'cmd' => [
                             $this->getTableName() => [
-                                $record['uid'] => [
+                                $liveUid => [
                                     'localize' => $languageUid,
                                 ],
                             ],
@@ -1366,17 +1704,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $record['possible_translations'] ??= [];
                 $record['possible_translations'][$languageUid] = $targetUrl;
 
-                if (ExtensionManagementUtility::isLoaded('deepltranslate_core') &&
-                    \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
+                if (ExtensionManagementUtility::isLoaded('deepltranslate_core')
+                    && \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
                 ) {
                     $deeplUrl = (string)$this->backendUriBuilder->buildUriFromRoute('tce_db', [
                         'redirect' => (string)$this->backendUriBuilder->buildUriFromRoute('record_edit', [
-                            'justLocalized' => $this->getTableName() . ':' . $record['uid'] . ':' . $languageUid,
+                            'justLocalized' => $this->getTableName() . ':' . $liveUid . ':' . $languageUid,
                             'returnUrl' => $redirectUrl,
                         ]),
                         'cmd' => [
                             $this->getTableName() => [
-                                $record['uid'] => [
+                                $liveUid => [
                                     'deepltranslate' => $languageUid,
                                 ],
                             ],
@@ -1477,72 +1815,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function addSysCategories(): void
-    {
-        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
-            if (($column['partial'] ?? '') !== 'Category') {
-                continue;
-            }
-
-            $recordUids = array_column($this->records, 'uid');
-            if (empty($recordUids)) {
-                continue;
-            }
-
-            $qb = $this->connectionPool->getQueryBuilderForTable('sys_category');
-            $categoryRelations = $qb->select('mm.uid_foreign')
-                ->addSelectLiteral('GROUP_CONCAT(c.uid) as category_uids')
-                ->from('sys_category', 'c')
-                ->innerJoin('c', 'sys_category_record_mm', 'mm', $qb->expr()->and(
-                    $qb->expr()->eq('mm.uid_local', 'c.uid'),
-                    $qb->expr()->eq('mm.tablenames', $qb->createNamedParameter($this->getTableName())),
-                    $qb->expr()->eq('mm.fieldname', $qb->createNamedParameter($column['columnName'])),
-                    $qb->expr()->in('mm.uid_foreign', $qb->quoteArrayBasedValueListToIntegerList($recordUids))
-                ))
-                ->groupBy('mm.uid_foreign')
-                ->executeQuery()
-                ->fetchAllKeyValue();
-
-            $categoryUids = [];
-            foreach ($categoryRelations as &$relation) {
-                $relation = GeneralUtility::intExplode(',', $relation, true);
-                $categoryUids = array_merge($categoryUids, $relation);
-            }
-
-            if (empty($categoryUids)) {
-                continue;
-            }
-
-            $queryBuilder = $this->connectionPool->getQueryBuilderForTable('sys_category');
-            $categories = $queryBuilder->select('uid', 'title')
-                ->from('sys_category')
-                ->where(
-                    $queryBuilder->expr()->in(
-                        'uid',
-                        $queryBuilder->quoteArrayBasedValueListToIntegerList(array_unique($categoryUids))
-                    )
-                )
-                ->executeQuery()
-                ->fetchAllKeyValue();
-
-            foreach ($categoryRelations as &$categoryUids) {
-                foreach ($categoryUids as &$categoryUid) {
-                    $categoryUid = [
-                        'uid' => $categoryUid,
-                        'title' => $categories[$categoryUid] ?? '',
-                    ];
-                }
-            }
-
-            foreach ($this->records as &$record) {
-                if (!isset($categoryRelations[$record['uid']])) {
-                    continue;
-                }
-                $record['_' . $column['columnName']] = $categoryRelations[$record['uid']];
-            }
-        }
-    }
-
     protected function setPaginatorItems(): void
     {
         $this->paginator->setPaginatedItems($this->records);
@@ -1555,14 +1827,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // new buttons
         $this->addNewButtonToModuleTemplate();
 
-        // show columns button
-        $this->addShowColumnsButtonToModuleTemplate();
+        // add view dropdown to button bar
+        $this->addViewDropdownButtonToModuleTemplate();
 
         // download button
         $this->addDownloadButtonToModuleTemplate();
 
-        // search button
-        $this->addSearchButtonToNewModuleTemplate();
+        // filter toggle button
+        $this->addToggleFiltersButtonToNewModuleTemplate();
 
         // language menu
         $this->addLanguageSelectionToModuleTemplate();
@@ -1576,6 +1848,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addNewButtonToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('newRecord')) {
+            return;
+        }
+
         $accessiblePages = $this->getAccessibleChildPages();
         $activeLanguage = $this->getActiveLanguage();
         $tableName = $this->getTableName();
@@ -1595,26 +1871,42 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function addShowColumnsButtonToModuleTemplate(): void
+    protected function addShowColumnsButtonToViewDropdown(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('showColumns')) {
+            return;
+        }
+
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-show-columns.js')
         );
 
-        $button = GeneralUtility::makeInstance(GenericButton::class)
+        if ($this->getTypo3Version() === 13) {
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem::class)
+                ->setHref('#')
+                ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
+                ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
+                ->setIcon($this->iconFactory->getIcon('actions-options', IconSize::SMALL))
+                ->setAttributes(['data-doc-button' => 'showColumnsButton']);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $this->viewDropdownButtons[] = $componentFactory->createDropDownItem()
             ->setTag('a')
             ->setHref('#')
-            ->setShowLabelText(true)
-            ->setLabel($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
-            ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.showColumns'))
-            ->setIcon($this->iconFactory->getIcon('actions-options'))
-            ->setClasses('showColumnsButton');
-
-        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton($button, ButtonBar::BUTTON_POSITION_RIGHT, 1);
+            ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
+            ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.showColumns'))
+            ->setIcon($this->iconFactory->getIcon('actions-options', IconSize::SMALL))
+            ->setAttributes(['data-doc-button' => 'showColumnsButton']);
     }
 
     protected function addDownloadButtonToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('download')) {
+            return;
+        }
+
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-download-button.js')
                 ->instance($this->getTableName(), $this->tableConfiguration[$this->getTableName()]['columns'])
@@ -1630,7 +1922,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref($url)
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:header.button.download'))
+                ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.download'))
                 ->setShowLabelText(true)
                 ->setClasses('recordlist-download-button')
                 ->setIcon($this->iconFactory->getIcon('actions-download', IconSize::SMALL)),
@@ -1639,24 +1931,81 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
     }
 
-    protected function addSearchButtonToNewModuleTemplate(): void
+    protected function getActiveFilterCount(): int
     {
-        $isSearchButtonActive = (string)$this->getModuleDataSetting($this->getTableName() . '.isSearchButtonActive');
-        $searchClass = $isSearchButtonActive ? 'active' : '';
+        $count = 0;
+        $tableName = $this->getTableName();
+
+        // Count dynamic filters from request
+        $body = $this->request->getParsedBody();
+        if (!empty($body['filter'])) {
+            foreach ($body['filter'] as $data) {
+                if (isset($data['value']) && $data['value'] !== '') {
+                    $count++;
+                }
+            }
+        }
+
+        // Count workspace filters from module data
+        if ($this->getModuleDataSetting($tableName . '.onlyOfflineRecords')) {
+            $count++;
+        }
+        if ($this->getModuleDataSetting($tableName . '.onlyReadyToPublish')) {
+            $count++;
+        }
+
+        return $count;
+    }
+
+    protected function addToggleFiltersButtonToNewModuleTemplate(): void
+    {
+        if (!$this->isActionAllowedInCurrentTemplate('toggleFilters')) {
+            return;
+        }
+
+        $isFilterButtonActive = (bool)$this->getModuleDataSetting($this->getTableName() . '.isFilterButtonActive');
+
+        $activeFilterCount = $this->getActiveFilterCount();
+        $showLabel = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.button.showFilters');
+        $showLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
+        $hideLabel = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.button.hideFilters');
+        $hideLabel .= $activeFilterCount > 0 ? ' (' . $activeFilterCount . ')' : '';
+
         $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
             $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
                 ->setHref('#')
-                ->setTitle($this->getLanguageService()->sL('LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.toggleSearch'))
-                ->setShowLabelText(false)
-                ->setClasses($searchClass . ' toggleSearchButton')
-                ->setIcon($this->iconFactory->getIcon('actions-search', IconSize::SMALL)),
+                ->setTitle($showLabel)
+                ->setShowLabelText(true)
+                ->setClasses('toggleFiltersButton show' . ($isFilterButtonActive ? ' hidden' : ' '))
+                ->setDataAttributes([
+                    'filter-count' => $activeFilterCount,
+                ])
+                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
             ButtonBar::BUTTON_POSITION_LEFT,
             2
+        );
+
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
+                ->setHref('#')
+                ->setTitle($hideLabel)
+                ->setShowLabelText(true)
+                ->setClasses('toggleFiltersButton toHide' . ($isFilterButtonActive ? '' : ' hidden'))
+                ->setDataAttributes([
+                    'filter-count' => $activeFilterCount,
+                ])
+                ->setIcon($this->iconFactory->getIcon('actions-filter', IconSize::SMALL)),
+            ButtonBar::BUTTON_POSITION_LEFT,
+            3
         );
     }
 
     protected function addLanguageSelectionToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('languageSelection')) {
+            return;
+        }
+
         $languageField = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['languageField'] ?? '';
         $languages = $this->getLanguages();
         if (!$languageField || count($languages) <= 1) {
@@ -1717,6 +2066,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addPidSelectionToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('pidSelection')) {
+            return;
+        }
+
         $accessiblePages = $this->getAccessiblePids();
         if (count($accessiblePages) > 1) {
             $pageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
@@ -1747,6 +2100,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addTableSelectionToModuleTemplate(): void
     {
+        if (!$this->isActionAllowedInCurrentTemplate('tableSelection')) {
+            return;
+        }
+
         $tableNames = $this->getTableNames();
         if (count($tableNames) > 1) {
             $tableMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
@@ -1801,7 +2158,32 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getTemplateName(): string
     {
-        return 'Default';
+        $templateConfigurations = $this->getTemplateConfigurations();
+        $selectedTemplate = $this->getModuleDataSetting($this->getTableName() . '.template');
+
+        // Return selected template if it exists in configurations, otherwise return first available
+        if ($selectedTemplate !== null && array_key_exists($selectedTemplate, $templateConfigurations)) {
+            return $selectedTemplate;
+        }
+
+        return array_key_first($templateConfigurations);
+    }
+
+    protected function getCurrentTemplateConfiguration(): array
+    {
+        $templateConfigurations = $this->getTemplateConfigurations();
+        $templateName = $this->getTemplateName();
+        return $templateConfigurations[$templateName] ?? [];
+    }
+
+    protected function isActionAllowedInCurrentTemplate(string $action): bool
+    {
+        $templateConfig = $this->getCurrentTemplateConfiguration();
+        // If no actions are defined, all actions are allowed (backwards compatibility)
+        if (!isset($templateConfig['actions'])) {
+            return true;
+        }
+        return in_array($action, $templateConfig['actions'], true);
     }
 
     protected function assignViewVariables(): void
@@ -1820,5 +2202,147 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->moduleTemplate->assign('table', $this->getTableName());
         $this->moduleTemplate->assign('typo3version', $this->getTypo3Version());
         $this->moduleTemplate->assign('itemsPerPageOptions', array_combine($this::ITEMS_PER_PAGE_OPTIONS, $this::ITEMS_PER_PAGE_OPTIONS));
+    }
+
+    protected function addViewDropdownButtonToModuleTemplate(): void
+    {
+        if (empty($this->viewDropdownButtons)) {
+            return;
+        }
+
+        if ($this->getTypo3Version() === 13) {
+            $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
+            $viewDropdownMenu = $buttonBar->makeDropDownButton()
+                ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.view'))
+                ->setIcon($this->iconFactory->getIcon('actions-menu-alternative', IconSize::SMALL))
+                ->setShowLabelText(true);
+
+            foreach ($this->viewDropdownButtons as $menuItem) {
+                $viewDropdownMenu->addItem($menuItem);
+            }
+
+            $buttonBar->addButton(
+                $viewDropdownMenu,
+                ButtonBar::BUTTON_POSITION_RIGHT,
+                1
+            );
+
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $viewDropdownButton = $componentFactory->createDropDownButton()
+            ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.view'))
+            ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.view'))
+            ->setIcon($this->iconFactory->getIcon('actions-menu-alternative', IconSize::SMALL))
+            ->setShowLabelText(true);
+
+        foreach ($this->viewDropdownButtons as $menuItem) {
+            $viewDropdownButton->addItem($menuItem);
+        }
+
+        $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
+            $viewDropdownButton,
+            ButtonBar::BUTTON_POSITION_RIGHT,
+            1
+        );
+    }
+
+    protected function configureViewDropdownButtons(): void
+    {
+        // template selection
+        $this->addTemplateSelectionToViewDropdown();
+
+        // show columns
+        $this->addShowColumnsButtonToViewDropdown();
+    }
+
+    protected function addTemplateSelectionToViewDropdown(): void
+    {
+        if (!$this->isActionAllowedInCurrentTemplate('templateSelection')) {
+            return;
+        }
+
+        $templateConfigurations = $this->getTemplateConfigurations();
+        if (count($templateConfigurations) < 2) {
+            return;
+        }
+
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-template-selection.js')
+        );
+
+        $currentTemplate = $this->getModuleDataSetting($this->getTableName() . '.template') ?? 'Default';
+        if ($this->getTypo3Version() === 13) {
+            foreach ($templateConfigurations as $templateName => $templateConfiguration) {
+                $templateItem = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownRadio::class)
+                    ->setHref('#')
+                    ->setLabel($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                    ->setTitle($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                    ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'] ?? 'actions-dot', IconSize::SMALL))
+                    ->setAttributes(['data-doc-button' => 'templateSelection', 'data-template-name' => $templateName]);
+                if ($currentTemplate === $templateName) {
+                    $templateItem->setActive(true);
+                }
+                $this->viewDropdownButtons[] = $templateItem;
+            }
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownDivider::class);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+
+        foreach ($templateConfigurations as $templateName => $templateConfiguration) {
+            $templateItem = $componentFactory->createDropDownRadio()
+                ->setHref('#')
+                ->setLabel($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                ->setTitle($this->getLanguageService()->sL($templateConfiguration['title'] ?? $templateName))
+                ->setIcon($this->iconFactory->getIcon($templateConfiguration['icon'] ?? 'actions-dot', IconSize::SMALL))
+                ->setAttributes(['data-doc-button' => 'templateSelection', 'data-template-name' => $templateName]);
+            if ($currentTemplate === $templateName) {
+                $templateItem->setActive(true);
+            }
+            $this->viewDropdownButtons[] = $templateItem;
+        }
+        $this->viewDropdownButtons[] = $componentFactory->createDropDownDivider();
+    }
+
+    protected function getTemplateConfigurations(): array
+    {
+        return [
+            'Default' => [
+                'title' => 'Page List',
+                'icon' => 'actions-list',
+                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
+            ],
+        ];
+    }
+
+    protected function addRelations(): void
+    {
+        if (empty($this->records)) {
+            return;
+        }
+
+        foreach ($this->tableConfiguration[$this->getTableName()]['columns'] as $column) {
+            if (!($column['active'] ?? false) || !in_array($column['partial'] ?? '', ['Select', 'Group', 'Inline', 'Category'], true)) {
+                continue;
+            }
+
+            $relations = $this->relationResolver->resolveForDisplay(
+                $this->getTableName(),
+                $column['columnName'],
+                $this->records,
+                $this::WORKSPACE_ID
+            );
+
+            foreach ($this->records as &$record) {
+                $uid = ($record['t3ver_oid'] ?? 0) ?: $record['uid'];
+                if (isset($relations[$uid])) {
+                    $record['_' . $column['columnName']] = $relations[$uid];
+                }
+            }
+            unset($record);
+        }
     }
 }

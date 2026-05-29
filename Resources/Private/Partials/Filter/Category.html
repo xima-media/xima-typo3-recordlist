@@ -42,13 +42,12 @@
                 data-overridevalues="[{fieldValue}]"
                 data-defaultvalues="[]">
 
-            <div id="tree_{fieldName}" class="svg-tree-element tree-element" style="height: 400px;"></div>
+            <div id="tree_{fieldName}" class="svg-tree-element tree-element" style="height: 256px;"></div>
 
         </typo3-formengine-element-category>
     </div>
     <f:if condition="{colConfig}">
         <div class="col col-2">
-            <f:form.hidden name="filter[{colConfig.columnName}][mm]" value="1" />
             <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'in', 1: 'notIn'}}" />
         </div>
     </f:if>

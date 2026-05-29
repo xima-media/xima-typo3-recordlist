@@ -1,14 +1,16 @@
 import AjaxRequest from "@typo3/core/ajax/ajax-request.js";
-import NProgress from "nprogress";
 import Modal from "@typo3/backend/modal.js";
 import { SeverityEnum } from "@typo3/backend/enum/severity.js";
 import $ from "jquery";
 import Utility from "@typo3/backend/utility.js";
 import Notification from "@typo3/backend/notification.js";
+import DocumentService from "@typo3/core/document-service.js";
 
 export default class RecordlistWorkspaceReadyToPublish {
   constructor() {
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {
@@ -45,27 +47,57 @@ export default class RecordlistWorkspaceReadyToPublish {
         text: TYPO3.lang.ok,
         btnClass: "btn-warning",
         name: "ok",
-        trigger: () => {
-          const payload = {
-            action: "Actions",
-            data: [tr.getAttribute("data-table"), tr.getAttribute("data-uid")],
-            method: typo3version === 13 ? "deleteSingleRecord" : "discardSingleRecord",
-            tid: 2,
-            type: "rpc"
-          };
-
+        trigger: async () => {
           modal.hideModal();
 
-          new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
-            .withQueryArguments({workspaceId: workspaceId})
-            .post(payload, {
-              headers: {
-                "Content-Type": "application/json; charset=utf-8"
-              }
-            })
-            .then(async () => {
-              top?.TYPO3.Backend.ContentContainer.refresh();
-            });
+          const discardMethod = typo3version === 13 ? "deleteSingleRecord" : "discardSingleRecord";
+          const state = tr.getAttribute("data-state");
+
+          // Discard inline children first.
+          const inlineReferences = this.getInlineReferences(tr);
+          const discardErrors = [];
+          for (const ref of inlineReferences) {
+            try {
+              await new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+                .withQueryArguments({workspaceId: workspaceId})
+                .post({
+                  action: "Actions",
+                  data: [ref.table, ref.versionId],
+                  method: discardMethod,
+                  tid: 2,
+                  type: "rpc"
+                }, {
+                  headers: { "Content-Type": "application/json; charset=utf-8" }
+                });
+            } catch (error) {
+              console.error("Failed to discard inline reference", ref, error);
+              discardErrors.push(ref);
+            }
+          }
+
+          // Discard the parent only when it has an actual workspace version.
+          if (state !== "children-modified") {
+            await new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
+              .withQueryArguments({workspaceId: workspaceId})
+              .post({
+                action: "Actions",
+                data: [tr.getAttribute("data-table"), tr.getAttribute("data-uid")],
+                method: discardMethod,
+                tid: 2,
+                type: "rpc"
+              }, {
+                headers: { "Content-Type": "application/json; charset=utf-8" }
+              });
+          }
+
+          if (discardErrors.length > 0) {
+            Notification.error(
+              TYPO3.lang["workspace.discard.error.title"],
+              TYPO3.lang["workspace.discard.error.message"]
+            );
+          }
+
+          top?.TYPO3.Backend.ContentContainer.refresh();
         }
       }
     ]);
@@ -89,13 +121,10 @@ export default class RecordlistWorkspaceReadyToPublish {
       t3verOid = uid;
     }
 
-    const recordsToPublish = [
-      {
-        liveId: t3verOid,
-        table: table,
-        versionId: uid
-      }
-    ];
+    const state = tr.getAttribute("data-state");
+    const recordsToPublish = state !== "children-modified"
+      ? [{ liveId: t3verOid, table: table, versionId: uid }]
+      : [];
 
     const sysFileReferencesToPublish = tr.getAttribute("data-sys-file-references") ?? "";
     if (sysFileReferencesToPublish) {
@@ -170,22 +199,33 @@ export default class RecordlistWorkspaceReadyToPublish {
       return;
     }
 
+    const state = tr.getAttribute("data-state");
+    const isChildrenOnly = state === "children-modified";
+
     const affectedRecord = {
       table: tr.getAttribute("data-table"),
       uid: tr.getAttribute("data-uid"),
       t3ver_oid: tr.getAttribute("data-t3ver_oid")
     };
 
+    const inlineElements = this.getInlineReferences(tr).map(ref => ({
+      table: ref.table,
+      uid: String(ref.versionId),
+      t3ver_oid: String(ref.liveId)
+    }));
+
+    // For children-only records the parent has no workspace version; use the first
+    // inline child to open the stage window and omit the parent from the execute payload.
+    const windowElements = isChildrenOnly ? inlineElements.slice(0, 1) : [affectedRecord];
+
     const payload = {
       action: "Actions",
-      data: [workspaceStage, [affectedRecord], TYPO3.settings.Workspaces.token],
+      data: [workspaceStage, windowElements, TYPO3.settings.Workspaces.token],
       method: "sendToSpecificStageWindow",
       tid: 1,
       type: "rpc"
     };
 
-    NProgress.configure({ parent: `tr[data-uid="${tr.getAttribute("data-uid")}"]`, showSpinner: true });
-    NProgress.start();
     new AjaxRequest(TYPO3.settings.ajaxUrls.workspace_dispatch)
       .withQueryArguments({workspaceId: workspaceId})
       .post(payload, {
@@ -200,7 +240,7 @@ export default class RecordlistWorkspaceReadyToPublish {
           if (target.name === "ok") {
             const serializedForm = Utility.convertFormToObject(modal.querySelector("form"));
             serializedForm.affects = {
-              elements: [affectedRecord],
+              elements: isChildrenOnly ? inlineElements : [affectedRecord, ...inlineElements],
               nextStage: workspaceStage
             };
 
@@ -231,6 +271,18 @@ export default class RecordlistWorkspaceReadyToPublish {
           }
         });
       });
+  }
+
+  getInlineReferences(tr) {
+    const raw = tr.getAttribute("data-sys-file-references") ?? "";
+    if (!raw) {
+      return [];
+    }
+    try {
+      return JSON.parse(raw).filter(ref => ref.table);
+    } catch {
+      return [];
+    }
   }
 
   renderSendToStageWindow(response) {

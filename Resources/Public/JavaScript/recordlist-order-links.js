@@ -1,32 +1,16 @@
+import DocumentService from "@typo3/core/document-service.js";
+
 export default class RecordlistOrderLinks {
   constructor() {
-    this.init();
+    DocumentService.ready().then(() => {
+      this.init();
+    });
   }
 
   init() {
-    document.querySelectorAll("th button.dropdown-toggle").forEach(button => {
-      button.addEventListener("click", this.onOrderButtonClick.bind(this));
-    });
-
     document.querySelectorAll("th a[data-order-field]").forEach(button => {
       button.addEventListener("click", this.onOrderLinkClick.bind(this));
     });
-  }
-
-  onOrderButtonClick(e) {
-    e.preventDefault();
-
-    const dropdown = e.currentTarget.nextElementSibling;
-    dropdown.classList.add("show");
-
-    // Close the dropdown if clicked outside
-    const closeDropdown = (event) => {
-      if (!dropdown.contains(event.target) && event.target !== e.currentTarget) {
-        dropdown.classList.remove("show");
-        document.removeEventListener("mousedown", closeDropdown);
-      }
-    };
-    document.addEventListener("mousedown", closeDropdown);
   }
 
   onOrderLinkClick(e) {

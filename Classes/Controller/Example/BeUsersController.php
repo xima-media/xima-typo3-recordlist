@@ -16,8 +16,15 @@ class BeUsersController extends AbstractBackendController
         return ['be_users', 'be_groups', 'sys_filemounts'];
     }
 
-    protected function getTemplateName(): string
+    public function getTemplateConfigurations(): array
     {
-        return 'Example/BeUsers';
+        return ['Example/BeUsers' => []];
+    }
+
+    protected function modifyTableConfiguration(): void
+    {
+        $this->tableConfiguration['be_users']['columns']['username']['defaultPosition'] = 1;
+        $this->tableConfiguration['be_users']['columns']['realName']['defaultPosition'] = 2;
+        $this->tableConfiguration['be_users']['columns']['email']['defaultPosition'] = 3;
     }
 }

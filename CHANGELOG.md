@@ -2,12 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [14.x] - Multiple Tables Support & Row Selection
+## [14.x] - Multiple Tables Support, Template Configuration, View Dropdown & Row Selection
 
 ### Features
 
 - **Multiple Tables Support**: Backend modules can now manage multiple tables with a table selection menu
 - **Table-Prefixed Settings**: Module data uses dot notation (e.g., `tableName.settingKey`) for proper table isolation
+- **View Button Dropdown**: New unified dropdown in the doc header containing view-related actions
+- **Template Configurations**: Define multiple templates per controller with custom layouts and actions
+- **Per-Template Actions**: Control which buttons/features are available for each template via the `actions` configuration
+- **Template Selection**: Users can switch between templates from the View dropdown (saved per table)
 - **New Example Controllers**: Added `BeUsersController` demonstrating multiple related tables (be_users, be_groups, sys_filemounts)
 - **Root Page Support**: Added handling for root-level pages (pageUid = 0)
 - **Fluid Template Helper**: Settings are automatically transformed into nested arrays for easier Fluid template access

@@ -46,17 +46,34 @@ main.recordlist ul.pagination input.form-control {
     min-width: unset;
 }
 
-.category-badge {
+.badge-container .badge {
     font-weight: normal;
     display: inline-flex;
     line-height: 1.4;
     gap: 4px;
 }
 
-.category-badge-container {
+.badge-container {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+}
+
+.badge-hidden {
+    display: none !important;
+}
+
+.badge-show-more,
+.badge-show-less {
+    border: 1px dashed currentColor;
+    background: transparent;
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.badge-show-more:hover,
+.badge-show-less:hover {
+    opacity: 1;
 }
 
 .recordlist table.table tr[data-state="new"]:not(.active) td {
@@ -71,10 +88,50 @@ main.recordlist ul.pagination input.form-control {
     background-color: color-mix(in srgb, var(--typo3-badge-danger-bg) 15%, transparent) !important;
 }
 
-.recordlist table .dropdown-static {
-    position: relative;
+/**
+* Inline relation badge workspace state colors
+*/
+.badge.badge-state-new {
+    background-color: var(--typo3-badge-success-bg);
+    color: var(--typo3-badge-success-color);
 }
 
-.recordlist table .dropdown-static .dropdown-menu {
-    top: 24px;
+.badge.badge-state-modified {
+    background-color: var(--typo3-badge-warning-bg);
+    color: var(--typo3-badge-warning-color);
+}
+
+.badge.badge-state-deleted {
+    background-color: var(--typo3-badge-danger-bg);
+    color: var(--typo3-badge-danger-color);
+    text-decoration: line-through;
+}
+
+.badge.badge-state-pending {
+    background-color: var(--typo3-badge-info-bg);
+    color: var(--typo3-badge-info-color);
+}
+
+/**
+* Filter
+*/
+#filterInputs .card-footer {
+    border-top: 1px solid var(--typo3-card-border-color);
+}
+
+@media (min-width: 1400px) {
+    #filterInputs .col-xxl-6 .row {
+        max-width: 90%;
+    }
+}
+
+/** v14 fix to apply button border */
+.btn-group > .new-record-in-page.btn.btn-sm.btn-default {
+    border-end-end-radius: var(--typo3-input-border-radius);
+    border-start-end-radius: var(--typo3-input-border-radius);
+}
+
+/** Hide the divider if it's the last element in the dropdown, to avoid a divider at the end of the list. */
+.btn-group .dropdown-menu li:last-child:has(hr) {
+    display: none;
 }

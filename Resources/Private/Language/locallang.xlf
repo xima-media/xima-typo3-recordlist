@@ -42,14 +42,20 @@
 			<trans-unit id="table.label.searchField">
 				<source>Enter search phrase</source>
 			</trans-unit>
-			<trans-unit id="table.button.toggleSearch">
-				<source>Show search form</source>
+			<trans-unit id="table.button.showFilters">
+				<source>Show filters</source>
+			</trans-unit>
+			<trans-unit id="table.button.hideFilters">
+				<source>Hide filters</source>
 			</trans-unit>
 			<trans-unit id="table.label.copy">
 				<source>Copy</source>
 			</trans-unit>
 			<trans-unit id="table.label.waiting">
 				<source>Awaiting review</source>
+			</trans-unit>
+			<trans-unit id="table.label.childrenModified">
+				<source>Related records modified</source>
 			</trans-unit>
 			<trans-unit id="table.button.view">
 				<source>Open website</source>
@@ -75,6 +81,9 @@
 			<trans-unit id="table.button.original">
 				<source>Original</source>
 			</trans-unit>
+			<trans-unit id="table.button.editOriginal">
+				<source>Edit original</source>
+			</trans-unit>
 			<trans-unit id="table.button.edit">
 				<source>Edit</source>
 			</trans-unit>
@@ -96,11 +105,11 @@
 			<trans-unit id="table.button.unhide">
 				<source>Un-hide record</source>
 			</trans-unit>
-			<trans-unit id="search.filtered.headline">
-				<source>View filtered</source>
+			<trans-unit id="search.noResults.headline">
+				<source>No results found</source>
 			</trans-unit>
-			<trans-unit id="search.filtered.text">
-				<source>By using the 🔍 search you can filter the event list</source>
+			<trans-unit id="search.noResults.text">
+				<source>No records match your current search or filter criteria. Try adjusting your filters or reset them.</source>
 			</trans-unit>
 			<trans-unit id="table.button.save">
 				<source>Save</source>
@@ -116,6 +125,12 @@
 			</trans-unit>
 			<trans-unit id="table.th.editFieldOfRecords">
 				<source>Edit the '%s' field of the listed records</source>
+			</trans-unit>
+			<trans-unit id="pagination.pageIndicator">
+				<source>Page %1$s of %2$d</source>
+			</trans-unit>
+			<trans-unit id="pagination.rangeIndicator">
+				<source>Records %1$d - %2$d</source>
 			</trans-unit>
 			<trans-unit id="modal.delete.title">
 				<source>Delete file</source>
@@ -150,6 +165,9 @@
 			<trans-unit id="header.button.download">
 				<source>Download</source>
 			</trans-unit>
+			<trans-unit id="header.button.view">
+				<source>View</source>
+			</trans-unit>
 			<trans-unit id="header.button.showColumns">
 				<source>Show columns</source>
 			</trans-unit>
@@ -176,6 +194,12 @@
 			</trans-unit>
 			<trans-unit id="showColumns.refresh">
 				<source>Refresh</source>
+			</trans-unit>
+			<trans-unit id="filter.checkbox.yes">
+				<source>Yes</source>
+			</trans-unit>
+			<trans-unit id="filter.checkbox.no">
+				<source>No</source>
 			</trans-unit>
 			<trans-unit id="filter.expr.label">
 				<source>Type</source>
@@ -236,6 +260,12 @@
 			</trans-unit>
 			<trans-unit id="workspace.requestChanges.notification.success.description">
 				<source>The change request has been sent successfully.</source>
+			</trans-unit>
+			<trans-unit id="workspace.discard.error.title">
+				<source>Discard failed</source>
+			</trans-unit>
+			<trans-unit id="workspace.discard.error.message">
+				<source>Some related records could not be discarded.</source>
 			</trans-unit>
 			<trans-unit id="inlineEdit.error.title">
 				<source>Error</source>
@@ -311,6 +341,12 @@
 			</trans-unit>
 			<trans-unit id="ajax.error.recordNotFound">
 				<source>Record not found</source>
+			</trans-unit>
+			<trans-unit id="badge.showMore">
+				<source>Show more</source>
+			</trans-unit>
+			<trans-unit id="badge.showLess">
+				<source>Show less</source>
 			</trans-unit>
 		</body>
 	</file>
