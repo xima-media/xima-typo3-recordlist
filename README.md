@@ -31,6 +31,9 @@ by extending `AbstractBackendController` instead of building record lists from s
     - [Custom Template Configurations](#custom-template-configurations)
     - [Modifying Records](#modifying-records)
     - [Custom Filters](#custom-filters)
+        - [Default Filters](#default-filters)
+        - [Filter Visibility Independent of Columns](#filter-visibility-independent-of-columns)
+        - [Modify Query Builder Filters](#modify-query-builder-filters)
     - [Column Configuration](#column-configuration)
     - [Custom Actions](#custom-actions)
 - [Documentation](#documentation)
@@ -268,6 +271,43 @@ class UserController extends AbstractBackendController
 ```
 
 ### Custom Filters
+
+#### Default Filters
+
+Configure filters that are applied automatically when the module first opens — before any user interaction. Override `getDefaultFilters()` in your controller:
+
+```php
+class NewsController extends AbstractBackendController
+{
+    protected function getDefaultFilters(): array
+    {
+        return [
+            'author' => ['value' => 'Ruby Bennett', 'expr' => 'eq'],
+        ];
+    }
+}
+```
+
+User-submitted filter values always override defaults. Each entry maps a field name to `value` (required) and `expr` (optional, defaults to equals). All standard filter expressions are supported: `eq`, `neq`, `like`, `notLike`, `lt`, `gt`, `in`, `notIn`.
+
+#### Filter Visibility Independent of Columns
+
+Show a filter for a field without displaying its column in the table. Set `filterVisible` on any column in `modifyTableConfiguration()`:
+
+```php
+class NewsController extends AbstractBackendController
+{
+    protected function modifyTableConfiguration(): void
+    {
+        // Show categories filter even when the categories column is hidden
+        $this->tableConfiguration['your-table-name']['columns']['categories']['filterVisible'] = true;
+    }
+}
+```
+
+With `filterVisible = true`, the filter remains in the filter panel regardless of whether the user has toggled the column off via column management. This is useful when you want filtering capability for a field without cluttering the table view.
+
+#### Modify Query Builder Filters
 
 Add custom filter options by modifying the query builder:
 

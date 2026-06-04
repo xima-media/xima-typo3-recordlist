@@ -584,11 +584,32 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
+    /**
+     * Returns default filter values applied when no user-submitted filter exists for a field.
+     * Override in concrete controllers to configure pre-applied filters.
+     *
+     * @return array<string, array{value: string, expr?: string}>
+     */
+    protected function getDefaultFilters(): array
+    {
+        return [];
+    }
+
     protected function addFilterConstraint(): void
     {
         $body = $this->request->getParsedBody();
-        if (!empty($body['filter'])) {
-            foreach ($body['filter'] as $field => $data) {
+        $bodyFilters = (array)($body['filter'] ?? []);
+
+        // Merge default filters — user-submitted values take precedence per field
+        $filters = $bodyFilters;
+        foreach ($this->getDefaultFilters() as $field => $data) {
+            if (!isset($filters[$field]) || ($filters[$field]['value'] ?? '') === '') {
+                $filters[$field] = $data;
+            }
+        }
+
+        if (!empty($filters)) {
+            foreach ($filters as $field => $data) {
                 // Validate field name against TCA
                 if ($field !== 'uid' && !isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$field])) {
                     continue;
@@ -1435,6 +1456,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $activeColumns = array_keys($defaultColumns);
         }
 
+        $defaultFilters = $this->getDefaultFilters();
+
         foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => &$column) {
             // translate label
             if (!isset($column['label'])) {
@@ -1442,14 +1465,20 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $column['label'] = $this->getLanguageService()->sL($column['label']);
 
-            // set filter value
-            if (isset($body['filter'][$columnName]['value']) && $body['filter'][$columnName]['value'] !== '') {
-                $column['filter']['value'] = $body['filter'][$columnName]['value'];
+            // set filter value — body takes precedence, then default filter
+            $bodyValue = $body['filter'][$columnName]['value'] ?? '';
+            if ($bodyValue !== '') {
+                $column['filter']['value'] = $bodyValue;
+            } elseif (isset($defaultFilters[$columnName]['value']) && $defaultFilters[$columnName]['value'] !== '') {
+                $column['filter']['value'] = $defaultFilters[$columnName]['value'];
             }
 
-            // set filter expr
-            if (!empty($body['filter'][$columnName]['expr'] ?? '')) {
-                $column['filter']['expr'] = $body['filter'][$columnName]['expr'];
+            // set filter expr — body takes precedence, then default filter
+            $bodyExpr = $body['filter'][$columnName]['expr'] ?? '';
+            if ($bodyExpr !== '') {
+                $column['filter']['expr'] = $bodyExpr;
+            } elseif (isset($defaultFilters[$columnName]['expr'])) {
+                $column['filter']['expr'] = $defaultFilters[$columnName]['expr'];
             }
 
             // set active state
@@ -1461,7 +1490,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $isBadgeExpanded = $this->getModuleDataSetting('badge_limits_expanded.' . $tableName . '.' . $columnName) ?? false;
             $column['badgesExpanded'] = $isBadgeExpanded === true || $isBadgeExpanded === 'true';
 
-            if (!$column['active'] || !isset($column['filter']['partial'])) {
+            // filterRendered: true when filter should be shown in the filter panel
+            // (active column OR explicitly marked as filterVisible, and has a filter partial)
+            $filterVisible = $column['filterVisible'] ?? false;
+            $column['filterRendered'] = ($column['active'] || $filterVisible) && isset($column['filter']['partial']);
+
+            if ((!$column['active'] && !$filterVisible) || !isset($column['filter']['partial'])) {
                 continue;
             }
 

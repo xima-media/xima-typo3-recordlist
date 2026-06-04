@@ -1,6 +1,6 @@
 <div class="row">
     <f:for each="{tableConfiguration.columns}" as="colConfig">
-        <f:if condition="{colConfig.active} && {colConfig.filter.partial}">
+        <f:if condition="{colConfig.filterRendered}">
             <div class="col-12 col-xxl-6 mb-3">
                 <f:render partial="Filter/{colConfig.filter.partial}" arguments="{_all}" />
             </div>
