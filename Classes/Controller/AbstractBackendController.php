@@ -224,7 +224,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->modifyTableConfiguration();
         $this->processTableConfiguration();
 
-        if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
+        $parsedBody = $this->request->getParsedBody();
+        $parsedBody = is_array($parsedBody) ? $parsedBody : [];
+        if (($parsedBody['is_download'] ?? null) === '1') {
             return $this->downloadRecords();
         }
 
@@ -349,16 +351,24 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $moduleData = $this->getModuleData();
         $body = $this->request->getParsedBody();
+        $body = is_array($body) ? $body : [];
         $tableName = $this->getTableName();
 
         if ($this->request->getMethod() === 'POST') {
             unset($body['__referrer'], $body['__trustedProperties'], $body['is_download']);
 
+            $isReset = isset($body['reset']) || isset($body['reset_view']);
+            $isResetView = isset($body['reset_view']);
+
             // clear moduleData + current request body in case reset button is used for submit
-            if (isset($body['reset'])) {
+            if ($isReset) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
                 unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.isFilterButtonActive'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
+            }
+
+            if ($isResetView) {
+                unset($moduleData['settings'][$tableName . '.activeColumns']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
@@ -410,10 +420,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $languages[-1]['uid'] = 'all';
         }
 
-        $activeLanguage = $this->getActiveLanguage();
+        $activeLanguage = (string)$this->getActiveLanguage();
         foreach ($languages as &$language) {
             // needs to be strict type checking as this is not possible in fluid
-            if ((string)$language['uid'] === $activeLanguage) {
+            if ((string)($language['uid'] ?? '') === $activeLanguage) {
                 $language['active'] = true;
             }
         }
@@ -569,8 +579,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addSearchConstraint(): void
     {
         $body = $this->request->getParsedBody();
-        if (isset($body['search_field']) && $body['search_field']) {
-            $searchInput = $body['search_field'];
+        $body = is_array($body) ? $body : [];
+        $searchInput = (string)($body['search_field'] ?? '');
+        if ($searchInput !== '') {
             $escapedSearchInput = addcslashes($searchInput, '%_');
             $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'];
             $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
@@ -600,7 +611,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addFilterConstraint(): void
     {
         $body = $this->request->getParsedBody();
+        $body = is_array($body) ? $body : [];
         $bodyFilters = (array)($body['filter'] ?? []);
+        $tableName = $this->getTableName();
+        $tableTca = is_array($GLOBALS['TCA'][$tableName] ?? null) ? $GLOBALS['TCA'][$tableName] : [];
+        $columns = is_array($tableTca['columns'] ?? null) ? $tableTca['columns'] : [];
 
         // Merge default filters — user-submitted values take precedence per field
         $filters = $bodyFilters;
@@ -617,9 +632,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $ctrl['tstamp'] ?? '',
             ]));
             foreach ($filters as $field => $data) {
+                if (!is_array($data)) {
+                    continue;
+                }
                 // Validate field name against TCA columns or ctrl timestamp fields
                 if ($field !== 'uid'
-                    && !isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$field])
+                    && !isset($columns[$field])
                     && !in_array($field, $ctrlTimestampFields, true)
                 ) {
                     continue;
@@ -628,11 +646,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     continue;
                 }
 
-                $columnType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['type'] ?? '';
+                $fieldConfig = is_array($columns[$field]['config'] ?? null) ? $columns[$field]['config'] : [];
+                $columnType = (string)($fieldConfig['type'] ?? '');
 
                 if (in_array($columnType, ['select', 'category', 'group', 'inline'], true)) {
                     $filterResult = $this->relationResolver->resolveForFilter(
-                        $this->getTableName(),
+                        $tableName,
                         $field,
                         $data['value'],
                         $this::WORKSPACE_ID
@@ -641,8 +660,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     continue;
                 }
 
-                if (isset($data['dataType']) && $data['dataType'] === 'date') {
-                    $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
+                if (($data['dataType'] ?? null) === 'date') {
+                    $dbType = (string)($fieldConfig['dbType'] ?? '');
                     $date = date('Y-m-d', strtotime($data['value']));
                     if ($dbType === 'date' || $dbType === 'datetime') {
                         $leftExpr = 'DATE(t1.' . $field . ')';
@@ -1890,6 +1909,36 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->setAttributes(['data-doc-button' => 'showColumnsButton']);
     }
 
+    protected function addResetViewButtonToViewDropdown(): void
+    {
+        if (!$this->isActionAllowedInCurrentTemplate('resetView')) {
+            return;
+        }
+
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-reset-view.js')
+        );
+
+        if ($this->getTypo3Version() === 13) {
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem::class)
+                ->setHref('#')
+                ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+                ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+                ->setIcon($this->iconFactory->getIcon('actions-undo', IconSize::SMALL))
+                ->setAttributes(['data-doc-button' => 'resetViewButton']);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $this->viewDropdownButtons[] = $componentFactory->createDropDownItem()
+            ->setTag('a')
+            ->setHref('#')
+            ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+            ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+            ->setIcon($this->iconFactory->getIcon('actions-undo', IconSize::SMALL))
+            ->setAttributes(['data-doc-button' => 'resetViewButton']);
+    }
+
     protected function addDownloadButtonToModuleTemplate(): void
     {
         if (!$this->isActionAllowedInCurrentTemplate('download')) {
@@ -2244,6 +2293,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // show columns
         $this->addShowColumnsButtonToViewDropdown();
+
+        // reset view
+        $this->addResetViewButtonToViewDropdown();
     }
 
     protected function addTemplateSelectionToViewDropdown(): void
@@ -2302,7 +2354,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'Default' => [
                 'title' => 'Page List',
                 'icon' => 'actions-list',
-                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
+                'actions' => ['templateSelection', 'showColumns', 'resetView', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
             ],
         ];
     }

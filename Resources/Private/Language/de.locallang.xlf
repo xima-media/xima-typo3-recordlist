@@ -235,6 +235,10 @@
 				<source />
 				<target>Spalten anpassen</target>
 			</trans-unit>
+			<trans-unit id="header.button.resetView" approved="yes">
+				<source />
+				<target>Ansicht zurücksetzen</target>
+			</trans-unit>
 			<trans-unit id="showColumns.filter" approved="yes">
 				<source />
 				<target>Filtern nach</target>
