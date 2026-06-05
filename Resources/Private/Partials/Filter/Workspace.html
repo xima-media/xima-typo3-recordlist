@@ -1,15 +1,12 @@
 <div class="row mb-3">
-    <div class="col-12">
-        <label class="form-label">
-            {f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.column.status')}
-        </label>
-    </div>
-    <div class="col-auto">
+    <div class="col-6">
         <f:render
-            partial="Filter/Checkbox" arguments="{fieldName: 'is_offline', fieldValue: '{settings.{table}.onlyOfflineRecords}', label: '{f:translate(key: \'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy\')}'}" />
+            partial="Filter/Select"
+            arguments="{fieldName: 'is_offline', fieldValue: '{settings.{table}.onlyOfflineRecords}', label: '{f:translate(key: \'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.copy\')}', fieldOptions: colConfig.filter.items}" />
     </div>
-    <div class="col-auto">
+    <div class="col-6">
         <f:render
-            partial="Filter/Checkbox" arguments="{fieldName: 'is_ready_to_publish', fieldValue: '{settings.{table}.onlyReadyToPublish}', label: '{f:translate(key: \'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting\')}'}" />
+            partial="Filter/Select"
+            arguments="{fieldName: 'is_ready_to_publish', fieldValue: '{settings.{table}.onlyReadyToPublish}', label: '{f:translate(key: \'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.label.waiting\')}', fieldOptions: colConfig.filter.items}" />
     </div>
 </div>
