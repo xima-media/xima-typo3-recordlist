@@ -1,11 +1,10 @@
+<f:variable name="optionValueField" value="value" />
+<f:variable name="optionLabelField" value="label" />
 <f:if condition="{colConfig}">
     <f:variable name="fieldName" value="filter[{colConfig.columnName}][value]" />
     <f:variable name="fieldValue" value="{colConfig.filter.value}" />
     <f:variable name="label" value="{colConfig.label}" />
     <f:variable name="fieldOptions" value="{colConfig.filter.items}" />
-    <f:variable name="optionValueField" value="value" />
-    <f:variable name="optionLabelField" value="label" />
-
 </f:if>
 
 <div class="row">

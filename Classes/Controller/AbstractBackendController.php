@@ -376,12 +376,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // demand: offline records (1/3)
         if (isset($body['is_offline']) && !isset($body['reset'])) {
-            $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
+            $rawValue = $body['is_offline'];
+            $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => $rawValue !== '' ? (int)$rawValue : null]);
         }
 
         // demand: readyToPublish (2/3)
         if (isset($body['is_ready_to_publish']) && !isset($body['reset'])) {
-            $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
+            $rawValue = $body['is_ready_to_publish'];
+            $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => $rawValue !== '' ? (int)$rawValue : null]);
         }
 
         // demand: items per page (3/3)
@@ -849,7 +851,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $record['_workspaceVersion'] = is_array($vRecord) ? $vRecord : null;
 
             // demand: readyToPublish
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish')) {
+            $readyToPublishSetting = $this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish');
+            if ($readyToPublishSetting == 1) {
                 $parentIsReady = is_array($vRecord) && $vRecord['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
                 if (!$parentIsReady) {
                     // Live parent may still qualify if it has workspace-modified children.
@@ -866,10 +869,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         continue;
                     }
                 }
+            } elseif ($readyToPublishSetting === -1) {
+                $parentIsReady = is_array($vRecord) && $vRecord['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
+                if ($parentIsReady) {
+                    $record = null;
+                    continue;
+                }
             }
 
             // demand: offline records
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords') && !is_array($vRecord)) {
+            $offlineRecordsSetting = $this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords');
+            if ($offlineRecordsSetting == 1 && !is_array($vRecord)) {
                 $hasChildChanges = false;
                 if ($this::WORKSPACE_ID > 0) {
                     $childRefs = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
@@ -882,6 +892,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $record = null;
                     continue;
                 }
+            } elseif ($offlineRecordsSetting === -1 && is_array($vRecord)) {
+                $record = null;
+                continue;
             }
         }
         unset($record);
@@ -1390,6 +1403,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'active' => false,
                 'filter' => [
                     'partial' => 'Workspace',
+                    'items' => [
+                        0 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.yes'), 'value' => 1],
+                        1 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.no'), 'value' => -1],
+                    ],
                 ],
             ];
         }
@@ -1895,10 +1912,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         // Count workspace filters from module data
-        if ($this->getModuleDataSetting($tableName . '.onlyOfflineRecords')) {
+        if ($this->getModuleDataSetting($tableName . '.onlyOfflineRecords') !== null) {
             $count++;
         }
-        if ($this->getModuleDataSetting($tableName . '.onlyReadyToPublish')) {
+        if ($this->getModuleDataSetting($tableName . '.onlyReadyToPublish') !== null) {
             $count++;
         }
 
