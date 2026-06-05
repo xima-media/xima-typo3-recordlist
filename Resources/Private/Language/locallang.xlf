@@ -171,6 +171,9 @@
 			<trans-unit id="header.button.showColumns">
 				<source>Show columns</source>
 			</trans-unit>
+			<trans-unit id="header.button.resetView">
+				<source>Reset view</source>
+			</trans-unit>
 			<trans-unit id="showColumns.filter">
 				<source>Filter by</source>
 			</trans-unit>

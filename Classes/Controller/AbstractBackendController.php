@@ -354,11 +354,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
         if ($this->request->getMethod() === 'POST') {
             unset($body['__referrer'], $body['__trustedProperties'], $body['is_download']);
 
+            $isReset = isset($body['reset']) || isset($body['reset_view']);
+            $isResetView = isset($body['reset_view']);
+
             // clear moduleData + current request body in case reset button is used for submit
-            if (isset($body['reset'])) {
+            if ($isReset) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
                 unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.isFilterButtonActive'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
+            }
+
+            if ($isResetView) {
+                unset($moduleData['settings'][$tableName . '.activeColumns']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
@@ -1866,6 +1873,36 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->setAttributes(['data-doc-button' => 'showColumnsButton']);
     }
 
+    protected function addResetViewButtonToViewDropdown(): void
+    {
+        if (!$this->isActionAllowedInCurrentTemplate('resetView')) {
+            return;
+        }
+
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-reset-view.js')
+        );
+
+        if ($this->getTypo3Version() === 13) {
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem::class)
+                ->setHref('#')
+                ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+                ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+                ->setIcon($this->iconFactory->getIcon('actions-undo', IconSize::SMALL))
+                ->setAttributes(['data-doc-button' => 'resetViewButton']);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $this->viewDropdownButtons[] = $componentFactory->createDropDownItem()
+            ->setTag('a')
+            ->setHref('#')
+            ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+            ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+            ->setIcon($this->iconFactory->getIcon('actions-undo', IconSize::SMALL))
+            ->setAttributes(['data-doc-button' => 'resetViewButton']);
+    }
+
     protected function addDownloadButtonToModuleTemplate(): void
     {
         if (!$this->isActionAllowedInCurrentTemplate('download')) {
@@ -2220,6 +2257,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // show columns
         $this->addShowColumnsButtonToViewDropdown();
+
+        // reset view
+        $this->addResetViewButtonToViewDropdown();
     }
 
     protected function addTemplateSelectionToViewDropdown(): void
@@ -2278,7 +2318,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'Default' => [
                 'title' => 'Page List',
                 'icon' => 'actions-list',
-                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
+                'actions' => ['templateSelection', 'showColumns', 'resetView', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
             ],
         ];
     }
