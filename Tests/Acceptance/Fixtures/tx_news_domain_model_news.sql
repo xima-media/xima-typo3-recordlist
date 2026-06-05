@@ -124,6 +124,11 @@ VALUES
 (119, 15, 1, 59, 'Jahresend-Leistungsüberprüfung', 'jahresend-leistungsueberprüfung', 'Starke Ergebnisse positionieren Unternehmen für zukünftiges Wachstum', '<p>Die Jahresend-Leistungsüberprüfung zeigt starke Ergebnisse über alle Metriken hinweg.</p><p>Erfolge umfassen Umsatzwachstum, Kundenakquise und operative Verbesserungen.</p>', UNIX_TIMESTAMP('2024-08-06 10:00:00'), 'Joe Price', 'hourly'),
 (120, 15, 1, 60, 'Zukunftspläne und Roadmap enthüllt', 'zukunftsplaene-und-roadmap-enthuellt', 'Strategische Initiativen geben Richtung für kommende Jahre vor', '<p>Unsere zukünftige Roadmap skizziert ehrgeizige Pläne für Innovation und Expansion.</p><p>Schlüsselinitiativen umfassen neue Produktentwicklung und Markteintritt.</p>', UNIX_TIMESTAMP('2024-08-09 14:30:00'), 'Ruby Bennett', 'daily');
 
+-- crdate/tstamp test data for ctrl timestamp field tests
+UPDATE `tx_news_domain_model_news` SET `crdate` = UNIX_TIMESTAMP('2024-01-15 10:00:00'), `tstamp` = UNIX_TIMESTAMP('2024-01-15 10:00:00') WHERE `uid` = 1;
+UPDATE `tx_news_domain_model_news` SET `crdate` = UNIX_TIMESTAMP('2024-01-15 14:30:00'), `tstamp` = UNIX_TIMESTAMP('2024-01-15 14:30:00') WHERE `uid` = 2;
+UPDATE `tx_news_domain_model_news` SET `crdate` = UNIX_TIMESTAMP('2024-02-01 09:15:00'), `tstamp` = UNIX_TIMESTAMP('2024-02-01 09:15:00') WHERE `uid` = 3;
+
 -- Date filter test data for content block date fields (three dbType variants)
 INSERT INTO `tx_news_domain_model_news`
 		(`uid`, `content_blocks_timestamp`, `content_blocks_date`, `content_blocks_datetime`)

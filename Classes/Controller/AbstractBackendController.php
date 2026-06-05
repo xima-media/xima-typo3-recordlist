@@ -611,9 +611,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         if (!empty($filters)) {
+            $ctrl = $GLOBALS['TCA'][$this->getTableName()]['ctrl'] ?? [];
+            $ctrlTimestampFields = array_values(array_filter([
+                $ctrl['crdate'] ?? '',
+                $ctrl['tstamp'] ?? '',
+            ]));
             foreach ($filters as $field => $data) {
-                // Validate field name against TCA
-                if ($field !== 'uid' && !isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$field])) {
+                // Validate field name against TCA columns or ctrl timestamp fields
+                if ($field !== 'uid'
+                    && !isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$field])
+                    && !in_array($field, $ctrlTimestampFields, true)
+                ) {
                     continue;
                 }
                 if (!isset($data['value']) || $data['value'] === '') {
@@ -1392,6 +1400,22 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if ($columnName === $defaultColumn) {
                 $columns[$columnName]['defaultPosition'] = 1;
             }
+        }
+
+        foreach (['crdate', 'tstamp'] as $ctrlKey) {
+            $ctrlField = $GLOBALS['TCA'][$tableName]['ctrl'][$ctrlKey] ?? '';
+            if ($ctrlField === '') {
+                continue;
+            }
+            $columns[$ctrlField] = [
+                'columnName' => $ctrlField,
+                'label' => self::TRANSLATION_PATH . 'table.column.' . $ctrlKey,
+                'partial' => 'DateTime',
+                'active' => false,
+                'filter' => ['partial' => 'DateTime'],
+                'defaultPosition' => 0,
+                'dateFormat' => 'd.m.Y H:i',
+            ];
         }
 
         if ($this::WORKSPACE_ID) {
