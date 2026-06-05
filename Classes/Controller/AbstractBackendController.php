@@ -351,6 +351,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $moduleData = $this->getModuleData();
         $body = $this->request->getParsedBody();
+        $body = is_array($body) ? $body : [];
         $tableName = $this->getTableName();
 
         if ($this->request->getMethod() === 'POST') {
