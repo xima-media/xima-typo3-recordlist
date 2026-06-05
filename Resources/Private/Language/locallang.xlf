@@ -21,6 +21,12 @@
 			<trans-unit id="table.column.pid">
 				<source>Page ID</source>
 			</trans-unit>
+			<trans-unit id="table.column.crdate">
+				<source>Creation date</source>
+			</trans-unit>
+			<trans-unit id="table.column.tstamp">
+				<source>Last modified</source>
+			</trans-unit>
 			<trans-unit id="table.button.reset">
 				<source>Reset</source>
 			</trans-unit>
