@@ -224,7 +224,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->modifyTableConfiguration();
         $this->processTableConfiguration();
 
-        $parsedBody = (array)$this->request->getParsedBody();
+        $parsedBody = $this->request->getParsedBody();
+        $parsedBody = is_array($parsedBody) ? $parsedBody : [];
         if (($parsedBody['is_download'] ?? null) === '1') {
             return $this->downloadRecords();
         }
@@ -569,7 +570,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addSearchConstraint(): void
     {
-        $body = (array)$this->request->getParsedBody();
+        $body = $this->request->getParsedBody();
+        $body = is_array($body) ? $body : [];
         $searchInput = (string)($body['search_field'] ?? '');
         if ($searchInput !== '') {
             $escapedSearchInput = addcslashes($searchInput, '%_');
@@ -600,7 +602,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addFilterConstraint(): void
     {
-        $body = (array)$this->request->getParsedBody();
+        $body = $this->request->getParsedBody();
+        $body = is_array($body) ? $body : [];
         $bodyFilters = (array)($body['filter'] ?? []);
         $tableName = $this->getTableName();
         $tableTca = is_array($GLOBALS['TCA'][$tableName] ?? null) ? $GLOBALS['TCA'][$tableName] : [];
