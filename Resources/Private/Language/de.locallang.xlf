@@ -27,6 +27,14 @@
 				<source />
 				<target>Seiten ID</target>
 			</trans-unit>
+			<trans-unit id="table.column.crdate" approved="yes">
+				<source />
+				<target>Erstellungsdatum</target>
+			</trans-unit>
+			<trans-unit id="table.column.tstamp" approved="yes">
+				<source />
+				<target>Zuletzt geändert</target>
+			</trans-unit>
 			<trans-unit id="table.button.reset" approved="yes">
 				<source />
 				<target>Zurücksetzen</target>

@@ -29,3 +29,21 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: '#^Offset ''TCA'' on array\<mixed, mixed\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: Classes/Utility/RelationResolver.php
+
+		-
+			message: '#^Offset mixed on null in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 3
+			path: Classes/Utility/RelationResolver.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 4
+			path: Classes/Utility/RelationResolver.php
