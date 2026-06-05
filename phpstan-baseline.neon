@@ -23,9 +23,3 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: Classes/Controller/AbstractBackendController.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between ''all''\|numeric\-string and int will always evaluate to false\.$#'
-			identifier: identical.alwaysFalse
-			count: 1
-			path: Classes/Controller/AbstractBackendController.php
