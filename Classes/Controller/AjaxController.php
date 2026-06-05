@@ -11,6 +11,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\DataHandling\History\RecordHistoryStore;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -98,6 +99,73 @@ class AjaxController
         $dataHandler->process_cmdmap();
 
         return $this->responseFactory->createResponse();
+    }
+
+    /**
+     * @throws Exception|\Doctrine\DBAL\Exception
+     */
+    public function recordHistory(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = $request->getParsedBody();
+        $table = $body['table'] ?? '';
+        $uid = (int)($body['uid'] ?? 0);
+
+        if ($table === '' || $uid === 0) {
+            return $this->responseFactory->createResponse(400);
+        }
+
+        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_history');
+        $rows = $qb
+            ->select('h.uid', 'h.tstamp', 'h.actiontype', 'h.history_data', 'u.username')
+            ->from('sys_history', 'h')
+            ->leftJoin('h', 'be_users', 'u', $qb->expr()->eq('h.userid', $qb->quoteIdentifier('u.uid')))
+            ->where(
+                $qb->expr()->eq('h.tablename', $qb->createNamedParameter($table)),
+                $qb->expr()->eq('h.recuid', $qb->createNamedParameter($uid, Connection::PARAM_INT)),
+                $qb->expr()->neq('h.actiontype', $qb->createNamedParameter(RecordHistoryStore::ACTION_STAGECHANGE, Connection::PARAM_INT))
+            )
+            ->orderBy('h.tstamp', 'DESC')
+            ->setMaxResults(50)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $entries = [];
+        foreach ($rows as $row) {
+            $historyData = $row['history_data'];
+            $fieldChanges = [];
+
+            if ($historyData !== null) {
+                if (str_starts_with($historyData, 'a')) {
+                    $decoded = unserialize($historyData, ['allowed_classes' => false]);
+                } else {
+                    $decoded = json_decode($historyData, true);
+                }
+
+                if (is_array($decoded)) {
+                    $newRecord = $decoded['newRecord'] ?? [];
+                    $oldRecord = $decoded['oldRecord'] ?? [];
+                    foreach ($newRecord as $field => $newValue) {
+                        $fieldChanges[] = [
+                            'field' => $field,
+                            'oldValue' => $oldRecord[$field] ?? null,
+                            'newValue' => $newValue,
+                        ];
+                    }
+                }
+            }
+
+            $entries[] = [
+                'tstamp' => (int)$row['tstamp'],
+                'user' => $row['username'] ?? 'System',
+                'actiontype' => (int)$row['actiontype'],
+                'fieldChanges' => $fieldChanges,
+            ];
+        }
+
+        $response = $this->responseFactory->createResponse()
+            ->withHeader('Content-Type', 'application/json; charset=utf-8');
+        $response->getBody()->write((string)json_encode($entries));
+        return $response;
     }
 
     protected function getBackendAuthentication(): BackendUserAuthentication

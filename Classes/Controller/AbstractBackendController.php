@@ -1487,6 +1487,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'Changelog',
                 'Revert',
                 'View',
+                'History',
             ],
             'actions' => [
                 'EditOriginal',

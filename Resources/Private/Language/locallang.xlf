@@ -96,6 +96,9 @@
 			<trans-unit id="table.button.changelog">
 				<source>View changes</source>
 			</trans-unit>
+			<trans-unit id="table.button.history">
+				<source>Show history</source>
+			</trans-unit>
 			<trans-unit id="table.button.translate">
 				<source>Translate record</source>
 			</trans-unit>
@@ -155,6 +158,15 @@
 			</trans-unit>
 			<trans-unit id="modal.delete.button.confirm">
 				<source>Yes, delete</source>
+			</trans-unit>
+			<trans-unit id="modal.history.title">
+				<source>Record history</source>
+			</trans-unit>
+			<trans-unit id="modal.history.noEntries">
+				<source>No history entries found.</source>
+			</trans-unit>
+			<trans-unit id="modal.history.close">
+				<source>Close</source>
 			</trans-unit>
 			<trans-unit id="notification.delete.success.title">
 				<source>File deleted</source>
