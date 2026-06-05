@@ -224,7 +224,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->modifyTableConfiguration();
         $this->processTableConfiguration();
 
-        if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
+        $parsedBody = $this->request->getParsedBody();
+        $parsedBody = is_array($parsedBody) ? $parsedBody : [];
+        if (($parsedBody['is_download'] ?? null) === '1') {
             return $this->downloadRecords();
         }
 
@@ -417,10 +419,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $languages[-1]['uid'] = 'all';
         }
 
-        $activeLanguage = $this->getActiveLanguage();
+        $activeLanguage = (string)$this->getActiveLanguage();
         foreach ($languages as &$language) {
             // needs to be strict type checking as this is not possible in fluid
-            if ((string)$language['uid'] === $activeLanguage) {
+            if ((string)($language['uid'] ?? '') === $activeLanguage) {
                 $language['active'] = true;
             }
         }
@@ -576,8 +578,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addSearchConstraint(): void
     {
         $body = $this->request->getParsedBody();
-        if (isset($body['search_field']) && $body['search_field']) {
-            $searchInput = $body['search_field'];
+        $body = is_array($body) ? $body : [];
+        $searchInput = (string)($body['search_field'] ?? '');
+        if ($searchInput !== '') {
             $escapedSearchInput = addcslashes($searchInput, '%_');
             $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'];
             $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
@@ -607,7 +610,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addFilterConstraint(): void
     {
         $body = $this->request->getParsedBody();
+        $body = is_array($body) ? $body : [];
         $bodyFilters = (array)($body['filter'] ?? []);
+        $tableName = $this->getTableName();
+        $tableTca = is_array($GLOBALS['TCA'][$tableName] ?? null) ? $GLOBALS['TCA'][$tableName] : [];
+        $columns = is_array($tableTca['columns'] ?? null) ? $tableTca['columns'] : [];
 
         // Merge default filters — user-submitted values take precedence per field
         $filters = $bodyFilters;
@@ -619,19 +626,23 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         if (!empty($filters)) {
             foreach ($filters as $field => $data) {
+                if (!is_array($data)) {
+                    continue;
+                }
                 // Validate field name against TCA
-                if ($field !== 'uid' && !isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$field])) {
+                if ($field !== 'uid' && !isset($columns[$field])) {
                     continue;
                 }
                 if (!isset($data['value']) || $data['value'] === '') {
                     continue;
                 }
 
-                $columnType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['type'] ?? '';
+                $fieldConfig = is_array($columns[$field]['config'] ?? null) ? $columns[$field]['config'] : [];
+                $columnType = (string)($fieldConfig['type'] ?? '');
 
                 if (in_array($columnType, ['select', 'category', 'group', 'inline'], true)) {
                     $filterResult = $this->relationResolver->resolveForFilter(
-                        $this->getTableName(),
+                        $tableName,
                         $field,
                         $data['value'],
                         $this::WORKSPACE_ID
@@ -640,8 +651,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     continue;
                 }
 
-                if (isset($data['dataType']) && $data['dataType'] === 'date') {
-                    $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
+                if (($data['dataType'] ?? null) === 'date') {
+                    $dbType = (string)($fieldConfig['dbType'] ?? '');
                     $date = date('Y-m-d', strtotime($data['value']));
                     if ($dbType === 'date' || $dbType === 'datetime') {
                         $leftExpr = 'DATE(t1.' . $field . ')';
