@@ -127,6 +127,10 @@
 				<source />
 				<target>Änderungen anzeigen</target>
 			</trans-unit>
+			<trans-unit id="table.button.history" approved="yes">
+				<source />
+				<target>Verlauf anzeigen</target>
+			</trans-unit>
 			<trans-unit id="table.button.translate" approved="yes">
 				<source />
 				<target>Übersetzung erstellen</target>
@@ -206,6 +210,18 @@
 			<trans-unit id="modal.delete.button.confirm" approved="yes">
 				<source />
 				<target>Ja, löschen</target>
+			</trans-unit>
+			<trans-unit id="modal.history.title" approved="yes">
+				<source />
+				<target>Datensatz-Verlauf</target>
+			</trans-unit>
+			<trans-unit id="modal.history.noEntries" approved="yes">
+				<source />
+				<target>Keine Verlaufseinträge gefunden.</target>
+			</trans-unit>
+			<trans-unit id="modal.history.close" approved="yes">
+				<source />
+				<target>Schließen</target>
 			</trans-unit>
 			<trans-unit id="notification.delete.success.title" approved="yes">
 				<source />

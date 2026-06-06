@@ -21,24 +21,67 @@ const STYLES = `
   /* toolbar */
   .xima-history-toolbar {
     display: flex; align-items: center; justify-content: flex-end;
-    padding-bottom: .625rem; margin-bottom: .125rem;
+    padding-bottom: .625rem; margin-bottom: .75rem;
     border-bottom: 1px solid var(--typo3-component-border-color, #dee2e6);
   }
   .xima-history-toolbar .form-check-label { font-size: .8125rem; cursor: pointer; }
 
+  /* timeline */
+  .xima-history-timeline {
+    position: relative;
+    padding-left: 3rem;
+  }
+  .xima-history-timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 2.5rem;
+    bottom: .5rem;
+    width: 2px;
+    background: var(--typo3-component-border-color, #e5e7eb);
+    border-radius: 1px;
+  }
+
   /* entries */
-  .xima-history-entry { padding: .875rem 0; border-bottom: 1px solid var(--typo3-component-border-color, #dee2e6); }
-  .xima-history-entry:last-child { border-bottom: none; padding-bottom: 0; }
-  .xima-history-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .625rem; flex-wrap: wrap; }
-  .xima-history-user { display: inline-flex; align-items: center; gap: .375rem; font-weight: 600; font-size: .9375rem; }
-  .xima-history-avatar {
+  .xima-history-entry {
+    position: relative;
+    padding-bottom: 1.75rem;
+  }
+  .xima-history-entry:last-child { padding-bottom: 0; }
+
+  /* avatar node — sits on the timeline line */
+  .xima-history-node {
+    position: absolute;
+    left: -3rem;
+    top: 0;
+    width: 2rem;
+    height: 2rem;
+    z-index: 1;
+    background: var(--typo3-component-modal-bg, #fff);
+    border-radius: 50%;
+  }
+  /* TYPO3 avatar wrapper injected via innerHTML */
+  .xima-history-node .avatar { --avatar-size: 2rem !important; display: block !important; }
+  .xima-history-node .avatar-image { display: block !important; }
+  .xima-history-node .avatar-image img {
+    width: 2rem !important; height: 2rem !important;
+    border-radius: 50%; object-fit: cover; display: block;
+  }
+  /* fallback initials circle */
+  .xima-history-avatar-fallback {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 1.625rem; height: 1.625rem; border-radius: 50%;
+    width: 2rem; height: 2rem; border-radius: 50%;
     background: var(--typo3-state-info-background, #cff4fc);
     color: var(--typo3-state-info-color, #055160);
-    font-size: .6875rem; font-weight: 700; flex-shrink: 0; line-height: 1;
-    border: 1px solid rgba(0,0,0,.06);
+    font-size: .6875rem; font-weight: 700; line-height: 1;
   }
+
+  /* entry header */
+  .xima-history-header {
+    display: flex; align-items: center; gap: .5rem;
+    min-height: 2rem; margin-bottom: .625rem; flex-wrap: wrap;
+  }
+  .xima-history-user { font-weight: 600; font-size: .9375rem; }
   .xima-history-date { margin-left: auto; font-size: .8125rem; color: var(--typo3-text-color-muted, #6c757d); white-space: nowrap; }
 
   /* diff list */
@@ -46,11 +89,8 @@ const STYLES = `
   .xima-history-field { display: flex; flex-direction: column; gap: .3rem; }
   .xima-history-field-name { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--typo3-text-color-muted, #6c757d); }
 
-  /* system-field visibility — controlled by wrapper class */
-  .xima-history-field[data-system] { }
+  /* system-field visibility — toggled via wrapper class */
   .xima-history--hide-system .xima-history-field[data-system] { display: none; }
-
-  /* notice shown when all fields of an entry are system fields */
   .xima-history-only-system { display: none; font-size: .8125rem; font-style: italic; color: var(--typo3-text-color-muted, #6c757d); padding: .25rem 0; }
   .xima-history--hide-system .xima-history-entry--all-system .xima-history-only-system { display: block; }
   .xima-history--hide-system .xima-history-entry--all-system .xima-history-diff { display: none; }
@@ -150,9 +190,12 @@ export default class RecordlistActionHistory {
 
     wrap.appendChild(this.buildToolbar(wrap));
 
+    const timeline = document.createElement("div");
+    timeline.className = "xima-history-timeline";
     for (const entry of entries) {
-      wrap.appendChild(this.buildEntry(entry));
+      timeline.appendChild(this.buildEntry(entry));
     }
+    wrap.appendChild(timeline);
 
     if (this.getHideSystemPref()) {
       wrap.classList.add("xima-history--hide-system");
@@ -192,6 +235,20 @@ export default class RecordlistActionHistory {
   buildEntry(entry) {
     const el = document.createElement("div");
     el.className = "xima-history-entry";
+
+    // Avatar node — sits on the timeline vertical line
+    const node = document.createElement("div");
+    node.className = "xima-history-node";
+    if (entry.avatarHtml) {
+      node.innerHTML = entry.avatarHtml;
+    } else {
+      const fallback = document.createElement("span");
+      fallback.className = "xima-history-avatar-fallback";
+      fallback.textContent = (entry.user || "?").charAt(0).toUpperCase();
+      node.appendChild(fallback);
+    }
+    el.appendChild(node);
+
     el.appendChild(this.buildHeader(entry));
 
     if (entry.fieldChanges && entry.fieldChanges.length > 0) {
@@ -215,16 +272,7 @@ export default class RecordlistActionHistory {
 
     const user = document.createElement("span");
     user.className = "xima-history-user";
-
-    const avatar = document.createElement("span");
-    avatar.className = "xima-history-avatar";
-    avatar.textContent = (entry.user || "?").charAt(0).toUpperCase();
-
-    const username = document.createElement("span");
-    username.textContent = entry.user || "System";
-
-    user.appendChild(avatar);
-    user.appendChild(username);
+    user.textContent = entry.user || "System";
     header.appendChild(user);
 
     const badge = document.createElement("span");

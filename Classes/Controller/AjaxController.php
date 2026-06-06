@@ -6,6 +6,7 @@ use Doctrine\DBAL\Driver\Exception;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Backend\Backend\Avatar\Avatar;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
@@ -114,9 +115,28 @@ class AjaxController
             return $this->responseFactory->createResponse(400);
         }
 
+        if (!$this->getBackendAuthentication()->check('tables_select', $table)) {
+            return $this->responseFactory->createResponse(403);
+        }
+
+        $record = BackendUtility::getRecord($table, $uid, 'uid,pid');
+        if (!$record) {
+            return $this->responseFactory->createResponse(404);
+        }
+
+        if ((int)$record['pid'] > 0) {
+            $pageAccess = BackendUtility::readPageAccess(
+                $record['pid'],
+                $this->getBackendAuthentication()->getPagePermsClause(Permission::PAGE_SHOW)
+            );
+            if ($pageAccess === false) {
+                return $this->responseFactory->createResponse(403);
+            }
+        }
+
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_history');
         $rows = $qb
-            ->select('h.uid', 'h.tstamp', 'h.actiontype', 'h.history_data', 'u.username')
+            ->select('h.uid', 'h.tstamp', 'h.actiontype', 'h.history_data', 'h.userid', 'u.username')
             ->from('sys_history', 'h')
             ->leftJoin('h', 'be_users', 'u', $qb->expr()->eq('h.userid', $qb->quoteIdentifier('u.uid')))
             ->where(
@@ -128,6 +148,9 @@ class AjaxController
             ->setMaxResults(50)
             ->executeQuery()
             ->fetchAllAssociative();
+
+        $avatarCache = [];
+        $avatarRenderer = GeneralUtility::makeInstance(Avatar::class);
 
         $entries = [];
         foreach ($rows as $row) {
@@ -154,9 +177,18 @@ class AjaxController
                 }
             }
 
+            $userId = (int)$row['userid'];
+            if (!isset($avatarCache[$userId])) {
+                $userRecord = $userId > 0 ? BackendUtility::getRecord('be_users', $userId) : null;
+                $avatarCache[$userId] = $userRecord
+                    ? $avatarRenderer->render($userRecord, 32, false)
+                    : '';
+            }
+
             $entries[] = [
                 'tstamp' => (int)$row['tstamp'],
                 'user' => $row['username'] ?? 'System',
+                'avatarHtml' => $avatarCache[$userId],
                 'actiontype' => (int)$row['actiontype'],
                 'fieldChanges' => $fieldChanges,
             ];
