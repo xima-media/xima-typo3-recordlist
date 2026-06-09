@@ -42,6 +42,13 @@
                     <f:render partial="ColumnsSettings" arguments="{_all}" />
                 </div>
 
+                <f:if condition="{fullRecordCount} == 0">
+                <f:then>
+                    <f:render section="EmptyState" arguments="{_all}" optional="true">
+                        <f:render partial="EmptyState" arguments="{_all}" />
+                    </f:render>
+                </f:then>
+                <f:else>
                 <div class="row">
                     <div class="col-12">
                         <f:variable name="isFilterActive" value="{settings.{table}.isFilterButtonActive}" />
@@ -193,6 +200,8 @@
                             </tbody>
                         </table>
                     </main>
+                </f:if>
+                </f:else>
                 </f:if>
             </f:form>
         </f:render>

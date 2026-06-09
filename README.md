@@ -205,6 +205,33 @@ class NewsController extends AbstractBackendController
 
 Create corresponding template files (e.g., `Default.html`, `Cards.html`) in your `Templates` directory.
 
+### Empty State
+
+When a table contains no records at all (the total record count is zero, independent of any active search or filter), the list view
+renders a customizable info box instead of an empty table with a search bar. Use it to guide editors — how to create the first record,
+where records are stored, how the module's entry point is configured, or links to documentation.
+
+There are two ways to customize it:
+
+1. **Override the partial** — copy [EmptyState.html](Resources/Private/Partials/EmptyState.html) into the `Partials` directory of
+   your template override path and adjust its content.
+2. **Override the section** — define an `EmptyState` section in your `Default.html` template; it takes precedence over the default
+   partial:
+
+   ```html
+   <f:section name="EmptyState">
+       <f:be.infobox title="No news yet" state="-1">
+           Create your first news entry via the "New" button, or import existing content.
+           See the <f:link.external uri="https://example.com/docs">documentation</f:link.external>.
+       </f:be.infobox>
+   </f:section>
+   ```
+
+The default headline and text are translatable via the `emptyState.headline` and `emptyState.text` labels.
+
+> **Note:** The empty state is part of the layout's default `Content` rendering. If your template overrides the entire `Content`
+> section, it bypasses this logic and must render its own empty state.
+
 **Configuration Options:**
 
 | Key       | Description                                |

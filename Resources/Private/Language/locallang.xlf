@@ -117,6 +117,12 @@
 			<trans-unit id="search.noResults.text">
 				<source>No records match your current search or filter criteria. Try adjusting your filters or reset them.</source>
 			</trans-unit>
+			<trans-unit id="emptyState.headline">
+				<source>No records yet</source>
+			</trans-unit>
+			<trans-unit id="emptyState.text">
+				<source>There are no records here yet. Once the first record is created, it will appear in this list.</source>
+			</trans-unit>
 			<trans-unit id="table.button.save">
 				<source>Save</source>
 			</trans-unit>
