@@ -34,6 +34,11 @@ class CategoryTreeController
      */
     protected int $levelsToFetch = 2;
 
+    /**
+     * Cached result of whether the current backend user may modify sys_category records.
+     */
+    private ?bool $userCanModifyCategories = null;
+
     public function __construct(
         protected readonly IconFactory $iconFactory,
         protected readonly UriBuilder $uriBuilder,
@@ -101,6 +106,16 @@ class CategoryTreeController
     protected function getBackendUser(): BackendUserAuthentication
     {
         return $GLOBALS['BE_USER'];
+    }
+
+    /**
+     * Whether the current backend user is allowed to modify sys_category records.
+     * Admins always pass; otherwise the table must be in the user's "tables_modify" list.
+     * DataHandler still enforces record-level access on the actual write.
+     */
+    protected function userCanModifyCategories(): bool
+    {
+        return $this->userCanModifyCategories ??= $this->getBackendUser()->check('tables_modify', 'sys_category');
     }
 
     protected function getLanguageService(): ?LanguageService
@@ -186,6 +201,8 @@ class CategoryTreeController
             'depth' => $depth,
             'icon' => $icon->getIdentifier(),
             'overlayIcon' => $icon->getOverlayIcon()?->getIdentifier() ?? '',
+            'editable' => $this->userCanModifyCategories(),
+            'deletable' => $this->userCanModifyCategories(),
             'hasChildren' => $hasChildren,
             'loaded' => $hasChildren && $depth < $this->levelsToFetch, // Mark as loaded if children are included
             'doktype' => 0,
