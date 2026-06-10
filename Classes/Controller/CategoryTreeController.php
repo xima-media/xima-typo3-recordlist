@@ -212,7 +212,7 @@ class CategoryTreeController
         //    $this->alternativeEntryPoints = array_map(intval(...), $this->alternativeEntryPoints);
         //    $this->alternativeEntryPoints = array_unique($this->alternativeEntryPoints);
         //}
-        //$userTsConfig = $this->getBackendUser()->getTSConfig();
+        $userTsConfig = $this->getBackendUser()->getTSConfig();
         $this->hiddenRecords = GeneralUtility::intExplode(
             ',',
             (string)($userTsConfig['options.']['hideRecords.']['pages'] ?? ''),
