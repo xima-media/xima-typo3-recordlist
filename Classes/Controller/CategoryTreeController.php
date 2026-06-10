@@ -438,7 +438,7 @@ class CategoryTreeController
 
     protected function filterCategoriesBySearchQuery(array $categories, string $searchQuery): array
     {
-        $searchQuery = strtolower(trim($searchQuery));
+        $searchQuery = mb_strtolower(trim($searchQuery));
         $matched = [];
 
         foreach ($categories as $category) {
@@ -453,7 +453,7 @@ class CategoryTreeController
 
     protected function categoryMatchesSearch(array $category, string $searchQuery): array
     {
-        $title = strtolower($category['title'] ?? '');
+        $title = mb_strtolower($category['title'] ?? '');
         $matches = str_contains($title, $searchQuery);
 
         // Check children recursively
