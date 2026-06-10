@@ -57,6 +57,7 @@ class CategoryTreeController
             'allowDragMove' => true,
             'doktypes' => $doktypes,
             'typeField' => $recordTypeField,
+            'canModify' => $this->userCanModifyCategories(),
             'displayDeleteConfirmation' => $this->getBackendUser()->jsConfirmation(JsConfirmation::DELETE),
             'temporaryMountPoint' => null,
             'showIcons' => true,

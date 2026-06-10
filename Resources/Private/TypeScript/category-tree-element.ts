@@ -574,7 +574,7 @@ class PageTreeToolbar extends TreeToolbar {
               return '';
             }
             const doktypes = this.tree.settings.doktypes;
-            if (doktypes && doktypes.length) {
+            if (this.tree.settings.canModify && doktypes && doktypes.length) {
               return doktypes.map((item: any) => {
                 return html`
                   <div
