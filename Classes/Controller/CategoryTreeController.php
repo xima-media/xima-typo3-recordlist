@@ -174,9 +174,9 @@ class CategoryTreeController
     protected function categoryToFlatArray(array $category, int $entryPoint, int $depth = 0): array
     {
         $categoryId = (int)$category['uid'];
-        $identifier = $entryPoint . '_cat_' . $categoryId;
         $items = [];
         $hasChildren = !empty($category['children']);
+        $icon = $this->iconFactory->getIconForRecord('sys_category', $category, IconSize::SMALL);
 
         $item = [
             'identifier' => (string)$categoryId,
@@ -184,8 +184,8 @@ class CategoryTreeController
             'recordType' => 'sys_category',
             'name' => htmlspecialchars($category['title'] ?? ''),
             'depth' => $depth,
-            'icon' => $this->iconFactory->getIconForRecord('sys_category', $category, IconSize::SMALL)->getIdentifier(),
-            'overlayIcon' => $this->iconFactory->getIconForRecord('sys_category', $category, IconSize::SMALL)?->getOverlayIcon()?->getIdentifier() ?? '',
+            'icon' => $icon->getIdentifier(),
+            'overlayIcon' => $icon->getOverlayIcon()?->getIdentifier() ?? '',
             'hasChildren' => $hasChildren,
             'loaded' => $hasChildren && $depth < $this->levelsToFetch, // Mark as loaded if children are included
             'doktype' => 0,
