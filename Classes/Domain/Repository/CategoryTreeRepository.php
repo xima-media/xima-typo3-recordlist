@@ -4,6 +4,7 @@ namespace Xima\XimaTypo3Recordlist\Domain\Repository;
 
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class CategoryTreeRepository
@@ -28,6 +29,7 @@ class CategoryTreeRepository
     public function getTree(int $startParent = 0): array
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('sys_category');
+        $queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
         $categories = $queryBuilder
             ->select('*')
             ->from('sys_category')

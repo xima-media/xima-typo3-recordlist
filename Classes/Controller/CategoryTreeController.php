@@ -354,6 +354,7 @@ class CategoryTreeController
             'name' => htmlspecialchars($category['title'] ?? ''),
             'depth' => $depth,
             'icon' => $this->iconFactory->getIconForRecord('sys_category', $category, IconSize::SMALL)->getIdentifier(),
+            'overlayIcon' => $this->iconFactory->getIconForRecord('sys_category', $category, IconSize::SMALL)?->getOverlayIcon()?->getIdentifier() ?? '',
             'hasChildren' => $hasChildren,
             'loaded' => $hasChildren && $depth < $this->levelsToFetch, // Mark as loaded if children are included
             'doktype' => 0,
