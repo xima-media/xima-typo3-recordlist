@@ -2,12 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
-
-### Added
-- Selection actions: register custom batch actions on selected records via `tableConfiguration['selectionActions']` and `handleSelectionAction()` override ([#48](https://github.com/xima-media/xima-typo3-recordlist/issues/48))
-- Empty state: when a table has no records at all, a customizable info box is shown instead of an empty list with search bar — override the `EmptyState` partial or section ([#87](https://github.com/xima-media/xima-typo3-recordlist/issues/87))
-
 ## [14.x] - Multiple Tables Support, Template Configuration, View Dropdown & Row Selection
 
 ### Features
