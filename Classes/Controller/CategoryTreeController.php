@@ -111,7 +111,6 @@ class CategoryTreeController
     public function fetchDataAction(ServerRequestInterface $request): ResponseInterface
     {
         $this->initializeConfiguration();
-        $categories = $this->categoryTreeRepository->getTree();
 
         $items = [];
         $parentIdentifier = $request->getQueryParams()['parent'] ?? null;
@@ -132,6 +131,7 @@ class CategoryTreeController
 
             $this->levelsToFetch = $originalLevelsToFetch;
         } else {
+            $categories = $this->categoryTreeRepository->getTree();
             // Root element — resets category filter when clicked
             $allCategoriesTitle = $this->getLanguageService()->sL(
                 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:tree.allCategories'
