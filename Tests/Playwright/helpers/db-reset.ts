@@ -28,6 +28,10 @@ export function resetUserPreferences(): void {
   mysql(`UPDATE be_users SET uc = '${DEFAULT_UC}';`);
 }
 
+export function truncateTable(tableName: string): void {
+  mysql(`SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE \`${tableName}\`; SET FOREIGN_KEY_CHECKS = 1;`);
+}
+
 export function resetDatabase(): void {
   const tables = fs.readdirSync(FIXTURE_PATH)
     .filter(f => f.endsWith('.sql'))
