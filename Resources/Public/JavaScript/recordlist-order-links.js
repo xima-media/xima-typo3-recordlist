@@ -21,9 +21,11 @@ export default class RecordlistOrderLinks {
     const fieldInput = document.querySelector("input[name=\"order_field\"]");
     const directionInput = document.querySelector("input[name=\"order_direction\"]");
 
-    // Set the hidden inputs and submit the form
-    fieldInput.value = field;
-    directionInput.value = direction;
+    // Clicking the currently active ordering again unsets it and restores the default ordering;
+    // otherwise apply the clicked field and direction.
+    const isActive = fieldInput.value === field && directionInput.value === direction;
+    fieldInput.value = isActive ? "" : field;
+    directionInput.value = isActive ? "" : direction;
     fieldInput.closest("form").submit();
 
     // Close the dropdown menu

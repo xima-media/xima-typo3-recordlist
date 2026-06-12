@@ -97,6 +97,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $tableConfiguration = [];
 
+    protected string $orderField = '';
+
+    protected string $orderDirection = 'ASC';
+
+    protected bool $orderIsCustom = false;
+
     protected EditableArrayPaginator $paginator;
 
     protected array $viewDropdownButtons = [];
@@ -830,10 +836,44 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $this->queryBuilder->addOrderBy($instruction['field'], $instruction['direction']);
         }
 
+        // remember the resolved ordering so action availability (e.g. sorting buttons) can rely on it
+        $this->orderField = (string)$orderInstructions[0]['field'];
+        $this->orderDirection = (string)$orderInstructions[0]['direction'];
+        $this->orderIsCustom = $orderIsCustom;
+
         // assign to view
-        $this->moduleTemplate->assign('order_field', $orderInstructions[0]['field']);
-        $this->moduleTemplate->assign('order_direction', $orderInstructions[0]['direction']);
-        $this->moduleTemplate->assign('order_is_custom', $orderIsCustom);
+        $this->moduleTemplate->assign('order_field', $this->orderField);
+        $this->moduleTemplate->assign('order_direction', $this->orderDirection);
+        $this->moduleTemplate->assign('order_is_custom', $this->orderIsCustom);
+    }
+
+    protected function getSortByField(): string
+    {
+        return (string)($GLOBALS['TCA'][$this->getTableName()]['ctrl']['sortby'] ?? '');
+    }
+
+    /**
+     * Sorting actions (move up / move down) may only be offered when the list is currently
+     * displayed in the table's manual sort order. If the user ordered the list by a different
+     * column or direction, the visible order no longer matches the stored `sortby` value, so the
+     * up/down buttons would move records in a way that does not reflect what the user sees.
+     */
+    protected function isSortingActionAvailable(): bool
+    {
+        return $this->canRenderSortingActions($this->getSortByField(), $this->orderField, $this->orderDirection);
+    }
+
+    /**
+     * Pure decision: sorting actions are available only for a configured `sortby` field that is
+     * also the field the list is currently ordered by, ascending.
+     */
+    protected function canRenderSortingActions(string $sortByField, string $orderField, string $orderDirection): bool
+    {
+        if ($sortByField === '') {
+            return false;
+        }
+
+        return $orderField === $sortByField && strtoupper($orderDirection) === 'ASC';
     }
 
     protected function addBasicQueryConstraints(): void
@@ -1478,20 +1518,27 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         ksort($columns);
 
+        $groupActions = [
+            'Translate',
+            'TranslateDeepl',
+            'Edit',
+            'HiddenToggle',
+            'Duplicate',
+            'Changelog',
+            'Revert',
+            'View',
+        ];
+
+        // prepend manual sorting buttons only when the list is shown in its `sortby` order
+        if ($this->isSortingActionAvailable()) {
+            array_unshift($groupActions, 'Sorting');
+        }
+
         $this->tableConfiguration[$tableName] = [
             'columns' => $columns,
             'showCheckboxColumn' => true,
             'showIconColumn' => true,
-            'groupActions' => [
-                'Translate',
-                'TranslateDeepl',
-                'Edit',
-                'HiddenToggle',
-                'Duplicate',
-                'Changelog',
-                'Revert',
-                'View',
-            ],
+            'groupActions' => $groupActions,
             'actions' => [
                 'EditOriginal',
                 'ReadyToPublish',

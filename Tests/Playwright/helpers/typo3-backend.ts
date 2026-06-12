@@ -1,4 +1,5 @@
 import { Page, FrameLocator } from '@playwright/test';
+import type { Locator } from '@playwright/test';
 
 export async function loginAsAdmin(page: Page): Promise<void> {
   await page.goto('/typo3');
@@ -63,6 +64,12 @@ export async function selectLanguage(contentFrame: FrameLocator, languageName: s
     await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
     await waitForReload(contentFrame);
   }
+}
+
+export async function moveRecord(contentFrame: FrameLocator, row: Locator, direction: 'up' | 'down'): Promise<void> {
+  // Sorting buttons POST via AJAX and reload the iframe on success
+  await row.locator(`a[data-sorting-move="${direction}"]`).evaluate((el) => (el as HTMLElement).click());
+  await waitForReload(contentFrame);
 }
 
 export async function sortBy(contentFrame: FrameLocator, columnName: string, direction: 'ASC' | 'DESC' = 'ASC'): Promise<void> {

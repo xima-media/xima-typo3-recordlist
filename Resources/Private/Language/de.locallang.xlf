@@ -147,6 +147,14 @@
 				<source />
 				<target>Datensatz einblenden</target>
 			</trans-unit>
+			<trans-unit id="table.button.moveUp" approved="yes">
+				<source />
+				<target>Datensatz nach oben verschieben</target>
+			</trans-unit>
+			<trans-unit id="table.button.moveDown" approved="yes">
+				<source />
+				<target>Datensatz nach unten verschieben</target>
+			</trans-unit>
 			<trans-unit id="search.noResults.headline" approved="yes">
 				<source />
 				<target>Keine Ergebnisse gefunden</target>
@@ -419,6 +427,14 @@
 				<source />
 				<target>Der Datensatz konnte nicht aktualisiert werden</target>
 			</trans-unit>
+			<trans-unit id="sorting.error.title" approved="yes">
+				<source />
+				<target>Fehler</target>
+			</trans-unit>
+			<trans-unit id="sorting.error.message" approved="yes">
+				<source />
+				<target>Der Datensatz konnte nicht verschoben werden</target>
+			</trans-unit>
 			<trans-unit id="download.modal.title" approved="yes">
 				<source />
 				<target>Datensätze herunterladen</target>
@@ -474,6 +490,18 @@
 			<trans-unit id="ajax.error.recordNotFound" approved="yes">
 				<source />
 				<target>Datensatz nicht gefunden</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.invalidDirection" approved="yes">
+				<source />
+				<target>Ungültige Verschieberichtung</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.tableNotSortable" approved="yes">
+				<source />
+				<target>Für die Tabelle ist keine manuelle Sortierung konfiguriert</target>
+			</trans-unit>
+			<trans-unit id="ajax.error.moveFailed" approved="yes">
+				<source />
+				<target>Der Datensatz konnte nicht verschoben werden</target>
 			</trans-unit>
 			<trans-unit id="badge.showMore">
 				<source />

@@ -1,0 +1,26 @@
+{namespace be=TYPO3\CMS\Backend\ViewHelpers}
+
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-action-sorting.js'}" />
+
+<f:if condition="{item.editable}">
+    <div class="btn-group">
+        <a
+            href="#"
+            class="btn btn-default {f:if(condition: recordIsFirst, then: 'disabled')}"
+            data-sorting-move="up"
+            aria-disabled="{f:if(condition: recordIsFirst, then: 'true', else: 'false')}"
+            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.moveUp')}"
+            data-bs-toggle="tooltip">
+            <core:icon identifier="actions-move-up" size="small" />
+        </a>
+        <a
+            href="#"
+            class="btn btn-default {f:if(condition: recordIsLast, then: 'disabled')}"
+            data-sorting-move="down"
+            aria-disabled="{f:if(condition: recordIsLast, then: 'true', else: 'false')}"
+            title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.moveDown')}"
+            data-bs-toggle="tooltip">
+            <core:icon identifier="actions-move-down" size="small" />
+        </a>
+    </div>
+</f:if>
