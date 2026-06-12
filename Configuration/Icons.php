@@ -29,4 +29,8 @@ return [
         'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
         'source' => 'EXT:xima_typo3_recordlist/Resources/Public/Icons/example-6.svg',
     ],
+    'module-example-7' => [
+        'provider' => \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
+        'source' => 'EXT:xima_typo3_recordlist/Resources/Public/Icons/example-7.svg',
+    ],
 ];

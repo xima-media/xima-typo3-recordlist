@@ -13,21 +13,6 @@ return [
         'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_module_group.xlf',
         'iconIdentifier' => 'modulegroup-myextension',
     ],
-    'example_content' => [
-        'parent' => 'example',
-        'position' => ['after' => 'list'],
-        'access' => 'user',
-        'iconIdentifier' => 'content-text',
-        'workspaces' => '*',
-        'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_content_module.xlf',
-        'extensionName' => 'XimaTypo3RecordlistExamples',
-        'controllerActions' => [
-            ContentController::class => [
-                'processRequest',
-            ],
-        ],
-        'inheritNavigationComponentFromMainModule' => false,
-    ],
     'example_pages' => [
         'parent' => 'example',
         'position' => ['after' => 'list'],
@@ -113,6 +98,21 @@ return [
         'extensionName' => 'XimaTypo3RecordlistExamples',
         'controllerActions' => [
             BeUsersController::class => [
+                'processRequest',
+            ],
+        ],
+        'inheritNavigationComponentFromMainModule' => false,
+    ],
+    'example_content' => [
+        'parent' => 'example',
+        'position' => ['after' => 'list'],
+        'access' => 'user',
+        'iconIdentifier' => 'module-example-7',
+        'workspaces' => '*',
+        'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_content_module.xlf',
+        'extensionName' => 'XimaTypo3RecordlistExamples',
+        'controllerActions' => [
+            ContentController::class => [
                 'processRequest',
             ],
         ],
