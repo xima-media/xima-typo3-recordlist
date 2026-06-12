@@ -10,7 +10,10 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Restriction\EndTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
+use TYPO3\CMS\Core\Database\Query\Restriction\StartTimeRestriction;
+use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
@@ -319,8 +322,12 @@ class AjaxController
         $uid = (int)$record['uid'];
 
         $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
-        // hidden records still occupy positions in the list, so they must be considered as neighbours
         $qb->getRestrictions()->removeByType(HiddenRestriction::class);
+        $qb->getRestrictions()->removeByType(StartTimeRestriction::class);
+        $qb->getRestrictions()->removeByType(EndTimeRestriction::class);
+        $qb->getRestrictions()->add(
+            GeneralUtility::makeInstance(WorkspaceRestriction::class, (int)$this->getBackendAuthentication()->workspace)
+        );
         $qb->select('uid')
             ->from($table)
             ->where($qb->expr()->eq('pid', $qb->createNamedParameter($pid, Connection::PARAM_INT)))
