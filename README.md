@@ -62,6 +62,7 @@ that overhead by providing:
 - **Workspace integration** for content approval workflows
 - **Pagination** for handling large datasets
 - **View record** button linking to frontend preview
+- **Record history** modal showing a colorful word/line diff of field changes from `sys_history`
 - **Row selection** with checkbox, row click, and keyboard shortcuts (Shift+Click, Ctrl/Alt+Click)
 - **Batch field editing** from column headers for selected or all records
 

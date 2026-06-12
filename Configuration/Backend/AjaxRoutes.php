@@ -17,4 +17,8 @@ return [
         'path' => '/xima/recordlist/edit',
         'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::editRecord',
     ],
+    'xima_recordlist_history' => [
+        'path' => '/xima/recordlist/history',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::recordHistory',
+    ],
 ];
