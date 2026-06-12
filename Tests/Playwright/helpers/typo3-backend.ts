@@ -90,6 +90,13 @@ export async function openColumnsModal(page: Page, contentFrame: FrameLocator): 
   await page.locator('.modal').waitFor({ timeout: 5000 });
 }
 
+export async function clickResetView(page: Page, contentFrame: FrameLocator): Promise<void> {
+  await contentFrame.locator('button.dropdown-toggle').filter({ hasText: 'View' }).click();
+  await page.waitForTimeout(300);
+  await contentFrame.locator('[data-doc-button="resetViewButton"]').evaluate((el) => (el as HTMLElement).click());
+  await waitForReload(contentFrame);
+}
+
 export async function toggleColumn(page: Page, contentFrame: FrameLocator, columnName: string): Promise<void> {
   await openColumnsModal(page, contentFrame);
   // Checkbox is in the modal (main frame) — use JS click to avoid styled-element interception

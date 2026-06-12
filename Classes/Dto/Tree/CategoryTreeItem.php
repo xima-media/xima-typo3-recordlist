@@ -21,7 +21,8 @@ final readonly class CategoryTreeItem implements \JsonSerializable
         public int $mountPoint,
         public int $storagePid,
         public int $sorting,
-    ) {}
+    ) {
+    }
 
     public function jsonSerialize(): array
     {

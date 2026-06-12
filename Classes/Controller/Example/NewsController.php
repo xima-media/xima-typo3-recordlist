@@ -27,6 +27,9 @@ class NewsController extends AbstractBackendController
         $this->tableConfiguration['tx_news_domain_model_news']['columns']['categories']['defaultPosition'] = 4;
         $this->tableConfiguration['tx_news_domain_model_news']['columns']['sys_language_uid']['defaultPosition'] = 5;
         $this->tableConfiguration['tx_news_domain_model_news']['columns']['workspace-status']['defaultPosition'] = 6;
+
+        // Show categories filter even when the categories column is hidden
+        $this->tableConfiguration['tx_news_domain_model_news']['columns']['categories']['filterVisible'] = true;
     }
 
     public function modifyQueryBuilder(): void

@@ -35,4 +35,3 @@ parameters:
 			identifier: nullCoalesce.expr
 			count: 1
 			path: Classes/Controller/AjaxController.php
-

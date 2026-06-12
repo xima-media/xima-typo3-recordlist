@@ -27,6 +27,14 @@
 				<source />
 				<target>Seiten ID</target>
 			</trans-unit>
+			<trans-unit id="table.column.crdate" approved="yes">
+				<source />
+				<target>Erstellungsdatum</target>
+			</trans-unit>
+			<trans-unit id="table.column.tstamp" approved="yes">
+				<source />
+				<target>Zuletzt geändert</target>
+			</trans-unit>
 			<trans-unit id="table.button.reset" approved="yes">
 				<source />
 				<target>Zurücksetzen</target>
@@ -147,6 +155,14 @@
 				<source />
 				<target>Keine Einträge entsprechen den aktuellen Such- oder Filterkriterien. Passen Sie die Filter an oder setzen Sie diese zurück.</target>
 			</trans-unit>
+			<trans-unit id="emptyState.headline" approved="yes">
+				<source />
+				<target>Noch keine Datensätze</target>
+			</trans-unit>
+			<trans-unit id="emptyState.text" approved="yes">
+				<source />
+				<target>Hier sind noch keine Datensätze vorhanden. Sobald der erste Datensatz angelegt wurde, erscheint er in dieser Liste.</target>
+			</trans-unit>
 			<trans-unit id="table.button.save" approved="yes">
 				<source />
 				<target>Speichern</target>
@@ -226,6 +242,10 @@
 			<trans-unit id="header.button.showColumns" approved="yes">
 				<source />
 				<target>Spalten anpassen</target>
+			</trans-unit>
+			<trans-unit id="header.button.resetView" approved="yes">
+				<source />
+				<target>Ansicht zurücksetzen</target>
 			</trans-unit>
 			<trans-unit id="showColumns.filter" approved="yes">
 				<source />

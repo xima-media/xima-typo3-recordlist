@@ -225,7 +225,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->modifyTableConfiguration();
         $this->processTableConfiguration();
 
-        if (isset($this->request->getParsedBody()['is_download']) && $this->request->getParsedBody()['is_download'] === '1') {
+        $parsedBody = $this->request->getParsedBody();
+        $parsedBody = is_array($parsedBody) ? $parsedBody : [];
+        if (($parsedBody['is_download'] ?? null) === '1') {
             return $this->downloadRecords();
         }
 
@@ -350,16 +352,24 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         $moduleData = $this->getModuleData();
         $body = $this->request->getParsedBody();
+        $body = is_array($body) ? $body : [];
         $tableName = $this->getTableName();
 
         if ($this->request->getMethod() === 'POST') {
             unset($body['__referrer'], $body['__trustedProperties'], $body['is_download']);
 
+            $isReset = isset($body['reset']) || isset($body['reset_view']);
+            $isResetView = isset($body['reset_view']);
+
             // clear moduleData + current request body in case reset button is used for submit
-            if (isset($body['reset'])) {
+            if ($isReset) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
                 unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.isFilterButtonActive'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
+            }
+
+            if ($isResetView) {
+                unset($moduleData['settings'][$tableName . '.activeColumns']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
@@ -377,12 +387,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // demand: offline records (1/3)
         if (isset($body['is_offline']) && !isset($body['reset'])) {
-            $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => filter_var($body['is_offline'], FILTER_VALIDATE_BOOLEAN)]);
+            $rawValue = $body['is_offline'];
+            $this->addToModuleDataSettings([$this->getTableName() . '.onlyOfflineRecords' => $rawValue !== '' ? (int)$rawValue : null]);
         }
 
         // demand: readyToPublish (2/3)
         if (isset($body['is_ready_to_publish']) && !isset($body['reset'])) {
-            $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => filter_var($body['is_ready_to_publish'], FILTER_VALIDATE_BOOLEAN)]);
+            $rawValue = $body['is_ready_to_publish'];
+            $this->addToModuleDataSettings([$this->getTableName() . '.onlyReadyToPublish' => $rawValue !== '' ? (int)$rawValue : null]);
         }
 
         // demand: items per page (3/3)
@@ -409,10 +421,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $languages[-1]['uid'] = 'all';
         }
 
-        $activeLanguage = $this->getActiveLanguage();
+        $activeLanguage = (string)$this->getActiveLanguage();
         foreach ($languages as &$language) {
             // needs to be strict type checking as this is not possible in fluid
-            if ((string)$language['uid'] === $activeLanguage) {
+            if ((string)($language['uid'] ?? '') === $activeLanguage) {
                 $language['active'] = true;
             }
         }
@@ -568,8 +580,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addSearchConstraint(): void
     {
         $body = $this->request->getParsedBody();
-        if (isset($body['search_field']) && $body['search_field']) {
-            $searchInput = $body['search_field'];
+        $body = is_array($body) ? $body : [];
+        $searchInput = (string)($body['search_field'] ?? '');
+        if ($searchInput !== '') {
             $escapedSearchInput = addcslashes($searchInput, '%_');
             $searchFields = $GLOBALS['TCA'][$this->getTableName()]['ctrl']['searchFields'] ?? $GLOBALS['TCA'][$this->getTableName()]['ctrl']['label'];
             $searchFieldArray = GeneralUtility::trimExplode(',', $searchFields, true);
@@ -585,24 +598,61 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
+    /**
+     * Returns default filter values applied when no user-submitted filter exists for a field.
+     * Override in concrete controllers to configure pre-applied filters.
+     *
+     * @return array<string, array{value: string, expr?: string}>
+     */
+    protected function getDefaultFilters(): array
+    {
+        return [];
+    }
+
     protected function addFilterConstraint(): void
     {
         $body = $this->request->getParsedBody();
-        if (!empty($body['filter'])) {
-            foreach ($body['filter'] as $field => $data) {
-                // Validate field name against TCA
-                if ($field !== 'uid' && !isset($GLOBALS['TCA'][$this->getTableName()]['columns'][$field])) {
+        $body = is_array($body) ? $body : [];
+        $bodyFilters = (array)($body['filter'] ?? []);
+        $tableName = $this->getTableName();
+        $tableTca = is_array($GLOBALS['TCA'][$tableName] ?? null) ? $GLOBALS['TCA'][$tableName] : [];
+        $columns = is_array($tableTca['columns'] ?? null) ? $tableTca['columns'] : [];
+
+        // Merge default filters — user-submitted values take precedence per field
+        $filters = $bodyFilters;
+        foreach ($this->getDefaultFilters() as $field => $data) {
+            if (!isset($filters[$field]) || ($filters[$field]['value'] ?? '') === '') {
+                $filters[$field] = $data;
+            }
+        }
+
+        if (!empty($filters)) {
+            $ctrl = $GLOBALS['TCA'][$this->getTableName()]['ctrl'] ?? [];
+            $ctrlTimestampFields = array_values(array_filter([
+                $ctrl['crdate'] ?? '',
+                $ctrl['tstamp'] ?? '',
+            ]));
+            foreach ($filters as $field => $data) {
+                if (!is_array($data)) {
+                    continue;
+                }
+                // Validate field name against TCA columns or ctrl timestamp fields
+                if ($field !== 'uid'
+                    && !isset($columns[$field])
+                    && !in_array($field, $ctrlTimestampFields, true)
+                ) {
                     continue;
                 }
                 if (!isset($data['value']) || $data['value'] === '') {
                     continue;
                 }
 
-                $columnType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['type'] ?? '';
+                $fieldConfig = is_array($columns[$field]['config'] ?? null) ? $columns[$field]['config'] : [];
+                $columnType = (string)($fieldConfig['type'] ?? '');
 
                 if (in_array($columnType, ['select', 'category', 'group', 'inline'], true)) {
                     $filterResult = $this->relationResolver->resolveForFilter(
-                        $this->getTableName(),
+                        $tableName,
                         $field,
                         $data['value'],
                         $this::WORKSPACE_ID
@@ -611,8 +661,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     continue;
                 }
 
-                if (isset($data['dataType']) && $data['dataType'] === 'date') {
-                    $dbType = $GLOBALS['TCA'][$this->getTableName()]['columns'][$field]['config']['dbType'] ?? '';
+                if (($data['dataType'] ?? null) === 'date') {
+                    $dbType = (string)($fieldConfig['dbType'] ?? '');
                     $date = date('Y-m-d', strtotime($data['value']));
                     if ($dbType === 'date' || $dbType === 'datetime') {
                         $leftExpr = 'DATE(t1.' . $field . ')';
@@ -914,7 +964,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $record['_workspaceVersion'] = is_array($vRecord) ? $vRecord : null;
 
             // demand: readyToPublish
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish')) {
+            $readyToPublishSetting = $this->getModuleDataSetting($this->getTableName() . '.onlyReadyToPublish');
+            if ($readyToPublishSetting == 1) {
                 $parentIsReady = is_array($vRecord) && $vRecord['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
                 if (!$parentIsReady) {
                     // Live parent may still qualify if it has workspace-modified children.
@@ -931,10 +982,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         continue;
                     }
                 }
+            } elseif ($readyToPublishSetting === -1) {
+                $parentIsReady = is_array($vRecord) && $vRecord['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH;
+                if ($parentIsReady) {
+                    $record = null;
+                    continue;
+                }
             }
 
             // demand: offline records
-            if ($this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords') && !is_array($vRecord)) {
+            $offlineRecordsSetting = $this->getModuleDataSetting($this->getTableName() . '.onlyOfflineRecords');
+            if ($offlineRecordsSetting == 1 && !is_array($vRecord)) {
                 $hasChildChanges = false;
                 if ($this::WORKSPACE_ID > 0) {
                     $childRefs = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
@@ -947,6 +1005,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $record = null;
                     continue;
                 }
+            } elseif ($offlineRecordsSetting === -1 && is_array($vRecord)) {
+                $record = null;
+                continue;
             }
         }
         unset($record);
@@ -1446,6 +1507,22 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
         }
 
+        foreach (['crdate', 'tstamp'] as $ctrlKey) {
+            $ctrlField = $GLOBALS['TCA'][$tableName]['ctrl'][$ctrlKey] ?? '';
+            if ($ctrlField === '') {
+                continue;
+            }
+            $columns[$ctrlField] = [
+                'columnName' => $ctrlField,
+                'label' => self::TRANSLATION_PATH . 'table.column.' . $ctrlKey,
+                'partial' => 'DateTime',
+                'active' => false,
+                'filter' => ['partial' => 'DateTime'],
+                'defaultPosition' => 0,
+                'dateFormat' => 'd.m.Y H:i',
+            ];
+        }
+
         if ($this::WORKSPACE_ID) {
             $columns['workspace-status'] = [
                 'columnName' => 'workspace-status',
@@ -1455,6 +1532,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 'active' => false,
                 'filter' => [
                     'partial' => 'Workspace',
+                    'items' => [
+                        0 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.yes'), 'value' => 1],
+                        1 => ['label' => $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'filter.checkbox.no'), 'value' => -1],
+                    ],
                 ],
             ];
         }
@@ -1521,6 +1602,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $activeColumns = array_keys($defaultColumns);
         }
 
+        $defaultFilters = $this->getDefaultFilters();
+
         foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => &$column) {
             // translate label
             if (!isset($column['label'])) {
@@ -1528,14 +1611,20 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $column['label'] = $this->getLanguageService()->sL($column['label']);
 
-            // set filter value
-            if (isset($body['filter'][$columnName]['value']) && $body['filter'][$columnName]['value'] !== '') {
-                $column['filter']['value'] = $body['filter'][$columnName]['value'];
+            // set filter value — body takes precedence, then default filter
+            $bodyValue = $body['filter'][$columnName]['value'] ?? '';
+            if ($bodyValue !== '') {
+                $column['filter']['value'] = $bodyValue;
+            } elseif (isset($defaultFilters[$columnName]['value']) && $defaultFilters[$columnName]['value'] !== '') {
+                $column['filter']['value'] = $defaultFilters[$columnName]['value'];
             }
 
-            // set filter expr
-            if (!empty($body['filter'][$columnName]['expr'] ?? '')) {
-                $column['filter']['expr'] = $body['filter'][$columnName]['expr'];
+            // set filter expr — body takes precedence, then default filter
+            $bodyExpr = $body['filter'][$columnName]['expr'] ?? '';
+            if ($bodyExpr !== '') {
+                $column['filter']['expr'] = $bodyExpr;
+            } elseif (isset($defaultFilters[$columnName]['expr'])) {
+                $column['filter']['expr'] = $defaultFilters[$columnName]['expr'];
             }
 
             // set active state
@@ -1547,7 +1636,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $isBadgeExpanded = $this->getModuleDataSetting('badge_limits_expanded.' . $tableName . '.' . $columnName) ?? false;
             $column['badgesExpanded'] = $isBadgeExpanded === true || $isBadgeExpanded === 'true';
 
-            if (!$column['active'] || !isset($column['filter']['partial'])) {
+            // filterRendered: true when filter should be shown in the filter panel
+            // (active column OR explicitly marked as filterVisible, and has a filter partial)
+            $filterVisible = $column['filterVisible'] ?? false;
+            $column['filterRendered'] = ($column['active'] || $filterVisible) && isset($column['filter']['partial']);
+
+            if ((!$column['active'] && !$filterVisible) || !isset($column['filter']['partial'])) {
                 continue;
             }
 
@@ -1901,6 +1995,36 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->setAttributes(['data-doc-button' => 'showColumnsButton']);
     }
 
+    protected function addResetViewButtonToViewDropdown(): void
+    {
+        if (!$this->isActionAllowedInCurrentTemplate('resetView')) {
+            return;
+        }
+
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-reset-view.js')
+        );
+
+        if ($this->getTypo3Version() === 13) {
+            $this->viewDropdownButtons[] = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\Buttons\DropDown\DropDownItem::class)
+                ->setHref('#')
+                ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+                ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+                ->setIcon($this->iconFactory->getIcon('actions-undo', IconSize::SMALL))
+                ->setAttributes(['data-doc-button' => 'resetViewButton']);
+            return;
+        }
+
+        $componentFactory = GeneralUtility::makeInstance(\TYPO3\CMS\Backend\Template\Components\ComponentFactory::class);
+        $this->viewDropdownButtons[] = $componentFactory->createDropDownItem()
+            ->setTag('a')
+            ->setHref('#')
+            ->setLabel($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+            ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'header.button.resetView'))
+            ->setIcon($this->iconFactory->getIcon('actions-undo', IconSize::SMALL))
+            ->setAttributes(['data-doc-button' => 'resetViewButton']);
+    }
+
     protected function addDownloadButtonToModuleTemplate(): void
     {
         if (!$this->isActionAllowedInCurrentTemplate('download')) {
@@ -1947,10 +2071,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         // Count workspace filters from module data
-        if ($this->getModuleDataSetting($tableName . '.onlyOfflineRecords')) {
+        if ($this->getModuleDataSetting($tableName . '.onlyOfflineRecords') !== null) {
             $count++;
         }
-        if ($this->getModuleDataSetting($tableName . '.onlyReadyToPublish')) {
+        if ($this->getModuleDataSetting($tableName . '.onlyReadyToPublish') !== null) {
             $count++;
         }
 
@@ -2255,6 +2379,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         // show columns
         $this->addShowColumnsButtonToViewDropdown();
+
+        // reset view
+        $this->addResetViewButtonToViewDropdown();
     }
 
     protected function addTemplateSelectionToViewDropdown(): void
@@ -2313,7 +2440,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'Default' => [
                 'title' => 'Page List',
                 'icon' => 'actions-list',
-                'actions' => ['templateSelection', 'showColumns', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
+                'actions' => ['templateSelection', 'showColumns', 'resetView', 'download', 'toggleFilters', 'tableSelection', 'pidSelection', 'languageSelection', 'newRecord'],
             ],
         ];
     }

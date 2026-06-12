@@ -120,7 +120,7 @@ main.recordlist ul.pagination input.form-control {
 }
 
 @media (min-width: 1400px) {
-    #filterInputs .col-xxl-6 .row {
+    #filterInputs .col-xxl-6 > .row {
         max-width: 90%;
     }
 }
