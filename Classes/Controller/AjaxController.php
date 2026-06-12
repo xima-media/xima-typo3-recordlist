@@ -10,6 +10,7 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
@@ -229,5 +230,151 @@ class AjaxController
         $dataHandler->process_datamap();
 
         return $this->responseFactory->createResponse(200);
+    }
+
+    /**
+     * Move a record one position up or down within its table's manual sort order (`sortby`).
+     *
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function moveRecord(ServerRequestInterface $request): ResponseInterface
+    {
+        $body = $request->getParsedBody();
+        $table = (string)($body['table'] ?? '');
+        $uid = (int)($body['uid'] ?? 0);
+        $direction = (string)($body['direction'] ?? '');
+
+        if ($direction !== 'up' && $direction !== 'down') {
+            return $this->responseFactory->createResponse(
+                400,
+                LocalizationUtility::translate('ajax.error.invalidDirection', 'xima_typo3_recordlist') ?? ''
+            );
+        }
+
+        // table must define a manual sorting field
+        $sortByField = (string)($GLOBALS['TCA'][$table]['ctrl']['sortby'] ?? '');
+        if ($sortByField === '') {
+            return $this->responseFactory->createResponse(
+                400,
+                LocalizationUtility::translate('ajax.error.tableNotSortable', 'xima_typo3_recordlist') ?? ''
+            );
+        }
+
+        // access check #1
+        if (!$this->getBackendAuthentication()->check('tables_modify', $table)) {
+            return $this->responseFactory->createResponse(
+                403,
+                LocalizationUtility::translate('ajax.error.noPermissionsToEdit', 'xima_typo3_recordlist') ?? ''
+            );
+        }
+
+        // access check #2
+        $record = BackendUtility::getRecord($table, $uid);
+        if (!$record) {
+            return $this->responseFactory->createResponse(
+                501,
+                LocalizationUtility::translate('ajax.error.recordNotFound', 'xima_typo3_recordlist') ?? ''
+            );
+        }
+        if ((int)$record['pid'] !== 0) {
+            $access = BackendUtility::readPageAccess(
+                $record['pid'],
+                $this->getBackendAuthentication()->getPagePermsClause(Permission::CONTENT_EDIT)
+            ) ?: [];
+            if (empty($access)) {
+                return $this->responseFactory->createResponse(
+                    403,
+                    LocalizationUtility::translate('ajax.error.noPermissionsToEdit', 'xima_typo3_recordlist') ?? ''
+                );
+            }
+        }
+
+        $target = $this->determineMoveTarget($table, $record, $sortByField, $direction);
+
+        // already at the boundary (top/bottom) — nothing to move
+        if ($target === null) {
+            return $this->responseFactory->createResponse(204);
+        }
+
+        $cmd[$table][$uid]['move'] = $target;
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start([], $cmd);
+        $dataHandler->process_cmdmap();
+
+        return $this->responseFactory->createResponse();
+    }
+
+    /**
+     * Resolve the DataHandler move target for a single up/down step.
+     *
+     * Looks up all sibling records (same pid and — when localized — same language) in their
+     * manual `sortby` order, then delegates the boundary logic to {@see computeMoveTarget()}.
+     *
+     * @param array<string, mixed> $record
+     * @throws \Doctrine\DBAL\Exception
+     */
+    protected function determineMoveTarget(string $table, array $record, string $sortByField, string $direction): ?int
+    {
+        $pid = (int)$record['pid'];
+        $uid = (int)$record['uid'];
+
+        $qb = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
+        // hidden records still occupy positions in the list, so they must be considered as neighbours
+        $qb->getRestrictions()->removeByType(HiddenRestriction::class);
+        $qb->select('uid')
+            ->from($table)
+            ->where($qb->expr()->eq('pid', $qb->createNamedParameter($pid, Connection::PARAM_INT)))
+            ->orderBy($sortByField, 'ASC')
+            ->addOrderBy('uid', 'ASC');
+
+        // keep moves within the same language siblings when the table is localizable
+        $languageField = (string)($GLOBALS['TCA'][$table]['ctrl']['languageField'] ?? '');
+        if ($languageField !== '' && isset($record[$languageField])) {
+            $qb->andWhere(
+                $qb->expr()->eq($languageField, $qb->createNamedParameter((int)$record[$languageField], Connection::PARAM_INT))
+            );
+        }
+
+        $orderedUids = array_map('intval', $qb->executeQuery()->fetchFirstColumn());
+
+        return $this->computeMoveTarget($orderedUids, $uid, $pid, $direction);
+    }
+
+    /**
+     * Pure boundary logic for a single move step.
+     *
+     * DataHandler interprets a positive target as "move to the top of that page id" and a negative
+     * target `-X` as "move directly after record X".
+     *
+     * @param list<int> $orderedUids sibling uids in ascending `sortby` order
+     * @return int|null the move target, or null when the record is already at the boundary
+     */
+    protected function computeMoveTarget(array $orderedUids, int $uid, int $pid, string $direction): ?int
+    {
+        $index = array_search($uid, $orderedUids, true);
+        if ($index === false) {
+            return null;
+        }
+
+        if ($direction === 'down') {
+            // already the last record
+            if ($index === count($orderedUids) - 1) {
+                return null;
+            }
+            // move after the following record
+            return -$orderedUids[$index + 1];
+        }
+
+        // direction === 'up'
+        if ($index === 0) {
+            // already the first record
+            return null;
+        }
+        if ($index === 1) {
+            // move to the very top of the page
+            return $pid;
+        }
+        // move after the record two positions above
+        return -$orderedUids[$index - 2];
     }
 }

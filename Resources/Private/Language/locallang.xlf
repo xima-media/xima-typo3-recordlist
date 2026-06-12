@@ -111,6 +111,12 @@
 			<trans-unit id="table.button.unhide">
 				<source>Un-hide record</source>
 			</trans-unit>
+			<trans-unit id="table.button.moveUp">
+				<source>Move record up</source>
+			</trans-unit>
+			<trans-unit id="table.button.moveDown">
+				<source>Move record down</source>
+			</trans-unit>
 			<trans-unit id="search.noResults.headline">
 				<source>No results found</source>
 			</trans-unit>
@@ -315,6 +321,12 @@
 			<trans-unit id="hiddenToggle.error.message">
 				<source>Could not update the record</source>
 			</trans-unit>
+			<trans-unit id="sorting.error.title">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="sorting.error.message">
+				<source>Could not move the record</source>
+			</trans-unit>
 			<trans-unit id="download.modal.title">
 				<source>Download records</source>
 			</trans-unit>
@@ -356,6 +368,12 @@
 			</trans-unit>
 			<trans-unit id="ajax.error.recordNotFound">
 				<source>Record not found</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.invalidDirection">
+				<source>Invalid move direction</source>
+			</trans-unit>
+			<trans-unit id="ajax.error.tableNotSortable">
+				<source>Table has no manual sorting configured</source>
 			</trans-unit>
 			<trans-unit id="badge.showMore">
 				<source>Show more</source>
