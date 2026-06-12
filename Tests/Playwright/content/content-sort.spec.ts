@@ -68,4 +68,19 @@ test.describe('Content manual sorting', () => {
 
     await expect(contentFrame.locator('a[data-sorting-move]')).toHaveCount(0);
   });
+
+  test('clicking the active ordering again unsets it and restores the default order', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_content');
+
+    // apply a custom ordering — header descending differs from the default manual sort order
+    await sortBy(contentFrame, 'Header', 'DESC');
+    expect((await headers(contentFrame))[0]).toBe('Third Element');
+
+    // clicking the same ordering again clears it and falls back to the default sort order
+    await sortBy(contentFrame, 'Header', 'DESC');
+    expect(await headers(contentFrame)).toEqual(EXPECTED_DEFAULT_ORDER);
+
+    // default order is the manual sort order, so the move actions are available again
+    await expect(contentFrame.locator('tr[data-uid]').first().locator('a[data-sorting-move="down"]')).toHaveCount(1);
+  });
 });
