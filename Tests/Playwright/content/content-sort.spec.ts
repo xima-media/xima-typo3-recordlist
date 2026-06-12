@@ -69,6 +69,19 @@ test.describe('Content manual sorting', () => {
     await expect(contentFrame.locator('a[data-sorting-move]')).toHaveCount(0);
   });
 
+  test('move up is disabled on the first record and move down on the last record', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_content');
+    const rows = contentFrame.locator('tr[data-uid]');
+
+    // first record: up disabled, down enabled
+    await expect(rows.first().locator('a[data-sorting-move="up"]')).toHaveClass(/disabled/);
+    await expect(rows.first().locator('a[data-sorting-move="down"]')).not.toHaveClass(/disabled/);
+
+    // last record: down disabled, up enabled
+    await expect(rows.last().locator('a[data-sorting-move="down"]')).toHaveClass(/disabled/);
+    await expect(rows.last().locator('a[data-sorting-move="up"]')).not.toHaveClass(/disabled/);
+  });
+
   test('clicking the active ordering again unsets it and restores the default order', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_content');
 

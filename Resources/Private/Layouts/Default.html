@@ -146,7 +146,9 @@
                                     </thead>
                                     <tbody>
                                     <f:render partial="PaginationRow" arguments="{_all}" />
-                                    <f:for each="{records}" as="item">
+                                    <f:for each="{records}" as="item" iteration="recordIterator">
+                                        <f:variable name="recordIsFirst" value="{f:if(condition: '{recordIterator.isFirst} && {current_page} == 1', then: '1')}" />
+                                        <f:variable name="recordIsLast" value="{f:if(condition: '{recordIterator.isLast} && {next_page} == 0', then: '1')}" />
                                         <tr
                                             data-uid="{item.uid}"
                                             data-pid="{item.pid}"

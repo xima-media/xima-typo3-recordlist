@@ -19,6 +19,12 @@ class RecordlistActionSorting {
   onSortingMoveClick(e) {
     e.preventDefault();
     const button = e.currentTarget;
+
+    // boundary buttons (first record's "up", last record's "down") are disabled — ignore clicks
+    if (button.classList.contains('disabled') || button.getAttribute('aria-disabled') === 'true') {
+      return;
+    }
+
     const tr = button.closest('tr');
 
     const payload = new FormData();
