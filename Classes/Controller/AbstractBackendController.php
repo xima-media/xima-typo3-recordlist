@@ -20,7 +20,9 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\EndTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
+use TYPO3\CMS\Core\Database\Query\Restriction\StartTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
@@ -574,6 +576,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
         $this->queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
         $this->queryBuilder->getRestrictions()->removeByType(HiddenRestriction::class);
+        $this->queryBuilder->getRestrictions()->removeByType(StartTimeRestriction::class);
+        $this->queryBuilder->getRestrictions()->removeByType(EndTimeRestriction::class);
     }
 
     protected function addSearchConstraint(): void
