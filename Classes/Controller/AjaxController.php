@@ -304,6 +304,14 @@ class AjaxController
         $dataHandler->start([], $cmd);
         $dataHandler->process_cmdmap();
 
+        // DataHandler failure (e.g. denied by a hook)
+        if ($dataHandler->errorLog !== []) {
+            return $this->responseFactory->createResponse(
+                500,
+                LocalizationUtility::translate('ajax.error.moveFailed', 'xima_typo3_recordlist') ?? ''
+            );
+        }
+
         return $this->responseFactory->createResponse();
     }
 

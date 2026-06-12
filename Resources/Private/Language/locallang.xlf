@@ -375,6 +375,9 @@
 			<trans-unit id="ajax.error.tableNotSortable">
 				<source>Table has no manual sorting configured</source>
 			</trans-unit>
+			<trans-unit id="ajax.error.moveFailed">
+				<source>Could not move the record</source>
+			</trans-unit>
 			<trans-unit id="badge.showMore">
 				<source>Show more</source>
 			</trans-unit>

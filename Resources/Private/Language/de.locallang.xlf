@@ -499,6 +499,10 @@
 				<source />
 				<target>Für die Tabelle ist keine manuelle Sortierung konfiguriert</target>
 			</trans-unit>
+			<trans-unit id="ajax.error.moveFailed" approved="yes">
+				<source />
+				<target>Der Datensatz konnte nicht verschoben werden</target>
+			</trans-unit>
 			<trans-unit id="badge.showMore">
 				<source />
 				<target>Mehr anzeigen</target>
