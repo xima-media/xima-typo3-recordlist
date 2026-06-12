@@ -17,4 +17,16 @@ return [
         'path' => '/xima/recordlist/edit',
         'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::editRecord',
     ],
+    'xima_categorytree_configuration' => [
+        'path' => '/xima/recordlist/categorytree/configuration',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::fetchConfigurationAction',
+    ],
+    'xima_categorytree_data' => [
+        'path' => '/xima/recordlist/categorytree/data',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::fetchDataAction',
+    ],
+    'xima_categorytree_filter' => [
+        'path' => '/xima/recordlist/categorytree/filter',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::filterDataAction',
+    ],
 ];

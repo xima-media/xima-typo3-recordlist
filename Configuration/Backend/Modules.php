@@ -40,7 +40,7 @@ return [
                 'processRequest',
             ],
         ],
-        'inheritNavigationComponentFromMainModule' => false,
+        'navigationComponent' => '@xima/recordlist/category-tree-element',
     ],
     'example_feusers' => [
         'parent' => 'example',

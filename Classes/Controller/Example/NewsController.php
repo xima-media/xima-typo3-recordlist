@@ -31,4 +31,15 @@ class NewsController extends AbstractBackendController
         // Show categories filter even when the categories column is hidden
         $this->tableConfiguration['tx_news_domain_model_news']['columns']['categories']['filterVisible'] = true;
     }
+
+    public function modifyQueryBuilder(): void
+    {
+        $this->queryBuilder->addSelectLiteral('CASE WHEN t1.l10n_parent != 0 THEN t1.l10n_parent ELSE t1.uid END AS ' . $this->queryBuilder->quoteIdentifier('sys_language_ordering'));
+    }
+
+    protected function addOrderConstraint(): void
+    {
+        parent::addOrderConstraint();
+        $this->queryBuilder->addOrderBy('sys_language_ordering', 'ASC');
+    }
 }

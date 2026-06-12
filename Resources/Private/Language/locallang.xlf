@@ -327,6 +327,9 @@
 			<trans-unit id="filter.category.label">
 				<source>Filter category</source>
 			</trans-unit>
+			<trans-unit id="tree.allCategories">
+				<source>All categories</source>
+			</trans-unit>
 			<trans-unit id="ajax.error.noPermissionsToDelete">
 				<source>No permissions to delete records</source>
 			</trans-unit>

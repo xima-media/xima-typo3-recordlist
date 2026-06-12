@@ -1,9 +1,45 @@
 parameters:
 	ignoreErrors:
 		-
+			message: '#^Call to an undefined method TYPO3\\CMS\\Backend\\Template\\Components\\DocHeaderComponent\:\:setLanguageSelector\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: '#^Call to method createDropDownButton\(\) on an unknown class TYPO3\\CMS\\Backend\\Template\\Components\\ComponentFactory\.$#'
+			identifier: class.notFound
+			count: 2
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: '#^Call to method createDropDownDivider\(\) on an unknown class TYPO3\\CMS\\Backend\\Template\\Components\\ComponentFactory\.$#'
+			identifier: class.notFound
+			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: '#^Call to method createDropDownItem\(\) on an unknown class TYPO3\\CMS\\Backend\\Template\\Components\\ComponentFactory\.$#'
+			identifier: class.notFound
+			count: 2
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: '#^Call to method createDropDownRadio\(\) on an unknown class TYPO3\\CMS\\Backend\\Template\\Components\\ComponentFactory\.$#'
+			identifier: class.notFound
+			count: 2
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
 			message: '#^Call to static method isDeeplApiKeySet\(\) on an unknown class WebVision\\Deepltranslate\\Core\\Utility\\DeeplBackendUtility\.$#'
 			identifier: class.notFound
 			count: 1
+			path: Classes/Controller/AbstractBackendController.php
+
+		-
+			message: '#^Class TYPO3\\CMS\\Backend\\Template\\Components\\ComponentFactory not found\.$#'
+			identifier: class.notFound
+			count: 5
 			path: Classes/Controller/AbstractBackendController.php
 
 		-
