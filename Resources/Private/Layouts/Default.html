@@ -186,7 +186,7 @@
                                             <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
                                                 <td>
                                                     <f:if condition="{tableConfiguration.groupActions}">
-                                                        <div class="btn-group">
+                                                        <div class="btn-group" data-recordlist-actions>
                                                             <f:for each="{tableConfiguration.groupActions}" as="actionName">
                                                                 <f:render partial="Actions/{actionName}" arguments="{_all}" />
                                                             </f:for>

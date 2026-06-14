@@ -135,3 +135,40 @@ main.recordlist ul.pagination input.form-control {
 .btn-group .dropdown-menu li:last-child:has(hr) {
     display: none;
 }
+
+/** "More" dropdown collapsing overflow row actions (issue #92). */
+/** Icon-only toggle (actions-menu-alternative) — suppress the default Bootstrap caret. */
+.recordlist-action-more > .dropdown-toggle::after {
+    display: none;
+}
+
+.recordlist-action-more-menu {
+    padding: 4px;
+    overflow: visible;
+}
+
+.recordlist-action-more-menu li {
+    display: block;
+}
+
+/** Render the moved icon buttons as full-width, left-aligned dropdown rows with a label. */
+.recordlist-action-more-menu .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+    border: 0;
+    border-radius: var(--typo3-input-border-radius);
+    text-align: start;
+}
+
+.recordlist-action-more-label {
+    white-space: nowrap;
+}
+
+/** A nested action group (e.g. Sorting) inside the tray stays a single full-width row. */
+.recordlist-action-more-menu .btn-group {
+    display: flex;
+    width: 100%;
+}

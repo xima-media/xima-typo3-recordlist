@@ -55,6 +55,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100, 200, 500];
     protected const BADGE_LIMIT = 5;
     protected const BADGE_MAX_CHARACTERS = 20;
+    protected const DEFAULT_ACTIONS_THRESHOLD = 5;
     protected const WORKSPACE_STAGE_READY_TO_PUBLISH = -10;
     protected const VERSION_STATE_DELETED = 2;
     protected const DOWNLOAD_FORMATS = [
@@ -184,6 +185,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // module: get name + settings
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'moduleName', $this->getModuleName());
         $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'currentTable', $this->getTableName());
+        $this->pageRenderer->addInlineSetting('XimaTypo3Recordlist', 'actionsThreshold', $this->getActionsThreshold());
         $this->pageRenderer->addInlineLanguageLabelFile('EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf');
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-order-links.js')
@@ -199,6 +201,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-new-record.js')
+        );
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-more.js')
         );
 
         $this->setLanguages();
@@ -778,6 +783,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function getModuleDataSetting(string $setting): mixed
     {
         return $this->getModuleData()['settings'][$setting] ?? null;
+    }
+
+    /**
+     * Number of row action buttons shown directly before the rest collapse into a "More"
+     * dropdown. Fixed in the controller; override in a concrete controller to tune it per
+     * table. A value of 0 disables collapsing.
+     */
+    protected function getActionsThreshold(): int
+    {
+        return self::DEFAULT_ACTIONS_THRESHOLD;
     }
 
     protected function addAdditionalConstraints(): void
@@ -1519,14 +1534,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ksort($columns);
 
         $groupActions = [
-            'Translate',
-            'TranslateDeepl',
             'Edit',
             'HiddenToggle',
-            'Duplicate',
-            'Changelog',
             'Revert',
             'View',
+            'Translate',
+            'TranslateDeepl',
+            'Changelog',
+            'Duplicate',
         ];
 
         // prepend manual sorting buttons only when the list is shown in its `sortby` order

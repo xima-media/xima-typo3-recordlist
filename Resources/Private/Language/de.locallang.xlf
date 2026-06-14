@@ -123,6 +123,10 @@
 				<source />
 				<target>Bearbeiten</target>
 			</trans-unit>
+			<trans-unit id="table.button.more" approved="yes">
+				<source />
+				<target>Mehr</target>
+			</trans-unit>
 			<trans-unit id="table.button.changelog" approved="yes">
 				<source />
 				<target>Änderungen anzeigen</target>
