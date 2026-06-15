@@ -1,0 +1,44 @@
+<html data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers">
+
+<f:comment>
+    Standalone dropdown shells, rendered server-side so they sit at their final size on
+    first paint (no flicker, no layout shift). recordlist-action-groups.js relocates the
+    tagged action buttons into the matching menu; recordlist.css hides a shell when the row
+    has no action of that category (presence-based `:has`).
+</f:comment>
+
+<div class="btn-group dropdown recordlist-action-group recordlist-action-translation">
+    <button
+        type="button"
+        class="btn btn-default dropdown-toggle"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.translations')}"
+        aria-label="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.translations')}">
+        <core:icon identifier="actions-translate" size="small" />
+        <span class="recordlist-action-chevron">
+            <core:icon identifier="actions-chevron-down" size="small" />
+        </span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end recordlist-action-group-menu"></ul>
+</div>
+
+<div class="btn-group dropdown recordlist-action-group recordlist-action-workspace">
+    <button
+        type="button"
+        class="btn btn-primary dropdown-toggle"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.workspaceActions')}"
+        aria-label="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.workspaceActions')}">
+        <core:icon identifier="actions-synchronize" size="small" />
+        <span class="recordlist-action-chevron">
+            <core:icon identifier="actions-chevron-down" size="small" />
+        </span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end recordlist-action-group-menu"></ul>
+</div>
+
+</html>

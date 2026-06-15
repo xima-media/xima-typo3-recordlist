@@ -185,18 +185,21 @@
 
                                             <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
                                                 <td>
-                                                    <f:if condition="{tableConfiguration.groupActions}">
+                                                    <div class="recordlist-actions">
                                                         <div class="btn-group" data-recordlist-actions>
-                                                            <f:for each="{tableConfiguration.groupActions}" as="actionName">
-                                                                <f:render partial="Actions/{actionName}" arguments="{_all}" />
-                                                            </f:for>
+                                                            <f:if condition="{tableConfiguration.groupActions}">
+                                                                <f:for each="{tableConfiguration.groupActions}" as="actionName">
+                                                                    <f:render partial="Actions/{actionName}" arguments="{_all}" />
+                                                                </f:for>
+                                                            </f:if>
+                                                            <f:if condition="{tableConfiguration.actions}">
+                                                                <f:for each="{tableConfiguration.actions}" as="actionName">
+                                                                    <f:render partial="Actions/{actionName}" arguments="{_all}" />
+                                                                </f:for>
+                                                            </f:if>
                                                         </div>
-                                                    </f:if>
-                                                    <f:if condition="{tableConfiguration.actions}">
-                                                        <f:for each="{tableConfiguration.actions}" as="actionName">
-                                                            <f:render partial="Actions/{actionName}" arguments="{_all}" />
-                                                        </f:for>
-                                                    </f:if>
+                                                        <f:render partial="ActionGroupDropdowns" arguments="{_all}" />
+                                                    </div>
                                                 </td>
                                             </f:if>
                                         </tr>

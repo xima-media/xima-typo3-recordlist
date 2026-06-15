@@ -84,17 +84,17 @@
 			<trans-unit id="table.button.requestChanges">
 				<source>Request changes</source>
 			</trans-unit>
-			<trans-unit id="table.button.original">
-				<source>Original</source>
-			</trans-unit>
 			<trans-unit id="table.button.editOriginal">
 				<source>Edit original</source>
 			</trans-unit>
 			<trans-unit id="table.button.edit">
 				<source>Edit</source>
 			</trans-unit>
-			<trans-unit id="table.button.more">
-				<source>More</source>
+			<trans-unit id="table.button.workspaceActions">
+				<source>Workspace actions</source>
+			</trans-unit>
+			<trans-unit id="table.button.translations">
+				<source>Translations</source>
 			</trans-unit>
 			<trans-unit id="table.button.changelog">
 				<source>View changes</source>

@@ -136,23 +136,43 @@ main.recordlist ul.pagination input.form-control {
     display: none;
 }
 
-/** "More" dropdown collapsing overflow row actions (issue #92). */
-/** Icon-only toggle (actions-menu-alternative) — suppress the default Bootstrap caret. */
-.recordlist-action-more > .dropdown-toggle::after {
+/** Semantic action dropdowns collapsing translation / workspace row actions (issue #92). */
+/** Avoid a flash of ungrouped actions on load: hide the buttons destined for a dropdown
+    until the module has processed the bar and relocated them (the move happens in the same
+    JS task, so they are never painted in the bar). Requires the JS module to run. */
+[data-recordlist-actions]:not([data-recordlist-actions-processed]) [data-action-group] {
     display: none;
 }
 
-.recordlist-action-more-menu {
+/** The dropdown shells render server-side; hide one when the row carries no action of that
+    category. Presence is read from the action button (in the bar before grouping, in the
+    menu after) so the shell's visibility — and therefore the cell width — never changes. */
+.recordlist-actions:not(:has([data-action-group="translation"])) .recordlist-action-translation,
+.recordlist-actions:not(:has([data-action-group="workspace"])) .recordlist-action-workspace {
+    display: none;
+}
+
+/** Standalone dropdowns sit beside the action button bar, not joined into it. */
+.recordlist-action-group {
+    margin-inline-start: 0.5rem;
+}
+
+/** Icon-only toggles — suppress the default Bootstrap caret. */
+.recordlist-action-group > .dropdown-toggle::after {
+    display: none;
+}
+
+.recordlist-action-group-menu {
     padding: 4px;
     overflow: visible;
 }
 
-.recordlist-action-more-menu li {
+.recordlist-action-group-menu li {
     display: block;
 }
 
 /** Render the moved icon buttons as full-width, left-aligned dropdown rows with a label. */
-.recordlist-action-more-menu .btn {
+.recordlist-action-group-menu .btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -163,12 +183,18 @@ main.recordlist ul.pagination input.form-control {
     text-align: start;
 }
 
-.recordlist-action-more-label {
+.recordlist-action-label {
     white-space: nowrap;
 }
 
-/** A nested action group (e.g. Sorting) inside the tray stays a single full-width row. */
-.recordlist-action-more-menu .btn-group {
+/** Explicit chevron next to a dropdown toggle icon (e.g. the workspace dropdown). */
+.recordlist-action-chevron {
+    display: inline-flex;
+    margin-inline-start: 0.25rem;
+}
+
+/** A nested action group (e.g. ReadyToPublish) inside the tray stays a single full-width row. */
+.recordlist-action-group-menu .btn-group {
     display: flex;
     width: 100%;
 }
