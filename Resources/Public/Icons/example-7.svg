@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="200px" viewBox="0 0 200 200" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Extension</title>
+    <g id="Extension" stroke="none" fill="none" fill-rule="evenodd">
+        <rect id="Rectangle" fill="#004E7E" x="0" y="0" width="200" height="200"></rect>
+        <g id="Group" stroke-width="1" transform="translate(43, 43)" fill="#F5F5F5">
+            <path d="M0,0 L0,114 L114,114 L114,0 L0,0 Z M8.14285714,8.14285714 L105.857143,8.14285714 L105.857143,105.857143 L8.14285714,105.857143 L8.14285714,8.14285714 Z" id="Shape" fill-rule="nonzero"></path>
+            <polygon id="Path" points="16.2857143 16.2857143 97.7142857 16.2857143 97.7142857 32.5714286 16.2857143 32.5714286"></polygon>
+            <path d="M16.2857143,40.7142857 L97.7142857,40.7142857 L97.7142857,48.8571429 L16.2857143,48.8571429 L16.2857143,40.7142857 Z M16.2857143,57 L97.7142857,57 L97.7142857,65.1428571 L16.2857143,65.1428571 L16.2857143,57 Z M16.2857143,73.2857143 L97.7142857,73.2857143 L97.7142857,81.4285714 L16.2857143,81.4285714 L16.2857143,73.2857143 Z M16.2857143,89.5714286 L97.7142857,89.5714286 L97.7142857,97.7142857 L16.2857143,97.7142857 L16.2857143,89.5714286 Z" id="Shape" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>

@@ -17,6 +17,10 @@ return [
         'path' => '/xima/recordlist/edit',
         'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::editRecord',
     ],
+    'xima_recordlist_move' => [
+        'path' => '/xima/recordlist/move',
+        'target' => \Xima\XimaTypo3Recordlist\Controller\AjaxController::class . '::moveRecord',
+    ],
     'xima_categorytree_configuration' => [
         'path' => '/xima/recordlist/categorytree/configuration',
         'target' => \Xima\XimaTypo3Recordlist\Controller\CategoryTreeController::class . '::fetchConfigurationAction',
