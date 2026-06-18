@@ -62,7 +62,7 @@ async function injectActions(contentFrame: FrameLocator, id: string, buttons: Ac
       wrapper.appendChild(menu);
       return wrapper;
     };
-    cell.appendChild(shell('translation', 'btn-default', false));
+    cell.appendChild(shell('translation', 'btn-default', true));
     cell.appendChild(shell('workspace', 'btn-primary', true));
 
     main.appendChild(cell);
@@ -121,8 +121,8 @@ test.describe('Action group dropdowns (issue #92)', () => {
     const toggle = contentFrame.locator('#tr2 .recordlist-action-translation > .dropdown-toggle');
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveClass(/btn-default/);
-    // The translation toggle stays icon-only — no chevron.
-    await expect(toggle.locator('.recordlist-action-chevron')).toHaveCount(0);
+    // The translation toggle carries an explicit chevron next to its icon.
+    await expect(toggle.locator('.recordlist-action-chevron')).toHaveCount(1);
     await expect(contentFrame.locator('#tr2 .recordlist-action-translation .recordlist-action-group-menu > li')).toHaveCount(2);
   });
 
