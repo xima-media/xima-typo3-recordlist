@@ -4,12 +4,16 @@
 
 <f:comment>
     Standalone dropdown shells, rendered server-side so they sit at their final size on
-    first paint (no flicker, no layout shift). recordlist-action-groups.js relocates the
-    tagged action buttons into the matching menu; recordlist.css hides a shell when the row
-    has no action of that category (presence-based `:has`).
+    first paint (no flicker, no layout shift). Each shell declares its group via
+    `data-action-group-menu`; recordlist-action-groups.js relocates every bar action marked
+    `data-action-group="<name>"` into the matching menu, and recordlist.css hides a shell
+    when the row has no action of that group (presence-based `:has`).
+
+    Add a group: add a shell here with a unique `data-action-group-menu`, tag the actions
+    with the matching `data-action-group`, and add the presence-hide rule in recordlist.css.
 </f:comment>
 
-<div class="btn-group dropdown recordlist-action-group recordlist-action-translation">
+<div class="btn-group dropdown recordlist-action-group" data-action-group-menu="translation">
     <button
         type="button"
         class="btn btn-default dropdown-toggle"
@@ -25,7 +29,7 @@
     <ul class="dropdown-menu dropdown-menu-end recordlist-action-group-menu"></ul>
 </div>
 
-<div class="btn-group dropdown recordlist-action-group recordlist-action-workspace">
+<div class="btn-group dropdown recordlist-action-group" data-action-group-menu="workspace">
     <button
         type="button"
         class="btn btn-primary dropdown-toggle"

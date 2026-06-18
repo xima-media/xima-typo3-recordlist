@@ -50,7 +50,8 @@ async function injectActions(contentFrame: FrameLocator, id: string, buttons: Ac
 
     const shell = (category: string, btnClass: string, chevron: boolean) => {
       const wrapper = document.createElement('div');
-      wrapper.className = `btn-group dropdown recordlist-action-group recordlist-action-${category}`;
+      wrapper.className = 'btn-group dropdown recordlist-action-group';
+      wrapper.setAttribute('data-action-group-menu', category);
       const toggle = document.createElement('button');
       toggle.type = 'button';
       toggle.className = `btn ${btnClass} dropdown-toggle`;
@@ -69,7 +70,7 @@ async function injectActions(contentFrame: FrameLocator, id: string, buttons: Ac
   }, { id, buttons });
 }
 
-test.describe('Action group dropdowns (issue #92)', () => {
+test.describe('Action group dropdowns', () => {
   test.describe.configure({ mode: 'serial' });
 
   test.beforeAll(() => { resetDatabase(); });
@@ -90,16 +91,16 @@ test.describe('Action group dropdowns (issue #92)', () => {
       { group: 'workspace', text: 'Publish' },
     ]);
 
-    const toggle = contentFrame.locator('#ws .recordlist-action-workspace > .dropdown-toggle');
+    const toggle = contentFrame.locator('#ws [data-action-group-menu="workspace"] > .dropdown-toggle');
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveClass(/btn-primary/);
     await expect(toggle).toHaveText('');
     // The workspace toggle carries an explicit chevron next to its icon.
     await expect(toggle.locator('.recordlist-action-chevron')).toHaveCount(1);
-    await expect(contentFrame.locator('#ws .recordlist-action-workspace .recordlist-action-group-menu > li')).toHaveCount(2);
+    await expect(contentFrame.locator('#ws [data-action-group-menu="workspace"] .recordlist-action-group-menu > li')).toHaveCount(2);
     // The dropdown is standalone — a sibling of the button bar, not inside it.
-    await expect(contentFrame.locator('#ws > .recordlist-action-workspace')).toHaveCount(1);
-    await expect(contentFrame.locator('#ws [data-recordlist-actions] .recordlist-action-workspace')).toHaveCount(0);
+    await expect(contentFrame.locator('#ws > [data-action-group-menu="workspace"]')).toHaveCount(1);
+    await expect(contentFrame.locator('#ws [data-recordlist-actions] [data-action-group-menu="workspace"]')).toHaveCount(0);
   });
 
   test('workspace dropdown is hidden when no workspace actions exist', async ({ page }) => {
@@ -107,8 +108,8 @@ test.describe('Action group dropdowns (issue #92)', () => {
     await injectActions(contentFrame, 'ws0', [{ title: 'Edit' }, { title: 'View' }]);
 
     // The shell is rendered server-side but hidden via CSS when the row has no such action.
-    await expect(contentFrame.locator('#ws0 .recordlist-action-workspace')).toBeHidden();
-    await expect(contentFrame.locator('#ws0 .recordlist-action-translation')).toBeHidden();
+    await expect(contentFrame.locator('#ws0 [data-action-group-menu="workspace"]')).toBeHidden();
+    await expect(contentFrame.locator('#ws0 [data-action-group-menu="translation"]')).toBeHidden();
   });
 
   test('multiple translation actions move into a default dropdown', async ({ page }) => {
@@ -118,21 +119,21 @@ test.describe('Action group dropdowns (issue #92)', () => {
       { group: 'translation', originalTitle: 'Translate with DeepL' },
     ]);
 
-    const toggle = contentFrame.locator('#tr2 .recordlist-action-translation > .dropdown-toggle');
+    const toggle = contentFrame.locator('#tr2 [data-action-group-menu="translation"] > .dropdown-toggle');
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveClass(/btn-default/);
     // The translation toggle carries an explicit chevron next to its icon.
     await expect(toggle.locator('.recordlist-action-chevron')).toHaveCount(1);
-    await expect(contentFrame.locator('#tr2 .recordlist-action-translation .recordlist-action-group-menu > li')).toHaveCount(2);
+    await expect(contentFrame.locator('#tr2 [data-action-group-menu="translation"] .recordlist-action-group-menu > li')).toHaveCount(2);
   });
 
   test('a single translation action also moves into the dropdown', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_beusers');
     await injectActions(contentFrame, 'tr1', [{ group: 'translation', title: 'Translate record' }]);
 
-    const toggle = contentFrame.locator('#tr1 .recordlist-action-translation > .dropdown-toggle');
+    const toggle = contentFrame.locator('#tr1 [data-action-group-menu="translation"] > .dropdown-toggle');
     await expect(toggle).toBeVisible();
-    await expect(contentFrame.locator('#tr1 .recordlist-action-translation .recordlist-action-group-menu > li')).toHaveCount(1);
+    await expect(contentFrame.locator('#tr1 [data-action-group-menu="translation"] .recordlist-action-group-menu > li')).toHaveCount(1);
     // Nothing of that category is left behind in the button bar.
     await expect(contentFrame.locator('#tr1 [data-recordlist-actions] [data-action-group="translation"]')).toHaveCount(0);
   });
@@ -144,8 +145,8 @@ test.describe('Action group dropdowns (issue #92)', () => {
       { group: 'workspace', text: 'Publish' },         // already has text → not labelled
     ]);
 
-    await contentFrame.locator('#lbl .recordlist-action-workspace > .dropdown-toggle').click();
-    const menu = contentFrame.locator('#lbl .recordlist-action-workspace .recordlist-action-group-menu');
+    await contentFrame.locator('#lbl [data-action-group-menu="workspace"] > .dropdown-toggle').click();
+    const menu = contentFrame.locator('#lbl [data-action-group-menu="workspace"] .recordlist-action-group-menu');
     const labels = menu.locator('.recordlist-action-label');
     await expect(labels).toHaveCount(1);
     await expect(labels).toHaveText('Revert');

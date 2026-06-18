@@ -1,70 +1,80 @@
 import DocumentService from "@typo3/core/document-service.js";
 import * as bootstrap from "bootstrap";
 
-// TYPO3 v13 exposes Bootstrap's classes as named exports (`import { Tooltip }`), while v14
-// exposes them on the default export. A named import throws on v14 ("no export named
-// Tooltip"), so resolve the class from the namespace at runtime to support both.
+// Bootstrap exposes Tooltip as a named export on v13 and on the default export on v14;
+// resolve from the namespace so a named import breaks neither version.
 const Tooltip = bootstrap.Tooltip ?? bootstrap.default?.Tooltip ?? null;
 
-// Moves translation / workspace row actions into their dropdowns to keep the action column
-// narrow (see issue #92).
-//
-// The dropdown shells — toggle, icon and empty menu — are rendered server-side
-// (Partials/ActionGroupDropdowns.html) so they appear at their final size on first paint:
-// no icon flicker, no layout shift. This module only relocates the tagged action buttons
-// into the matching menu. The actions vary per row (translations emit one button per
-// language, workspace actions are stage-/permission-dependent), so the move is client-side;
-// recordlist.css hides a shell when the row carries no action of that category.
+// Moves tagged row actions into server-rendered dropdown shells to keep the action column
+// narrow. A shell declares its group via `data-action-group-menu="<name>"`; every bar
+// action marked `data-action-group="<name>"` is relocated into the matching menu. Groups
+// are discovered from the DOM, so adding one needs no change here — see
+// Partials/ActionGroupDropdowns.html.
 export default class RecordlistActionGroups {
   static PROCESSED_ATTR = "data-recordlist-actions-processed";
-  static CATEGORIES = ["translation", "workspace"];
 
   constructor() {
     DocumentService.ready().then(() => {
       this.groupAll();
-      this.observeAjaxRows();
+      this.observeInsertedBars();
     });
   }
 
   groupAll() {
     document
       .querySelectorAll(`[data-recordlist-actions]:not([${RecordlistActionGroups.PROCESSED_ATTR}])`)
-      .forEach(container => this.groupContainer(container));
+      .forEach(bar => this.groupBar(bar));
   }
 
-  groupContainer(container) {
-    // Guard: never process the same container twice (idempotent across re-runs).
-    container.setAttribute(RecordlistActionGroups.PROCESSED_ATTR, "1");
+  // Standard navigation (sort, paginate, filter) reloads the list frame and re-runs this
+  // module, so the constructor pass covers it. This observer only catches action bars
+  // inserted into the DOM after load (the processed-guard makes re-grouping idempotent).
+  observeInsertedBars() {
+    const target = document.querySelector("main.recordlist") ?? document.body;
+    let scheduled = false;
+    new MutationObserver(() => {
+      if (scheduled) {
+        return;
+      }
+      scheduled = true;
+      window.requestAnimationFrame(() => {
+        scheduled = false;
+        this.groupAll();
+      });
+    }).observe(target, {childList: true, subtree: true});
+  }
 
-    const cell = container.parentElement;
+  groupBar(bar) {
+    bar.setAttribute(RecordlistActionGroups.PROCESSED_ATTR, "1");
+
+    const cell = bar.parentElement;
     if (!cell) {
       return;
     }
 
-    RecordlistActionGroups.CATEGORIES.forEach(category => {
-      const menu = cell.querySelector(`.recordlist-action-${category} .recordlist-action-group-menu`);
+    cell.querySelectorAll("[data-action-group-menu]").forEach(shell => {
+      const category = shell.getAttribute("data-action-group-menu");
+      const menu = shell.querySelector(".recordlist-action-group-menu");
       if (!menu) {
         return;
       }
-      // Each direct element child is one action unit; a nested .btn-group counts as one.
-      Array.from(container.children)
-        .filter(child => child.matches(`[data-action-group="${category}"]`))
-        .forEach(item => {
+      Array.from(bar.children)
+        .filter(action => action.matches(`[data-action-group="${category}"]`))
+        .forEach(action => {
           const entry = document.createElement("li");
-          entry.appendChild(item);
-          this.addLabels(item);
-          this.removeTooltips(item);
+          entry.appendChild(action);
+          this.addLabel(action);
+          this.removeTooltip(action);
           menu.appendChild(entry);
         });
     });
   }
 
-  // The actions now carry a visible text label inside the dropdown, so their tooltips are
-  // redundant (and would overlay the menu). Dispose any initialised tooltip and strip the
-  // attributes so neither Bootstrap nor a native `title` tooltip is shown.
-  removeTooltips(unit) {
-    const targets = unit.matches('[data-bs-toggle="tooltip"]') ? [unit] : [];
-    unit.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => targets.push(el));
+  // Inside the menu the action carries a visible label, so its tooltip is redundant (and
+  // would overlay the menu). Dispose any initialised tooltip and strip the attributes.
+  removeTooltip(action) {
+    const targets = action.matches('[data-bs-toggle="tooltip"]') ? [action] : [];
+    action.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => targets.push(el));
     targets.forEach(el => {
       Tooltip?.getInstance(el)?.dispose();
       el.removeAttribute("data-bs-toggle");
@@ -72,12 +82,11 @@ export default class RecordlistActionGroups {
     });
   }
 
-  // Icon-only actions carry their name in `title`. Inside the dropdown there is room for
-  // text, so surface that as a visible label. Bootstrap's tooltip moves `title` to
-  // `data-bs-original-title` (and removes `title`) on init, so read that first. Actions
-  // that already render their own text label (e.g. Publish) are left untouched.
-  addLabels(unit) {
-    const targets = unit.matches("a, button") ? [unit] : unit.querySelectorAll("a, button");
+  // Icon-only actions carry their name in `title`; surface it as a visible label. Bootstrap
+  // moves `title` to `data-bs-original-title` on tooltip init, so read that first. Actions
+  // that already render their own text are left untouched.
+  addLabel(action) {
+    const targets = action.matches("a, button") ? [action] : action.querySelectorAll("a, button");
     targets.forEach(el => {
       if (el.textContent.trim() || el.querySelector(".recordlist-action-label")) {
         return;
@@ -93,24 +102,6 @@ export default class RecordlistActionGroups {
       span.textContent = text;
       el.appendChild(span);
     });
-  }
-
-  // The list module can inject fresh rows via AJAX. The idempotency guard only prevents
-  // re-processing existing containers, so newly added ones need to be grouped too.
-  observeAjaxRows() {
-    const target = document.querySelector("main.recordlist") ?? document.body;
-    let scheduled = false;
-    const observer = new MutationObserver(() => {
-      if (scheduled) {
-        return;
-      }
-      scheduled = true;
-      window.requestAnimationFrame(() => {
-        scheduled = false;
-        this.groupAll();
-      });
-    });
-    observer.observe(target, { childList: true, subtree: true });
   }
 }
 

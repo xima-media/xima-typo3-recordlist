@@ -33,7 +33,7 @@ test.describe('News Publish', () => {
     await contentFrame.locator('main.recordlist').waitFor({ timeout: 10000 });
 
     // Workspace actions are grouped into a dropdown — open it before reaching the button
-    await contentFrame.locator(`tr[data-t3ver_oid="${uid}"] .recordlist-action-workspace > .dropdown-toggle`).click();
+    await contentFrame.locator(`tr[data-t3ver_oid="${uid}"] [data-action-group-menu="workspace"] > .dropdown-toggle`).click();
 
     // Click the "Send to stage" workspace action inside the dropdown
     await contentFrame.locator(`tr[data-t3ver_oid="${uid}"] a[data-workspace-action="sendToSpecificStageExecute"][data-workspace-stage="-10"]`).click();

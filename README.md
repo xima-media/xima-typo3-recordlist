@@ -449,6 +449,31 @@ class UserController extends AbstractBackendController
 }
 ```
 
+#### Grouping Actions into Dropdowns
+
+Translation and workspace row actions are collapsed into dropdowns to keep the action
+column narrow. The grouping is markup-driven — `recordlist-action-groups.js` discovers the
+groups from the DOM and needs no change to support a new one.
+
+To add a group (e.g. `publishing`):
+
+1. **Add a dropdown shell** in your `ActionGroupDropdowns.html` partial, marked with
+   `data-action-group-menu="publishing"` and containing an empty
+   `<ul class="dropdown-menu recordlist-action-group-menu"></ul>`.
+2. **Tag the actions** that belong in it with `data-action-group="publishing"`.
+3. **Add a presence-hide rule** to your CSS so the empty shell stays hidden — and the
+   column width stays stable on first paint — when a row has no such action:
+
+   ```css
+   .recordlist-actions:not(:has([data-action-group="publishing"])) [data-action-group-menu="publishing"] {
+       display: none;
+   }
+   ```
+
+On load the module moves every `[data-action-group="X"]` action from the bar into the shell
+whose `data-action-group-menu` is `X`, adds a text label (from the action's `title`), and
+strips the now-redundant tooltip.
+
 ## Documentation
 
 - 📋 [Changelog](CHANGELOG.md) - See what's new in each version
