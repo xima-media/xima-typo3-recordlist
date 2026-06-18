@@ -32,7 +32,10 @@ test.describe('News Publish', () => {
     await contentFrame.locator('a.t3js-editform-close').click();
     await contentFrame.locator('main.recordlist').waitFor({ timeout: 10000 });
 
-    // Click the "Send to stage" workspace action on the version row
+    // Workspace actions are grouped into a dropdown — open it before reaching the button
+    await contentFrame.locator(`tr[data-t3ver_oid="${uid}"] .recordlist-action-workspace > .dropdown-toggle`).click();
+
+    // Click the "Send to stage" workspace action inside the dropdown
     await contentFrame.locator(`tr[data-t3ver_oid="${uid}"] a[data-workspace-action="sendToSpecificStageExecute"][data-workspace-stage="-10"]`).click();
 
     // Modal opens in main frame
