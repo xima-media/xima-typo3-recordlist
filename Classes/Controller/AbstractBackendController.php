@@ -200,6 +200,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-new-record.js')
         );
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-groups.js')
+        );
 
         $this->setLanguages();
 
@@ -1519,14 +1522,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ksort($columns);
 
         $groupActions = [
-            'Translate',
-            'TranslateDeepl',
             'Edit',
             'HiddenToggle',
-            'Duplicate',
-            'Changelog',
-            'Revert',
+            'Delete',
             'View',
+            'Translate',
+            'TranslateDeepl',
+            'Duplicate',
         ];
 
         // prepend manual sorting buttons only when the list is shown in its `sortby` order
@@ -1540,7 +1542,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'showIconColumn' => true,
             'groupActions' => $groupActions,
             'actions' => [
+                'Changelog',
                 'EditOriginal',
+                'Revert',
                 'ReadyToPublish',
                 'RequestChanges',
                 'Publish',

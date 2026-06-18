@@ -135,3 +135,67 @@ main.recordlist ul.pagination input.form-control {
 .btn-group .dropdown-menu li:last-child:has(hr) {
     display: none;
 }
+
+/** Semantic action dropdowns collapsing translation / workspace row actions. */
+/** Avoid a flash of ungrouped actions on load: hide the buttons destined for a dropdown
+    until the module has processed the bar and relocated them (the move happens in the same
+    JS task, so they are never painted in the bar). Requires the JS module to run. */
+[data-recordlist-actions]:not([data-recordlist-actions-processed]) [data-action-group] {
+    display: none;
+}
+
+/** The dropdown shells render server-side; hide one when the row carries no action of that
+    group. Presence is read from the action button (in the bar before grouping, in the menu
+    after) so the shell's visibility — and therefore the cell width — never changes. One
+    rule per group; add a line when adding a group. */
+.recordlist-actions:not(:has([data-action-group="translation"])) [data-action-group-menu="translation"],
+.recordlist-actions:not(:has([data-action-group="workspace"])) [data-action-group-menu="workspace"] {
+    display: none;
+}
+
+/** Standalone dropdowns sit beside the action button bar, not joined into it. */
+.recordlist-action-group {
+    margin-inline-start: 0.5rem;
+}
+
+/** Icon-only toggles — suppress the default Bootstrap caret. */
+.recordlist-action-group > .dropdown-toggle::after {
+    display: none;
+}
+
+.recordlist-action-group-menu {
+    padding: 4px;
+    overflow: visible;
+}
+
+.recordlist-action-group-menu li {
+    display: block;
+}
+
+/** Render the moved icon buttons as full-width, left-aligned dropdown rows with a label. */
+.recordlist-action-group-menu .btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+    border: 0;
+    border-radius: var(--typo3-input-border-radius);
+    text-align: start;
+}
+
+.recordlist-action-label {
+    white-space: nowrap;
+}
+
+/** Explicit chevron next to a dropdown toggle icon (e.g. the workspace dropdown). */
+.recordlist-action-chevron {
+    display: inline-flex;
+    margin-inline-start: 0.25rem;
+}
+
+/** A nested action group (e.g. ReadyToPublish) inside the tray stays a single full-width row. */
+.recordlist-action-group-menu .btn-group {
+    display: flex;
+    width: 100%;
+}

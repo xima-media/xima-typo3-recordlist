@@ -1,0 +1,48 @@
+<html data-namespace-typo3-fluid="true"
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers">
+
+<f:comment>
+    Standalone dropdown shells, rendered server-side so they sit at their final size on
+    first paint (no flicker, no layout shift). Each shell declares its group via
+    `data-action-group-menu`; recordlist-action-groups.js relocates every bar action marked
+    `data-action-group="<name>"` into the matching menu, and recordlist.css hides a shell
+    when the row has no action of that group (presence-based `:has`).
+
+    Add a group: add a shell here with a unique `data-action-group-menu`, tag the actions
+    with the matching `data-action-group`, and add the presence-hide rule in recordlist.css.
+</f:comment>
+
+<div class="btn-group dropdown recordlist-action-group" data-action-group-menu="translation">
+    <button
+        type="button"
+        class="btn btn-default dropdown-toggle"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.translations')}"
+        aria-label="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.translations')}">
+        <core:icon identifier="actions-translate" size="small" />
+        <span class="recordlist-action-chevron">
+            <core:icon identifier="actions-chevron-down" size="small" />
+        </span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end recordlist-action-group-menu"></ul>
+</div>
+
+<div class="btn-group dropdown recordlist-action-group" data-action-group-menu="workspace">
+    <button
+        type="button"
+        class="btn btn-primary dropdown-toggle"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.workspaceActions')}"
+        aria-label="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.workspaceActions')}">
+        <core:icon identifier="actions-synchronize" size="small" />
+        <span class="recordlist-action-chevron">
+            <core:icon identifier="actions-chevron-down" size="small" />
+        </span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end recordlist-action-group-menu"></ul>
+</div>
+
+</html>

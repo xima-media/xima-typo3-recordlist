@@ -1,12 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Call to static method isDeeplApiKeySet\(\) on an unknown class WebVision\\Deepltranslate\\Core\\Utility\\DeeplBackendUtility\.$#'
-			identifier: class.notFound
-			count: 1
-			path: Classes/Controller/AbstractBackendController.php
-
-		-
 			message: '#^Expression on left side of \?\? is not nullable\.$#'
 			identifier: nullCoalesce.expr
 			count: 2
