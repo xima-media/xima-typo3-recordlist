@@ -2,7 +2,7 @@
 	"name": "xima/xima-typo3-recordlist",
 	"description": "This package provides an abstract class for creating TYPO3 backend modules that display a feature-rich and easy-to-customize list view of records. It also includes built-in simplified TYPO3 workspace integration.",
 	"license": "GPL-2.0-or-later",
-	"type": "library",
+	"type": "typo3-cms-extension",
 	"keywords": [
 		"typo3",
 		"typo3-cms-extension"
