@@ -294,17 +294,35 @@ abstract class AbstractBackendController extends ActionController implements Bac
     }
 
     /**
+     * Legacy single entry point.
+     *
+     * @deprecated since 14.6.0, will be removed in 15.0.0. Implement getRecordSources() instead.
+     */
+    public function getRecordPid(): int
+    {
+        return 0;
+    }
+
+    /**
      * Entry points from which records are collected.
      *
      * Override this to expose records from multiple pages/folders (optionally
      * across several sites) instead of a single one. The default reproduces the
-     * legacy behaviour: the configured {@see getRecordPid()} plus its direct
+     * legacy behaviour: the deprecated {@see getRecordPid()} plus its direct
      * child pages.
      *
      * @return RecordSource[]
      */
     protected function getRecordSources(): array
     {
+        // BC: derive from the deprecated getRecordPid() while a subclass still implements it.
+        if ((new \ReflectionMethod($this, 'getRecordPid'))->getDeclaringClass()->getName() !== self::class) {
+            trigger_error(
+                'getRecordPid() is deprecated since 14.6.0 and will be removed in 15.0.0. Implement getRecordSources() instead.',
+                E_USER_DEPRECATED
+            );
+        }
+
         return [new RecordSource($this->getRecordPid(), includeSubpages: true, depth: 1)];
     }
 
@@ -1942,7 +1960,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addPreviewButton(): void
     {
         // check if preview is possible
-        $previewSettings = BackendUtility::getPagesTSconfig($this->getRecordPid())['TCEMAIN.']['preview.'][$this->getTableName() . '.'] ?? [];
+        $previewSettings = BackendUtility::getPagesTSconfig($this->getAccessiblePids()[0] ?? 0)['TCEMAIN.']['preview.'][$this->getTableName() . '.'] ?? [];
         $previewPageId = $previewSettings['previewPageId'] ?? 0;
         if ($this->getTableName() !== 'pages' && $this->getTableName() !== 'tt_content' && !MathUtility::canBeInterpretedAsInteger($previewPageId)) {
             return;

@@ -13,9 +13,13 @@ All notable changes to this project will be documented in this file.
 
 - **Root/First Page Selectable on Create**: The new-record modal now lists every accessible page (including the configured root/first page), which was previously excluded so only subpages could be chosen.
 
+### Deprecations
+
+- **`getRecordPid()`** is deprecated since 14.6.0 and will be removed in 15.0.0. Implement `getRecordSources()` instead. Controllers still implementing `getRecordPid()` continue to work (the default `getRecordSources()` falls back to it) but emit an `E_USER_DEPRECATED` notice.
+
 ### Backwards Compatibility
 
-- Controllers implementing only `getRecordPid()` are unaffected — the default `getRecordSources()` reproduces the previous "configured page + direct children" behaviour.
+- Controllers implementing only the deprecated `getRecordPid()` are unaffected at runtime — the default `getRecordSources()` reproduces the previous "configured page + direct children" behaviour.
 
 ## [14.x] - Multiple Tables Support, Template Configuration, View Dropdown & Row Selection
 

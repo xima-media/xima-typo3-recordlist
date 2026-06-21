@@ -82,8 +82,8 @@ Get a working backend module in 3 simple steps:
 
 ### 1. Extend new controller from `AbstractBackendController`
 
-The controller implements the `BackendControllerInterface` which requires you to add the
-methods `getTableNames()` and `getRecordPid()`:
+The controller must implement `getTableNames()` (which tables to manage) and `getRecordSources()`
+(which pages/folders to collect records from):
 
 ```php
 <?php
@@ -92,6 +92,7 @@ methods `getTableNames()` and `getRecordPid()`:
 namespace Vendor\MyExtension\Controller\Backend;
 
 use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 
 class UserController extends AbstractBackendController
 {
@@ -100,12 +101,16 @@ class UserController extends AbstractBackendController
         return ['fe_users'];
     }
 
-    public function getRecordPid(): int
+    protected function getRecordSources(): array
     {
-        return $this->site->getConfiguration()['userPid'] ?? 0;
+        return [new RecordSource($this->site->getConfiguration()['userPid'] ?? 0)];
     }
 }
 ```
+
+> **Deprecation:** Earlier versions required a `getRecordPid(): int` method instead. It still works
+> but is **deprecated since 14.6.0 and will be removed in 15.0.0** — use `getRecordSources()`.
+> See [Record Sources](#record-sources-multiple-directories--sites).
 
 **Note:** For multiple tables in one module, return multiple table names:
 
@@ -264,11 +269,6 @@ use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 
 class NewsController extends AbstractBackendController
 {
-    public function getRecordPid(): int
-    {
-        return 15; // still required by the interface; used as a fallback
-    }
-
     protected function getRecordSources(): array
     {
         return [
@@ -294,8 +294,8 @@ class NewsController extends AbstractBackendController
 - When the resolved pages span **more than one site**, labels in the dropdown and the new-record modal are **prefixed with the site title**
   (e.g. `Site A › News`), because folders can share the same name across sites.
 
-> **Backwards compatibility:** Existing controllers that only implement `getRecordPid()` keep working unchanged — the default
-> `getRecordSources()` reproduces the previous "configured page + direct children" behaviour.
+> **Backwards compatibility:** Controllers that still implement the deprecated `getRecordPid()` keep working unchanged — the default
+> `getRecordSources()` reproduces the previous "configured page + direct children" behaviour and emits a deprecation notice.
 
 ### Modifying Records
 

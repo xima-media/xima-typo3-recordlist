@@ -3,14 +3,15 @@
 namespace Xima\XimaTypo3Recordlist\Controller\Example;
 
 use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 
 class NewsController extends AbstractBackendController
 {
     public const WORKSPACE_ID = 1;
 
-    public function getRecordPid(): int
+    protected function getRecordSources(): array
     {
-        return 15;
+        return [new RecordSource(15, includeSubpages: true, depth: 1)];
     }
 
     public function getTableNames(): array
