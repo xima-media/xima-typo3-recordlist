@@ -252,6 +252,51 @@ protected function getTemplateConfigurations(): array
 }
 ```
 
+### Record Sources (Multiple Directories & Sites)
+
+By default the module collects records from the configured `getRecordPid()` page **and its direct child pages**. To aggregate records from
+several, completely unrelated folders — optionally including their subpages, and even across multiple sites (mandants) — override
+`getRecordSources()` and return a list of `RecordSource` objects:
+
+```php
+use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
+
+class NewsController extends AbstractBackendController
+{
+    public function getRecordPid(): int
+    {
+        return 15; // still required by the interface; used as a fallback
+    }
+
+    protected function getRecordSources(): array
+    {
+        return [
+            new RecordSource(15, includeSubpages: true), // folder + all subpages (recursive)
+            new RecordSource(42),                         // single folder, no subpages
+            new RecordSource(118, includeSubpages: true, depth: 1), // folder + direct children only
+        ];
+    }
+}
+```
+
+| Argument          | Default      | Description                                                              |
+|-------------------|--------------|--------------------------------------------------------------------------|
+| `pid`             | *(required)* | The page/folder UID to collect records from                              |
+| `includeSubpages` | `false`      | Whether to also collect records from descendant pages                    |
+| `depth`           | `100`        | Maximum recursion depth when `includeSubpages` is `true` (`1` = direct children) |
+
+**Behaviour:**
+
+- Pages are filtered by the backend user's permissions — inaccessible pages are silently skipped.
+- When more than one page is accessible, a **directory dropdown** appears in the doc header to filter the list per page, and the **new
+  record** button opens a modal to choose the target page (including the root/first page).
+- When the resolved pages span **more than one site**, labels in the dropdown and the new-record modal are **prefixed with the site title**
+  (e.g. `Site A › News`), because folders can share the same name across sites.
+
+> **Backwards compatibility:** Existing controllers that only implement `getRecordPid()` keep working unchanged — the default
+> `getRecordSources()` reproduces the previous "configured page + direct children" behaviour.
+
 ### Modifying Records
 
 Add computed fields or transform data by overriding the `modifyRecord()` method:

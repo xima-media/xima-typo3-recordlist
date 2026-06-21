@@ -24,6 +24,7 @@ use TYPO3\CMS\Core\Database\Query\Restriction\EndTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\StartTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\IconFactory;
@@ -45,6 +46,7 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
 use Xima\XimaTypo3Recordlist\Utility\RelationResolver;
@@ -85,6 +87,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected ModuleTemplate $moduleTemplate;
 
     protected Site $site;
+
+    /**
+     * Cache for resolved accessible pages.
+     *
+     * @var array<int, array{uid: int, title: string, siteIdentifier: string|null, siteTitle: string|null}>|null
+     */
+    protected ?array $accessiblePagesCache = null;
 
     protected array $additionalConstraints = [];
 
@@ -284,52 +293,152 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
     }
 
-    protected function getAccessiblePids(): array
+    /**
+     * Entry points from which records are collected.
+     *
+     * Override this to expose records from multiple pages/folders (optionally
+     * across several sites) instead of a single one. The default reproduces the
+     * legacy behaviour: the configured {@see getRecordPid()} plus its direct
+     * child pages.
+     *
+     * @return RecordSource[]
+     */
+    protected function getRecordSources(): array
     {
-        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages();
-        return array_column($accessiblePages, 'uid');
+        return [new RecordSource($this->getRecordPid(), includeSubpages: true, depth: 1)];
     }
 
     /**
-     * @throws \Doctrine\DBAL\Exception
+     * @return int[]
      */
-    protected function getAccessibleChildPages(): array
+    protected function getAccessiblePids(): array
     {
-        $pageUid = $this->getRecordPid();
-        if ($pageUid === 0) {
-            return [['uid' => 0]];
+        return array_map(static fn (array $page): int => $page['uid'], $this->getAccessiblePages());
+    }
+
+    /**
+     * Resolve all configured record sources into a flat, de-duplicated list of
+     * accessible pages, enriched with the owning site (used for label prefixing
+     * when sources span multiple sites).
+     *
+     * @return array<int, array{uid: int, title: string, siteIdentifier: string|null, siteTitle: string|null}>
+     */
+    protected function getAccessiblePages(): array
+    {
+        if ($this->accessiblePagesCache !== null) {
+            return $this->accessiblePagesCache;
         }
 
-        $qb = $this->connectionPool->getQueryBuilderForTable('pages');
-        $pages = $qb->select('uid', 'title')
-            ->from('pages')
-            ->where(
-                $qb->expr()->or(
-                    $qb->expr()->eq('uid', $qb->createNamedParameter($pageUid, Connection::PARAM_INT)),
-                    $qb->expr()->eq('pid', $qb->createNamedParameter($pageUid, Connection::PARAM_INT))
-                )
-            )
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
 
-        $accessiblePages = [];
-        foreach ($pages as $page) {
-            if (!is_int($page['uid'])) {
+        // Resolve sources to a de-duplicated uid list, preserving source order.
+        $uids = [];
+        foreach ($this->getRecordSources() as $source) {
+            $sourceUids = [$source->pid];
+            if ($source->includeSubpages && $source->pid > 0) {
+                // bypassEnableFieldsCheck keeps hidden folders visible in the backend
+                $sourceUids = array_merge(
+                    $sourceUids,
+                    $pageRepository->getDescendantPageIdsRecursive($source->pid, $source->depth, 0, [], true)
+                );
+            }
+            foreach ($sourceUids as $uid) {
+                $uids[(int)$uid] = true;
+            }
+        }
+
+        $permsClause = $this->getBackendAuthentication()->getPagePermsClause(Permission::PAGE_SHOW);
+        $pages = [];
+        foreach (array_keys($uids) as $uid) {
+            if ($uid === 0) {
+                // Root: no page record exists; kept accessible for root-level records (legacy behaviour).
+                $pages[] = [
+                    'uid' => 0,
+                    'title' => $this->getRootPageTitle(),
+                    'siteIdentifier' => null,
+                    'siteTitle' => null,
+                ];
                 continue;
             }
 
-            $access = BackendUtility::readPageAccess(
-                $page['uid'],
-                $this->getBackendAuthentication()->getPagePermsClause(Permission::PAGE_SHOW)
-            ) ?: [];
-
+            $access = BackendUtility::readPageAccess($uid, $permsClause) ?: [];
             if (empty($access)) {
                 continue;
             }
 
-            $accessiblePages[] = $page;
+            $site = $this->findSiteForPage($uid, $siteFinder);
+            $pages[] = [
+                'uid' => $uid,
+                'title' => (string)($access['title'] ?? ('#' . $uid)),
+                'siteIdentifier' => $site?->getIdentifier(),
+                'siteTitle' => $site instanceof Site ? $this->getSiteTitle($site) : null,
+            ];
         }
-        return $accessiblePages;
+
+        return $this->accessiblePagesCache = $pages;
+    }
+
+    /**
+     * BC wrapper returning the legacy [uid, title] shape.
+     *
+     * @return array<int, array{uid: int, title: string}>
+     */
+    protected function getAccessibleChildPages(): array
+    {
+        return array_map(
+            static fn (array $page): array => ['uid' => $page['uid'], 'title' => $page['title']],
+            $this->getAccessiblePages()
+        );
+    }
+
+    protected function findSiteForPage(int $pageUid, SiteFinder $siteFinder): ?Site
+    {
+        if ($pageUid <= 0) {
+            return null;
+        }
+        try {
+            return $siteFinder->getSiteByPageId($pageUid);
+        } catch (SiteNotFoundException) {
+            return null;
+        }
+    }
+
+    protected function getSiteTitle(Site $site): string
+    {
+        $title = (string)($site->getConfiguration()['websiteTitle'] ?? '');
+        return $title !== '' ? $title : $site->getIdentifier();
+    }
+
+    protected function getRootPageTitle(): string
+    {
+        return $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'pidSelection.root') ?: 'Root';
+    }
+
+    /**
+     * Whether the accessible pages belong to more than one site. When true,
+     * page labels are prefixed with the site title to disambiguate folders that
+     * share the same name across sites (mandants).
+     */
+    protected function accessiblePagesSpanMultipleSites(): bool
+    {
+        $identifiers = array_filter(array_map(
+            static fn (array $page): ?string => $page['siteIdentifier'],
+            $this->getAccessiblePages()
+        ));
+        return count(array_unique($identifiers)) > 1;
+    }
+
+    /**
+     * @param array{uid: int, title: string, siteIdentifier: string|null, siteTitle: string|null} $page
+     */
+    protected function getPageDisplayTitle(array $page): string
+    {
+        $title = $page['title'] !== '' ? $page['title'] : '#' . $page['uid'];
+        if ($this->accessiblePagesSpanMultipleSites() && !empty($page['siteTitle'])) {
+            return $page['siteTitle'] . ' › ' . $title;
+        }
+        return $title;
     }
 
     protected function getBackendAuthentication(): BackendUserAuthentication
@@ -1915,19 +2024,51 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        $accessiblePages = $this->getAccessibleChildPages();
+        $accessiblePages = $this->getAccessiblePages();
+        if ($accessiblePages === []) {
+            return;
+        }
+
         $activeLanguage = $this->getActiveLanguage();
         $tableName = $this->getTableName();
-        foreach ($accessiblePages as $key => $page) {
-            $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
-            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-                $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                    ->setHref($this->backendUriBuilder->buildUriFromRoute(
-                        'record_edit',
-                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals, 'module' => $this->getModuleName(), 'workspaceId' => $this::WORKSPACE_ID]
-                    ))
-                    ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
-                    ->setTitle($key === 0 ? 'New ' . $this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
+        $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
+        $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
+        $newLabel = 'New ' . $this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']);
+
+        $buildHref = fn (int $pid): string => (string)$this->backendUriBuilder->buildUriFromRoute(
+            'record_edit',
+            ['edit' => [$tableName => [$pid => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals, 'module' => $this->getModuleName(), 'workspaceId' => $this::WORKSPACE_ID]
+        );
+
+        // Single target: a plain link button that navigates directly.
+        if (count($accessiblePages) === 1) {
+            $buttonBar->addButton(
+                $buttonBar->makeLinkButton()
+                    ->setHref($buildHref($accessiblePages[0]['uid']))
+                    ->setClasses('new-record-in-page')
+                    ->setTitle($newLabel)
+                    ->setShowLabelText(true)
+                    ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
+            );
+            return;
+        }
+
+        // Multiple targets: one visible trigger opens a modal that lists every
+        // accessible page (including the root/first page — previously excluded).
+        $buttonBar->addButton(
+            $buttonBar->makeLinkButton()
+                ->setHref('#')
+                ->setClasses('new-record-trigger')
+                ->setTitle($newLabel)
+                ->setShowLabelText(true)
+                ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
+        );
+        foreach ($accessiblePages as $page) {
+            $buttonBar->addButton(
+                $buttonBar->makeLinkButton()
+                    ->setHref($buildHref($page['uid']))
+                    ->setClasses('new-record-in-page hidden')
+                    ->setTitle($this->getPageDisplayTitle($page))
                     ->setShowLabelText(true)
                     ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
             );
@@ -2163,16 +2304,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        $accessiblePages = $this->getAccessiblePids();
+        $accessiblePages = $this->getAccessiblePages();
         if (count($accessiblePages) > 1) {
             $pageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
             $pageMenu->setIdentifier('pageSelector');
             $pageMenu->setLabel('');
-            foreach ($accessiblePages as $pageUid) {
-                $page = BackendUtility::getRecord('pages', $pageUid);
+            foreach ($accessiblePages as $page) {
                 $menuItem = $pageMenu
                     ->makeMenuItem()
-                    ->setTitle($page['title'])
+                    ->setTitle($this->getPageDisplayTitle($page))
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
                         ['id' => $page['uid'], 'language' => $this->getActiveLanguage() ?? 0]

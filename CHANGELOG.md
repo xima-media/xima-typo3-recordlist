@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Features
+
+- **Multiple Record Sources**: New `getRecordSources()` override exposes records from several pages/folders at once via `RecordSource` objects, each with an optional recursive `includeSubpages` flag and `depth`. Replaces the implicit "single pid + direct children" entry point.
+- **Multi-Site Directories**: Accessible pages spanning more than one site get site-prefixed labels (e.g. `Site A › News`) in the directory dropdown and the new-record modal, disambiguating identically named folders across mandants.
+
+### Bug Fixes
+
+- **Root/First Page Selectable on Create**: The new-record modal now lists every accessible page (including the configured root/first page), which was previously excluded so only subpages could be chosen.
+
+### Backwards Compatibility
+
+- Controllers implementing only `getRecordPid()` are unaffected — the default `getRecordSources()` reproduces the previous "configured page + direct children" behaviour.
+
 ## [14.x] - Multiple Tables Support, Template Configuration, View Dropdown & Row Selection
 
 ### Features

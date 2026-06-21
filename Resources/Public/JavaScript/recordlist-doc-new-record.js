@@ -9,22 +9,21 @@ export default class RecordlistDocNewRecord {
   }
 
   init() {
-    if (document.querySelectorAll(".new-record-in-page").length > 1) {
-      document.querySelectorAll(".new-record-in-page").forEach(btn => {
-        btn.addEventListener("click", this.onNewRecordInPageClick.bind(this));
-      });
+    const trigger = document.querySelector(".new-record-trigger");
+    if (trigger) {
+      trigger.addEventListener("click", this.onNewRecordTriggerClick.bind(this));
     }
   }
 
-  onNewRecordInPageClick(e) {
+  onNewRecordTriggerClick(e) {
     e.preventDefault();
-    const btn = e.currentTarget;
+    const trigger = e.currentTarget;
 
-    // construct select element
+    // construct select element from every available target page (incl. root/first)
     const selection = document.createElement("select");
     selection.id = "page-for-new-record";
     selection.classList.add("form-select");
-    document.querySelectorAll(".new-record-in-page.hidden").forEach(btn => {
+    document.querySelectorAll(".new-record-in-page").forEach(btn => {
       const option = document.createElement("option");
       option.value = btn.getAttribute("href") ?? "";
       option.text = btn.getAttribute("title") ?? "";
@@ -38,7 +37,7 @@ export default class RecordlistDocNewRecord {
       content: selection,
       buttons: [
         {
-          text: btn.getAttribute("title"),
+          text: trigger.getAttribute("title"),
           icon: "actions-add",
           btnClass: "btn-primary",
           trigger: function() {
