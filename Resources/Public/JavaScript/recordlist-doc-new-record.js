@@ -19,14 +19,15 @@ export default class RecordlistDocNewRecord {
     e.preventDefault();
     const trigger = e.currentTarget;
 
-    // construct select element from every available target page (incl. root/first)
+    // construct select element from the pages carried on the trigger's data attribute
+    const pages = JSON.parse(trigger.dataset.pages ?? "[]");
     const selection = document.createElement("select");
     selection.id = "page-for-new-record";
     selection.classList.add("form-select");
-    document.querySelectorAll(".new-record-in-page").forEach(btn => {
+    pages.forEach(page => {
       const option = document.createElement("option");
-      option.value = btn.getAttribute("href") ?? "";
-      option.text = btn.getAttribute("title") ?? "";
+      option.value = page.href ?? "";
+      option.text = page.title ?? "";
       selection.appendChild(option);
     });
 

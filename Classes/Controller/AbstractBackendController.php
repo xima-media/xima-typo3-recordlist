@@ -2083,8 +2083,17 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        // Multiple targets: one visible trigger opens a modal that lists every
-        // accessible page (including the root/first page — previously excluded).
+        // Multiple targets: a single button carrying the selectable pages as a
+        // data attribute. The modal (JS) builds the picker from it — avoiding
+        // extra hidden buttons that disturbed the doc header layout.
+        $pages = [];
+        foreach ($accessiblePages as $page) {
+            $pages[] = [
+                'href' => $buildHref($page['uid']),
+                'title' => $this->getPageDisplayTitle($page),
+            ];
+        }
+
         $buttonBar->addButton(
             $buttonBar->makeLinkButton()
                 ->setHref('#')
@@ -2092,17 +2101,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setTitle($newLabel)
                 ->setShowLabelText(true)
                 ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
+                ->setDataAttributes(['pages' => (string)json_encode($pages)])
         );
-        foreach ($accessiblePages as $page) {
-            $buttonBar->addButton(
-                $buttonBar->makeLinkButton()
-                    ->setHref($buildHref($page['uid']))
-                    ->setClasses('new-record-in-page hidden')
-                    ->setTitle($this->getPageDisplayTitle($page))
-                    ->setShowLabelText(true)
-                    ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
-            );
-        }
     }
 
     protected function addShowColumnsButtonToViewDropdown(): void

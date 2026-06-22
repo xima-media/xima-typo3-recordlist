@@ -47,11 +47,15 @@ test.describe('Multi-Site News (record sources across sites)', () => {
     await expect(items.filter({ hasText: 'Second Site › News' })).toHaveCount(1);
   });
 
-  test('new-record options offer every folder, site-prefixed', async ({ page }) => {
+  test('new-record modal offers every folder, site-prefixed', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_multisite_news');
 
-    // Both folders (including the first/root) are selectable when creating a record.
-    const options = contentFrame.locator('a.new-record-in-page');
+    // A single trigger button carries the pages; clicking it opens the picker modal.
+    await contentFrame.locator('a.new-record-trigger').evaluate((el) => (el as HTMLElement).click());
+
+    // Modal renders in the top document; both folders (incl. the first/root) are selectable.
+    await page.locator('#page-for-new-record').waitFor({ state: 'visible', timeout: 5000 });
+    const options = page.locator('#page-for-new-record option');
     await expect(options.filter({ hasText: 'Main Site › News' })).toHaveCount(1);
     await expect(options.filter({ hasText: 'Second Site › News' })).toHaveCount(1);
   });
