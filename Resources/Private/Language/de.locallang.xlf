@@ -183,6 +183,14 @@
 				<source />
 				<target>Hier sind noch keine Datensätze vorhanden. Sobald der erste Datensatz angelegt wurde, erscheint er in dieser Liste.</target>
 			</trans-unit>
+			<trans-unit id="noStorage.headline">
+				<source />
+				<target>Kein Speicher verfügbar</target>
+			</trans-unit>
+			<trans-unit id="noStorage.text">
+				<source />
+				<target>Es wurde keine zugängliche Seite für dieses Modul gefunden. Dies könnte auf fehlende Berechtigungen oder eine Fehlkonfiguration zurückzuführen sein. Bitte wenden Sie sich an Ihren Administrator.</target>
+			</trans-unit>
 			<trans-unit id="table.button.save" approved="yes">
 				<source />
 				<target>Speichern</target>
