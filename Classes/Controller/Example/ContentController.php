@@ -3,6 +3,7 @@
 namespace Xima\XimaTypo3Recordlist\Controller\Example;
 
 use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 
 /**
  * Example module listing `tt_content` records.
@@ -13,9 +14,9 @@ use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
  */
 class ContentController extends AbstractBackendController
 {
-    public function getRecordPid(): int
+    protected function getRecordSources(): array
     {
-        return 3;
+        return [new RecordSource(3, includeSubpages: true, depth: 1)];
     }
 
     public function getTableNames(): array

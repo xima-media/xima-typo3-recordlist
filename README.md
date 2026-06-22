@@ -82,8 +82,8 @@ Get a working backend module in 3 simple steps:
 
 ### 1. Extend new controller from `AbstractBackendController`
 
-The controller implements the `BackendControllerInterface` which requires you to add the
-methods `getTableNames()` and `getRecordPid()`:
+The controller must implement `getTableNames()` (which tables to manage) and `getRecordSources()`
+(which pages/folders to collect records from):
 
 ```php
 <?php
@@ -92,6 +92,7 @@ methods `getTableNames()` and `getRecordPid()`:
 namespace Vendor\MyExtension\Controller\Backend;
 
 use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 
 class UserController extends AbstractBackendController
 {
@@ -100,12 +101,14 @@ class UserController extends AbstractBackendController
         return ['fe_users'];
     }
 
-    public function getRecordPid(): int
+    protected function getRecordSources(): array
     {
-        return $this->site->getConfiguration()['userPid'] ?? 0;
+        return [new RecordSource(pid: 7, includeSubpages: true, depth: 1)];
     }
 }
 ```
+
+> See [Record Sources](#record-sources-multiple-directories--sites) for advanced page collection options, including multiple folders and cross-site support.
 
 **Note:** For multiple tables in one module, return multiple table names:
 
@@ -251,6 +254,41 @@ protected function getTemplateConfigurations(): array
     };
 }
 ```
+
+### Record Sources (Multiple Directories & Sites)
+
+By default the module collects records from the configured `getRecordPid()` page **and its direct child pages**. To aggregate records from
+several, completely unrelated folders — optionally including their subpages, and even across multiple sites (mandants) — override
+`getRecordSources()` and return a list of `RecordSource` objects:
+
+```php
+use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
+
+class NewsController extends AbstractBackendController
+{
+    protected function getRecordSources(): array
+    {
+        return [
+            new RecordSource(pid: 15, includeSubpages: true), // folder + all subpages (recursive)
+            new RecordSource(pid: 42),                         // single folder, no subpages
+            new RecordSource(pid: 118, includeSubpages: true, depth: 1), // folder + direct children only
+        ];
+    }
+}
+```
+
+| Argument          | Default      | Description                                                              |
+|-------------------|--------------|--------------------------------------------------------------------------|
+| `pid`             | *(required)* | The page/folder UID to collect records from                              |
+| `includeSubpages` | `false`      | Whether to also collect records from descendant pages                    |
+| `depth`           | `100`        | Maximum recursion depth when `includeSubpages` is `true` (`1` = direct children) |
+
+**Behaviour:**
+
+- Pages are filtered by the backend user's permissions — inaccessible pages are silently skipped.
+- When more than one page is accessible, a **directory dropdown** appears in the doc header to filter the list per page, and the **new record** button opens a modal to choose the target page (including the root/first page).
+- When the resolved pages span **more than one site**, labels in the dropdown and the new-record modal are **prefixed with the site title** (e.g. `Site A › News`), because folders can share the same name across sites.
 
 ### Modifying Records
 

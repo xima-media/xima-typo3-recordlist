@@ -19,4 +19,6 @@ insert into `pages` (`uid`, `pid`, `title`, `slug`, `sys_language_uid`, `l10n_pa
 	(17,1,'Categories','/categories',0,0,0,1,1,31,31,1,254,0,'', 'Browse by category', 'System storage folder containing category records used for organizing and classifying content throughout the website.'),
 	(18,1,'Kategorien','/kategorien',1,17,0,1,1,31,31,1,254,0,'', 'Nach Kategorie durchsuchen', 'System-Ablageordner mit Kategoriedatensätzen zur Organisation und Klassifizierung von Inhalten auf der gesamten Website.'),
 	(19,1,'User','/user',0,0,0,1,1,31,31,1,254,0,'fe_users', 'User management', 'Secure storage folder for frontend user accounts, managing member registrations, profiles, and access permissions.'),
-	(20,1,'Benutzer','/benutzer',1,19,0,1,1,31,31,1,254,0,'fe_users', 'Benutzerverwaltung', 'Sicherer Ablageordner für Frontend-Benutzerkonten zur Verwaltung von Mitgliederregistrierungen, Profilen und Zugriffsrechten.');
+	(20,1,'Benutzer','/benutzer',1,19,0,1,1,31,31,1,254,0,'fe_users', 'Benutzerverwaltung', 'Sicherer Ablageordner für Frontend-Benutzerkonten zur Verwaltung von Mitgliederregistrierungen, Profilen und Zugriffsrechten.'),
+	(21,0,'Second Site','/',0,0,0,1,1,31,31,1,1,1,'', 'Second mandant root', 'Root page of a second site (mandant) used to verify cross-site record aggregation.'),
+	(22,21,'News','/news',0,0,0,1,1,31,31,1,254,0,'news', 'Second site news folder', 'Storage folder holding news records for the second site, intentionally sharing the name "News" with the main site folder.');
