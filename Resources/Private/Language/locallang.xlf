@@ -138,6 +138,12 @@
 			<trans-unit id="emptyState.text">
 				<source>There are no records here yet. Once the first record is created, it will appear in this list.</source>
 			</trans-unit>
+			<trans-unit id="noStorage.headline">
+				<source>No record storage available</source>
+			</trans-unit>
+			<trans-unit id="noStorage.text">
+				<source>No accessible storage was found for this module. This could be due to missing permissions or a misconfiguration. Please contact your administrator.</source>
+			</trans-unit>
 			<trans-unit id="table.button.save">
 				<source>Save</source>
 			</trans-unit>

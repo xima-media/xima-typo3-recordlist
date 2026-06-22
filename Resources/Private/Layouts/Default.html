@@ -45,9 +45,18 @@
                 <f:if condition="{fullRecordCount} == 0">
                     <f:then>
 
-                        <f:render section="EmptyState" arguments="{_all}" optional="true">
-                            <f:render partial="EmptyState" arguments="{_all}" />
-                        </f:render>
+                        <f:if condition="{noStorage}">
+                            <f:then>
+                                <f:render section="NoStorage" arguments="{_all}" optional="true">
+                                    <f:render partial="NoStorage" arguments="{_all}" />
+                                </f:render>
+                            </f:then>
+                            <f:else>
+                                <f:render section="EmptyState" arguments="{_all}" optional="true">
+                                    <f:render partial="EmptyState" arguments="{_all}" />
+                                </f:render>
+                            </f:else>
+                        </f:if>
 
                     </f:then>
                     <f:else>

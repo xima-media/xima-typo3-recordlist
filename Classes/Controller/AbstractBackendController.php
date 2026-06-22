@@ -183,8 +183,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // Get site
         $this->setSite();
 
-        // check access + redirect
-        $this->accessCheck();
+        // No accessible record storage found
+        if ($this->getAccessiblePids() === []) {
+            return $this->renderNoStorageResponse();
+        }
 
         if (!in_array($this->getCurrentPid(), $this->getAccessiblePids(), true)) {
             return new RedirectResponse($this->getCurrentUrl());
@@ -285,12 +287,22 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return null;
     }
 
-    protected function accessCheck(): void
+    /**
+     * Render the module with a "no record storage" infobox instead of crashing
+     * when no accessible storage pid is configured/available yet.
+     */
+    protected function renderNoStorageResponse(): ResponseInterface
     {
-        $accessiblePids = $this->getAccessiblePids();
-        if (!count($accessiblePids)) {
-            throw new RouteNotFoundException('No accessible child pages found.', 403);
-        }
+        $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+        $this->setLanguages();
+        $this->assignViewVariables();
+        $this->moduleTemplate->assignMultiple([
+            'noStorage' => true,
+            'records' => [],
+            'recordCount' => 0,
+        ]);
+
+        return $this->moduleTemplate->renderResponse($this->getTemplateName());
     }
 
     /**
@@ -662,6 +674,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     protected function getFullRecordCount(): int
     {
+        if ($this->getRequestedPids() === []) {
+            return 0;
+        }
+
         $tableName = $this->getTableName();
         $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
