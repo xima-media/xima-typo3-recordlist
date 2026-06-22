@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsAdmin, openModule, searchFor } from '../helpers/typo3-backend';
+import { loginAsAdmin, openModule, searchFor, selectDirectory, directoryMenuItems } from '../helpers/typo3-backend';
 import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
 
 // Records that live exclusively in one site's news folder.
@@ -40,7 +40,7 @@ test.describe('Multi-Site News (record sources across sites)', () => {
   test('directory dropdown offers an "all" entry plus each site-prefixed folder', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_multisite_news');
 
-    const items = contentFrame.locator('a.dropdown-item.dropdown-item-spaced');
+    const items = directoryMenuItems(contentFrame);
     await expect(items.filter({ hasText: 'All directories' })).toHaveCount(1);
     // Both folders are named "News" — disambiguated by the site title prefix.
     await expect(items.filter({ hasText: 'Main Site › News' })).toHaveCount(1);
@@ -65,9 +65,7 @@ test.describe('Multi-Site News (record sources across sites)', () => {
     // Clear any search persisted by a previous test so the count reflects the directory only.
     await searchFor(contentFrame, '');
 
-    const link = contentFrame.locator('a.dropdown-item.dropdown-item-spaced[title="Second Site › News"]');
-    const href = await link.getAttribute('href');
-    await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
+    await selectDirectory(contentFrame, 'Second Site › News');
 
     // The second-site folder holds exactly its two records. Poll through the iframe
     // reload (which briefly detaches the frame) until the new list has settled.
@@ -88,9 +86,7 @@ test.describe('Multi-Site News (record sources across sites)', () => {
     const contentFrame = await openModule(page, 'example_multisite_news');
     await searchFor(contentFrame, '');
 
-    const link = contentFrame.locator('a.dropdown-item.dropdown-item-spaced[title="Main Site › News"]');
-    const href = await link.getAttribute('href');
-    await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
+    await selectDirectory(contentFrame, 'Main Site › News');
 
     // The main folder holds many records; the second site's records must be excluded.
     await expect.poll(async () => {
