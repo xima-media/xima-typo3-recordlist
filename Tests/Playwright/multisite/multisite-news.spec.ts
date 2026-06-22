@@ -37,11 +37,12 @@ test.describe('Multi-Site News (record sources across sites)', () => {
     await expect(contentFrame.locator('tr[data-uid]')).toHaveCount(0);
   });
 
-  test('directory dropdown prefixes folders with their site title', async ({ page }) => {
+  test('directory dropdown offers an "all" entry plus each site-prefixed folder', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_multisite_news');
 
-    // Both folders are named "News" — disambiguated by the site title prefix.
     const items = contentFrame.locator('a.dropdown-item.dropdown-item-spaced');
+    await expect(items.filter({ hasText: 'All directories' })).toHaveCount(1);
+    // Both folders are named "News" — disambiguated by the site title prefix.
     await expect(items.filter({ hasText: 'Main Site › News' })).toHaveCount(1);
     await expect(items.filter({ hasText: 'Second Site › News' })).toHaveCount(1);
   });
@@ -75,5 +76,26 @@ test.describe('Multi-Site News (record sources across sites)', () => {
     }).toBe(2);
     await expect(contentFrame.locator('body')).toContainText(SECOND_NEWS);
     await expect(contentFrame.locator('body')).not.toContainText(MAIN_NEWS);
+  });
+
+  test('selecting the first directory filters to it instead of aggregating everything', async ({ page }) => {
+    // Regression guard: the first accessible page used to act as an implicit "all"
+    // scope, so it could never be filtered on its own.
+    const contentFrame = await openModule(page, 'example_multisite_news');
+    await searchFor(contentFrame, '');
+
+    const link = contentFrame.locator('a.dropdown-item.dropdown-item-spaced[title="Main Site › News"]');
+    const href = await link.getAttribute('href');
+    await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
+
+    // The main folder holds many records; the second site's records must be excluded.
+    await expect.poll(async () => {
+      try {
+        return await contentFrame.locator('tr[data-uid]').count();
+      } catch {
+        return -1;
+      }
+    }).toBeGreaterThan(2);
+    await expect(contentFrame.locator('body')).not.toContainText(SECOND_NEWS);
   });
 });

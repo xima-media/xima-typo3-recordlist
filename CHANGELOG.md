@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - **Root/First Page Selectable on Create**: The new-record modal now lists every accessible page (including the configured root/first page), which was previously excluded so only subpages could be chosen.
+- **First Directory Filterable**: The directory dropdown now has an explicit "All directories" entry and uses a `scope` query parameter, so selecting the first directory filters to it instead of implicitly showing all pages.
 
 ### Deprecations
 

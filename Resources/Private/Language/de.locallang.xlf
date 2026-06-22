@@ -11,6 +11,10 @@
 				<source />
 				<target>Root</target>
 			</trans-unit>
+			<trans-unit id="pidSelection.all" approved="yes">
+				<source />
+				<target>Alle Verzeichnisse</target>
+			</trans-unit>
 			<trans-unit id="table.column.language" approved="yes">
 				<source />
 				<target>Sprache</target>

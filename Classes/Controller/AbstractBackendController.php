@@ -680,7 +680,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getRequestedPids(): array
     {
-        return $this->getCurrentPid() === $this->getAccessiblePids()[0] ? $this->getAccessiblePids() : [$this->getCurrentPid()];
+        if ($this->getCurrentScope() === 'all') {
+            return $this->getAccessiblePids();
+        }
+        return [$this->getCurrentPid()];
+    }
+
+    /**
+     * Whether the directory dropdown aggregates all accessible pages ('all') or
+     * filters to the currently selected one ('single'). Defaults to 'all'.
+     */
+    protected function getCurrentScope(): string
+    {
+        return ($this->request->getQueryParams()['scope'] ?? 'all') === 'single' ? 'single' : 'all';
     }
 
     protected function getTableName(): string
@@ -2274,7 +2286,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ->setTitle($language['title'])
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
-                        ['id' => $this->getCurrentPid(), 'language' => $languageKey]
+                        ['id' => $this->getCurrentPid(), 'language' => $languageKey, 'scope' => $this->getCurrentScope()]
                     ));
                 if ($this->getActiveLanguage() === $languageKey) {
                     $menuItem->setActive(true);
@@ -2294,7 +2306,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setLabel($language['title'])
                 ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                     $this->getModuleName(),
-                    ['id' => $this->getCurrentPid(), 'language' => $languageKey]
+                    ['id' => $this->getCurrentPid(), 'language' => $languageKey, 'scope' => $this->getCurrentScope()]
                 ))
                 ->setTitle($language['title']);
             if ($this->getActiveLanguage() === $languageKey) {
@@ -2324,20 +2336,34 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
         $accessiblePages = $this->getAccessiblePages();
         if (count($accessiblePages) > 1) {
+            $language = $this->getActiveLanguage() ?? 0;
+            $isAllScope = $this->getCurrentScope() === 'all';
+
             $pageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
             $pageMenu->setIdentifier('pageSelector');
             $pageMenu->setLabel('');
+
+            // Aggregate entry: records from every accessible page.
+            $pageMenu->addMenuItem(
+                $pageMenu
+                    ->makeMenuItem()
+                    ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'pidSelection.all') ?: 'All directories')
+                    ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
+                        $this->getModuleName(),
+                        ['id' => $accessiblePages[0]['uid'], 'language' => $language, 'scope' => 'all']
+                    ))
+                    ->setActive($isAllScope)
+            );
+
             foreach ($accessiblePages as $page) {
                 $menuItem = $pageMenu
                     ->makeMenuItem()
                     ->setTitle($this->getPageDisplayTitle($page))
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
-                        ['id' => $page['uid'], 'language' => $this->getActiveLanguage() ?? 0]
-                    ));
-                if ($this->getCurrentPid() === $page['uid']) {
-                    $menuItem->setActive(true);
-                }
+                        ['id' => $page['uid'], 'language' => $language, 'scope' => 'single']
+                    ))
+                    ->setActive(!$isAllScope && $this->getCurrentPid() === $page['uid']);
                 $pageMenu->addMenuItem($menuItem);
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
@@ -2366,7 +2392,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ->setTitle($this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']))
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
-                        ['id' => $this->getCurrentPid(), 'language' => $this->getActiveLanguage() ?? 0, 'table' => $tableName]
+                        ['id' => $this->getCurrentPid(), 'language' => $this->getActiveLanguage() ?? 0, 'table' => $tableName, 'scope' => $this->getCurrentScope()]
                     ));
                 if ($this->getTableName() === $tableName) {
                     $menuItem->setActive(true);

@@ -9,6 +9,9 @@
 			<trans-unit id="pidSelection.root">
 				<source>Root</source>
 			</trans-unit>
+			<trans-unit id="pidSelection.all">
+				<source>All directories</source>
+			</trans-unit>
 			<trans-unit id="table.column.language">
 				<source>Language</source>
 			</trans-unit>
