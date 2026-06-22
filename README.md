@@ -103,15 +103,12 @@ class UserController extends AbstractBackendController
 
     protected function getRecordSources(): array
     {
-        // page + its direct children (the behaviour of the deprecated getRecordPid())
-        return [new RecordSource($this->site->getConfiguration()['userPid'] ?? 0, includeSubpages: true, depth: 1)];
+        return [new RecordSource(pid: 7, includeSubpages: true, depth: 1)];
     }
 }
 ```
 
-> **Deprecation:** Earlier versions required a `getRecordPid(): int` method instead. It still works
-> but is **deprecated since 14.6.0 and will be removed in 15.0.0** — use `getRecordSources()`.
-> See [Record Sources](#record-sources-multiple-directories--sites).
+> See [Record Sources](#record-sources-multiple-directories--sites) for advanced page collection options, including multiple folders and cross-site support.
 
 **Note:** For multiple tables in one module, return multiple table names:
 
@@ -273,9 +270,9 @@ class NewsController extends AbstractBackendController
     protected function getRecordSources(): array
     {
         return [
-            new RecordSource(15, includeSubpages: true), // folder + all subpages (recursive)
-            new RecordSource(42),                         // single folder, no subpages
-            new RecordSource(118, includeSubpages: true, depth: 1), // folder + direct children only
+            new RecordSource(pid: 15, includeSubpages: true), // folder + all subpages (recursive)
+            new RecordSource(pid: 42),                         // single folder, no subpages
+            new RecordSource(pid: 118, includeSubpages: true, depth: 1), // folder + direct children only
         ];
     }
 }
@@ -292,9 +289,6 @@ class NewsController extends AbstractBackendController
 - Pages are filtered by the backend user's permissions — inaccessible pages are silently skipped.
 - When more than one page is accessible, a **directory dropdown** appears in the doc header to filter the list per page, and the **new record** button opens a modal to choose the target page (including the root/first page).
 - When the resolved pages span **more than one site**, labels in the dropdown and the new-record modal are **prefixed with the site title** (e.g. `Site A › News`), because folders can share the same name across sites.
-
-> **Backwards compatibility:** Controllers that still implement the deprecated `getRecordPid()` keep working unchanged — the default
-> `getRecordSources()` reproduces the previous "configured page + direct children" behaviour and emits a deprecation notice.
 
 ### Modifying Records
 
