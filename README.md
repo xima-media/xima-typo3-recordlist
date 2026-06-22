@@ -103,7 +103,8 @@ class UserController extends AbstractBackendController
 
     protected function getRecordSources(): array
     {
-        return [new RecordSource($this->site->getConfiguration()['userPid'] ?? 0)];
+        // page + its direct children (the behaviour of the deprecated getRecordPid())
+        return [new RecordSource($this->site->getConfiguration()['userPid'] ?? 0, includeSubpages: true, depth: 1)];
     }
 }
 ```
@@ -289,10 +290,8 @@ class NewsController extends AbstractBackendController
 **Behaviour:**
 
 - Pages are filtered by the backend user's permissions — inaccessible pages are silently skipped.
-- When more than one page is accessible, a **directory dropdown** appears in the doc header to filter the list per page, and the **new
-  record** button opens a modal to choose the target page (including the root/first page).
-- When the resolved pages span **more than one site**, labels in the dropdown and the new-record modal are **prefixed with the site title**
-  (e.g. `Site A › News`), because folders can share the same name across sites.
+- When more than one page is accessible, a **directory dropdown** appears in the doc header to filter the list per page, and the **new record** button opens a modal to choose the target page (including the root/first page).
+- When the resolved pages span **more than one site**, labels in the dropdown and the new-record modal are **prefixed with the site title** (e.g. `Site A › News`), because folders can share the same name across sites.
 
 > **Backwards compatibility:** Controllers that still implement the deprecated `getRecordPid()` keep working unchanged — the default
 > `getRecordSources()` reproduces the previous "configured page + direct children" behaviour and emits a deprecation notice.
