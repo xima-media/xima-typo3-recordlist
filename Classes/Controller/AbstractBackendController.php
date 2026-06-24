@@ -1771,16 +1771,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             $config = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName] ?? [];
             if ($column['filter']['partial'] === 'Select') {
-                if ($config['config']['foreign_table'] ?? '') {
+                if (($config['config']['type'] ?? '') === 'select') {
                     $column['filter']['items'] = $this->relationResolver->resolveSelectFilterItems(
                         $this->getTableName(),
                         $columnName,
                         $this->getCurrentPid(),
                         $this->request
                     );
-                    $foreignTable = $config['config']['foreign_table'];
-                    $column['filter']['iconIdentifier'] = $GLOBALS['TCA'][$foreignTable]['ctrl']['typeicon_classes']['default'] ?? '';
-                    $column['filter']['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$foreignTable]['ctrl']['title'] ?? '');
+                    if ($config['config']['foreign_table'] ?? '') {
+                        $foreignTable = $config['config']['foreign_table'];
+                        $column['filter']['iconIdentifier'] = $GLOBALS['TCA'][$foreignTable]['ctrl']['typeicon_classes']['default'] ?? '';
+                        $column['filter']['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$foreignTable]['ctrl']['title'] ?? '');
+                    }
                 }
             }
 
