@@ -1985,8 +1985,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
     {
         // check if preview is possible
         $previewSettings = BackendUtility::getPagesTSconfig($this->getAccessiblePids()[0] ?? 0)['TCEMAIN.']['preview.'][$this->getTableName() . '.'] ?? [];
-        $previewPageId = $previewSettings['previewPageId'] ?? 0;
-        if ($this->getTableName() !== 'pages' && $this->getTableName() !== 'tt_content' && !MathUtility::canBeInterpretedAsInteger($previewPageId)) {
+        $configuredPreviewPageId = $previewSettings['previewPageId'] ?? 0;
+        if ($this->getTableName() !== 'pages' && $this->getTableName() !== 'tt_content' && !MathUtility::canBeInterpretedAsInteger($configuredPreviewPageId)) {
             return;
         }
 
@@ -2001,6 +2001,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if ($isWorkspaceAware) {
                 $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
             }
+
+            // A configured previewPageId (TSconfig) wins; otherwise fall back to the record's own pid
+            $previewPageId = $configuredPreviewPageId ?: ($record['pid'] ?? 0);
 
             if ($this->getTableName() === 'pages') {
                 $previewPageId = $record['uid'];
