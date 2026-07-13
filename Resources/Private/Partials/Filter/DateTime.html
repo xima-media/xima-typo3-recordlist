@@ -1,36 +1,55 @@
-<f:be.pageRenderer includeJavaScriptModules="{0: '@typo3/backend/form-engine/element/datetime-element.js'}" />
+<f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-filter-daterange.js'}" />
 
 <f:if condition="{colConfig}">
     <f:variable name="fieldName" value="filter[{colConfig.columnName}][value]"></f:variable>
     <f:variable name="fieldValue" value="{colConfig.filter.value}"></f:variable>
+    <f:variable name="fieldValueEnd" value="{colConfig.filter.valueEnd}"></f:variable>
+    <f:variable name="fieldExpr" value="{colConfig.filter.expr}"></f:variable>
     <f:variable name="label" value="{colConfig.label}"></f:variable>
     <f:form.hidden name="filter[{colConfig.columnName}][dataType]" value="date" />
 </f:if>
 
 <div class="row">
     <div class="col">
-        <label for="{fieldName}" class="form-label">{label}</label>
+        <label for="daterange-{colConfig.columnName}" class="form-label">{label}</label>
 
-        <typo3-formengine-element-datetime
-            class="formengine-field-item t3js-formengine-field-item d-flex w-100" recordfieldid="{fieldName}">
+        <div
+            class="xima-recordlist-daterange"
+            data-recordlist-daterange
+            data-expr-name="filter[{colConfig.columnName}][expr]"
+            data-initial-expr="{fieldExpr}"
+            data-preset-last7days="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.date.preset.last7days')}"
+            data-preset-last30days="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.date.preset.last30days')}"
+            data-preset-thismonth="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.date.preset.thisMonth')}"
+            data-preset-lastmonth="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.date.preset.lastMonth')}"
+        >
             <div class="input-group">
-                <f:form.textfield
-                    value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'Y-m-d\', date: fieldValue)}')}"
-                    id="{fieldName}"
-                    type="date"
-                    name="{fieldName}"
-                    additionalAttributes="{'autocomplete': 'off'}"
-                    class="form-control form-control-clearable t3js-clearable input"
-                    data="{date-type: 'date', data-formengine-datepicker-real-input-name: '{fieldName}'}" />
-                <label class="mb-0 btn btn-default" for="{fieldName}">
+                <input
+                    type="text"
+                    id="daterange-{colConfig.columnName}"
+                    class="form-control form-control-clearable input"
+                    autocomplete="off"
+                    data-daterange-display />
+                <label class="mb-0 btn btn-default" data-daterange-trigger for="daterange-{colConfig.columnName}">
                     <core:icon identifier="actions-calendar" />
                 </label>
             </div>
-        </typo3-formengine-element-datetime>
+
+            <input
+                type="hidden"
+                data-daterange-start
+                name="filter[{colConfig.columnName}][value]"
+                value="{f:if(condition: fieldValue, then: '{f:format.date(format:\'Y-m-d\', date: fieldValue)}')}" />
+            <input
+                type="hidden"
+                data-daterange-end
+                name="filter[{colConfig.columnName}][valueEnd]"
+                value="{f:if(condition: fieldValueEnd, then: '{f:format.date(format:\'Y-m-d\', date: fieldValueEnd)}')}" />
+        </div>
     </div>
     <f:if condition="{colConfig}">
         <div class="col col-2">
-                <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'lt', 1: 'gt', 2: 'eq', 3: 'neq'}}" />
+                <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'between', 1: 'lt', 2: 'gt', 3: 'eq', 4: 'neq'}}" />
         </div>
     </f:if>
 </div>

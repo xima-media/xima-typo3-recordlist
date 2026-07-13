@@ -200,3 +200,88 @@ main.recordlist ul.pagination input.form-control {
     display: flex;
     width: 100%;
 }
+
+/* --- Date range filter (flatpickr two-month range picker) --------------------
+   TYPO3 core bundles flatpickr's JS and a single-month CSS theme, but ships no
+   layout rules for `showMonths: 2` (`.multiMonth`). Without them the second
+   month's day grid collapses onto the first. These rules lay the two months out
+   side by side using core's own sizing variables so the picker stays on-theme.
+   Scoped to `.multiMonth`, which only this range picker produces. */
+.xima-recordlist-daterange {
+    position: relative;
+}
+
+/* In `static` mode flatpickr wraps the field in `.flatpickr-wrapper`; keep it
+   filling the Bootstrap input-group and anchor the inline calendar to it. */
+.xima-recordlist-daterange .flatpickr-wrapper {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.xima-recordlist-daterange .flatpickr-wrapper > .form-control {
+    width: 100%;
+}
+
+/* The inline calendar drops below the field; lift it above sibling controls. */
+.xima-recordlist-daterange .flatpickr-calendar.static {
+    z-index: 1000;
+}
+
+/* The filter panel is a Bootstrap `.card`, which sets `overflow: hidden` (for
+   corner clipping). That clips the inline calendar, so allow overflow on this
+   one card. Safe: the card-body padding keeps content off the rounded corners. */
+#filterInputs {
+    overflow: visible;
+}
+
+.flatpickr-calendar.multiMonth {
+    width: auto !important;
+}
+
+/* Lay each calendar section (weekday header + day grid) out as a flex row of
+   fixed-width month columns, all sized to core's single-month width so the two
+   months line up column-for-column. */
+.flatpickr-calendar.multiMonth .flatpickr-weekdays,
+.flatpickr-calendar.multiMonth .flatpickr-days {
+    display: flex;
+    overflow: visible;
+    width: auto !important;
+}
+
+.flatpickr-calendar.multiMonth .flatpickr-weekdaycontainer,
+.flatpickr-calendar.multiMonth .flatpickr-days .dayContainer {
+    flex: 0 0 auto;
+    width: var(--flatpickr-width, 246px);
+    min-width: var(--flatpickr-width, 246px);
+    max-width: var(--flatpickr-width, 246px);
+}
+
+.flatpickr-calendar.multiMonth .flatpickr-days .dayContainer + .dayContainer {
+    border-inline-start: 1px solid var(--typo3-component-border-color);
+}
+
+/* Each month header spans one month column; center its name + year together
+   (core drops vanilla's absolute centering, which mis-places them per month). */
+.flatpickr-calendar.multiMonth .flatpickr-months .flatpickr-month {
+    flex: 0 0 auto;
+    width: var(--flatpickr-width, 246px);
+}
+
+.flatpickr-calendar.multiMonth .flatpickr-current-month {
+    position: static;
+    left: auto;
+    width: auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em;
+}
+
+/* Hide flatpickr's pointer caret. Core paints both its triangles in the
+   component background, so it renders as a borderless white-on-white artifact.
+   The calendar is an inline dropdown already attached under the field, so the
+   caret is redundant — drop it for a clean edge. */
+.xima-recordlist-daterange .flatpickr-calendar::before,
+.xima-recordlist-daterange .flatpickr-calendar::after {
+    display: none;
+}

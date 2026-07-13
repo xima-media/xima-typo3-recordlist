@@ -830,12 +830,37 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
                 if (($data['dataType'] ?? null) === 'date') {
                     $dbType = (string)($fieldConfig['dbType'] ?? '');
-                    $date = date('Y-m-d', strtotime($data['value']));
                     if ($dbType === 'date' || $dbType === 'datetime') {
                         $leftExpr = 'DATE(t1.' . $field . ')';
                     } else {
                         $leftExpr = 'DATE(FROM_UNIXTIME(NULLIF(t1.' . $field . ', 0)))';
                     }
+
+                    // Range filter: DATE(...) BETWEEN start AND end, both bounds inclusive.
+                    // A missing end falls back to the start (single-day range).
+                    if (($data['expr'] ?? '') === 'between') {
+                        $start = date('Y-m-d', strtotime($data['value']));
+                        $endValue = (string)($data['valueEnd'] ?? '');
+                        $end = $endValue !== '' ? date('Y-m-d', strtotime($endValue)) : $start;
+                        if ($end < $start) {
+                            [$start, $end] = [$end, $start];
+                        }
+                        $this->additionalConstraints[] = $this->queryBuilder->expr()->and(
+                            $this->queryBuilder->expr()->comparison(
+                                $leftExpr,
+                                '>=',
+                                $this->queryBuilder->createNamedParameter($start)
+                            ),
+                            $this->queryBuilder->expr()->comparison(
+                                $leftExpr,
+                                '<=',
+                                $this->queryBuilder->createNamedParameter($end)
+                            )
+                        );
+                        continue;
+                    }
+
+                    $date = date('Y-m-d', strtotime($data['value']));
                     $operator = match ($data['expr'] ?? '') {
                         'neq' => '!=',
                         'lt' => '<',
@@ -1741,6 +1766,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 $column['filter']['value'] = $bodyValue;
             } elseif (isset($defaultFilters[$columnName]['value']) && $defaultFilters[$columnName]['value'] !== '') {
                 $column['filter']['value'] = $defaultFilters[$columnName]['value'];
+            }
+
+            // set filter end value (date range upper bound) — body takes precedence, then default filter
+            $bodyValueEnd = $body['filter'][$columnName]['valueEnd'] ?? '';
+            if ($bodyValueEnd !== '') {
+                $column['filter']['valueEnd'] = $bodyValueEnd;
+            } elseif (isset($defaultFilters[$columnName]['valueEnd']) && $defaultFilters[$columnName]['valueEnd'] !== '') {
+                $column['filter']['valueEnd'] = $defaultFilters[$columnName]['valueEnd'];
             }
 
             // set filter expr — body takes precedence, then default filter

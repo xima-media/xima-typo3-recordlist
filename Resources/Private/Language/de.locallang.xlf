@@ -351,6 +351,26 @@
 				<source />
 				<target>Enthält nicht</target>
 			</trans-unit>
+			<trans-unit id="filter.expr.between" approved="yes">
+				<source />
+				<target>Zwischen</target>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.last7days" approved="yes">
+				<source />
+				<target>Letzte 7 Tage</target>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.last30days" approved="yes">
+				<source />
+				<target>Letzte 30 Tage</target>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.thisMonth" approved="yes">
+				<source />
+				<target>Dieser Monat</target>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.lastMonth" approved="yes">
+				<source />
+				<target>Letzter Monat</target>
+			</trans-unit>
 			<trans-unit id="pagination.page">
 				<source>Page</source>
 				<target>Seite</target>
