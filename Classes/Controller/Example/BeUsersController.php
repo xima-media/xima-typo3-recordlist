@@ -3,12 +3,13 @@
 namespace Xima\XimaTypo3Recordlist\Controller\Example;
 
 use Xima\XimaTypo3Recordlist\Controller\AbstractBackendController;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 
 class BeUsersController extends AbstractBackendController
 {
-    public function getRecordPid(): int
+    protected function getRecordSources(): array
     {
-        return 0;
+        return [new RecordSource(0, includeSubpages: true, depth: 1)];
     }
 
     public function getTableNames(): array

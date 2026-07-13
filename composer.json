@@ -2,7 +2,7 @@
 	"name": "xima/xima-typo3-recordlist",
 	"description": "This package provides an abstract class for creating TYPO3 backend modules that display a feature-rich and easy-to-customize list view of records. It also includes built-in simplified TYPO3 workspace integration.",
 	"license": "GPL-2.0-or-later",
-	"type": "library",
+	"type": "typo3-cms-extension",
 	"keywords": [
 		"typo3",
 		"typo3-cms-extension"
@@ -36,7 +36,8 @@
 		"typo3/cms-lowlevel": "^13.4 || ^14.0",
 		"typo3/cms-setup": "^13.4 || ^14.0",
 		"typo3/cms-workspaces": "^13.4 || ^14.0",
-		"typo3/testing-framework": "^9.0"
+		"typo3/testing-framework": "^9.0",
+		"web-vision/deepltranslate-core": "^6.0"
 	},
 	"suggest": {
 		"typo3/cms-workspaces": "For workspace integration",
@@ -56,6 +57,7 @@
 		"allow-plugins": {
 			"ergebnis/composer-normalize": true,
 			"move-elevator/composer-translation-validator": true,
+			"php-http/discovery": true,
 			"phpstan/extension-installer": true,
 			"typo3/class-alias-loader": true,
 			"typo3/cms-composer-installers": true

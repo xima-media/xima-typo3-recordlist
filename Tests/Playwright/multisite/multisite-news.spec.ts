@@ -1,0 +1,101 @@
+import { test, expect } from '@playwright/test';
+import { loginAsAdmin, openModule, searchFor, selectDirectory, directoryMenuItems } from '../helpers/typo3-backend';
+import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-errors';
+
+// Records that live exclusively in one site's news folder.
+const MAIN_NEWS = 'New Product Launch Revolutionizes Industry'; // pid 15 (main site)
+const SECOND_NEWS = 'Second Site Exclusive Announcement';        // pid 22 (second site)
+
+test.describe('Multi-Site News (record sources across sites)', () => {
+  // Serial: tests share the same TYPO3 admin session — persisted search state bleeds otherwise.
+  test.describe.configure({ mode: 'serial' });
+
+  let consoleErrors: ConsoleErrorTracker;
+  test.beforeEach(async ({ page }) => {
+    consoleErrors = trackConsoleErrors(page);
+    await loginAsAdmin(page);
+  });
+  test.afterEach(() => { consoleErrors.assertNoErrors(); });
+
+  test('aggregates news records from folders in two different sites', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_multisite_news');
+
+    // Records that only exist in the second site's folder are reachable here...
+    await searchFor(contentFrame, 'Second Site');
+    await expect(contentFrame.locator('tr[data-uid]')).toHaveCount(2);
+    await expect(contentFrame.locator('body')).toContainText(SECOND_NEWS);
+
+    // ...and so are records that only exist in the main site's folder.
+    await searchFor(contentFrame, 'New Product Launch');
+    await expect(contentFrame.locator('tr[data-uid]')).toHaveCount(1);
+  });
+
+  test('the second site folder is not visible in the single-site news module', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_news');
+
+    await searchFor(contentFrame, 'Second Site');
+    await expect(contentFrame.locator('tr[data-uid]')).toHaveCount(0);
+  });
+
+  test('directory dropdown offers an "all" entry plus each site-prefixed folder', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_multisite_news');
+
+    const items = directoryMenuItems(contentFrame);
+    await expect(items.filter({ hasText: 'All directories' })).toHaveCount(1);
+    // Both folders are named "News" — disambiguated by the site title prefix.
+    await expect(items.filter({ hasText: 'Main Site › News' })).toHaveCount(1);
+    await expect(items.filter({ hasText: 'Second Site › News' })).toHaveCount(1);
+  });
+
+  test('new-record modal offers every folder, site-prefixed', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_multisite_news');
+
+    // A single trigger button carries the pages; clicking it opens the picker modal.
+    await contentFrame.locator('a.new-record-trigger').evaluate((el) => (el as HTMLElement).click());
+
+    // Modal renders in the top document; both folders (incl. the first/root) are selectable.
+    await page.locator('#page-for-new-record').waitFor({ state: 'visible', timeout: 5000 });
+    const options = page.locator('#page-for-new-record option');
+    await expect(options.filter({ hasText: 'Main Site › News' })).toHaveCount(1);
+    await expect(options.filter({ hasText: 'Second Site › News' })).toHaveCount(1);
+  });
+
+  test('selecting the second site directory filters to its records only', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_multisite_news');
+    // Clear any search persisted by a previous test so the count reflects the directory only.
+    await searchFor(contentFrame, '');
+
+    await selectDirectory(contentFrame, 'Second Site › News');
+
+    // The second-site folder holds exactly its two records. Poll through the iframe
+    // reload (which briefly detaches the frame) until the new list has settled.
+    await expect.poll(async () => {
+      try {
+        return await contentFrame.locator('tr[data-uid]').count();
+      } catch {
+        return -1;
+      }
+    }).toBe(2);
+    await expect(contentFrame.locator('body')).toContainText(SECOND_NEWS);
+    await expect(contentFrame.locator('body')).not.toContainText(MAIN_NEWS);
+  });
+
+  test('selecting the first directory filters to it instead of aggregating everything', async ({ page }) => {
+    // Regression guard: the first accessible page used to act as an implicit "all"
+    // scope, so it could never be filtered on its own.
+    const contentFrame = await openModule(page, 'example_multisite_news');
+    await searchFor(contentFrame, '');
+
+    await selectDirectory(contentFrame, 'Main Site › News');
+
+    // The main folder holds many records; the second site's records must be excluded.
+    await expect.poll(async () => {
+      try {
+        return await contentFrame.locator('tr[data-uid]').count();
+      } catch {
+        return -1;
+      }
+    }).toBeGreaterThan(2);
+    await expect(contentFrame.locator('body')).not.toContainText(SECOND_NEWS);
+  });
+});

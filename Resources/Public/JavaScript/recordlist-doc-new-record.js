@@ -9,25 +9,25 @@ export default class RecordlistDocNewRecord {
   }
 
   init() {
-    if (document.querySelectorAll(".new-record-in-page").length > 1) {
-      document.querySelectorAll(".new-record-in-page").forEach(btn => {
-        btn.addEventListener("click", this.onNewRecordInPageClick.bind(this));
-      });
+    const trigger = document.querySelector(".new-record-trigger");
+    if (trigger) {
+      trigger.addEventListener("click", this.onNewRecordTriggerClick.bind(this));
     }
   }
 
-  onNewRecordInPageClick(e) {
+  onNewRecordTriggerClick(e) {
     e.preventDefault();
-    const btn = e.currentTarget;
+    const trigger = e.currentTarget;
 
-    // construct select element
+    // construct select element from the pages carried on the trigger's data attribute
+    const pages = JSON.parse(trigger.dataset.pages ?? "[]");
     const selection = document.createElement("select");
     selection.id = "page-for-new-record";
     selection.classList.add("form-select");
-    document.querySelectorAll(".new-record-in-page.hidden").forEach(btn => {
+    pages.forEach(page => {
       const option = document.createElement("option");
-      option.value = btn.getAttribute("href") ?? "";
-      option.text = btn.getAttribute("title") ?? "";
+      option.value = page.href ?? "";
+      option.text = page.title ?? "";
       selection.appendChild(option);
     });
 
@@ -38,7 +38,7 @@ export default class RecordlistDocNewRecord {
       content: selection,
       buttons: [
         {
-          text: btn.getAttribute("title"),
+          text: trigger.getAttribute("title"),
           icon: "actions-add",
           btnClass: "btn-primary",
           trigger: function() {

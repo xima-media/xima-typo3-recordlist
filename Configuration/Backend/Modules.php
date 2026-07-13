@@ -4,6 +4,7 @@ use Xima\XimaTypo3Recordlist\Controller\Example\BeUsersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\ContentController;
 use Xima\XimaTypo3Recordlist\Controller\Example\FeUsersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\FilesController;
+use Xima\XimaTypo3Recordlist\Controller\Example\MultiSiteNewsController;
 use Xima\XimaTypo3Recordlist\Controller\Example\NewsController;
 use Xima\XimaTypo3Recordlist\Controller\Example\PagesController;
 use Xima\XimaTypo3Recordlist\Controller\Example\SysCategoryController;
@@ -42,6 +43,21 @@ return [
             ],
         ],
         'navigationComponent' => '@xima/recordlist/category-tree-element',
+    ],
+    'example_multisite_news' => [
+        'parent' => 'example',
+        'position' => ['after' => 'list'],
+        'access' => 'user',
+        'iconIdentifier' => 'module-example-2',
+        'workspaces' => '*',
+        'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_multisite_news_module.xlf',
+        'extensionName' => 'XimaTypo3RecordlistExamples',
+        'controllerActions' => [
+            MultiSiteNewsController::class => [
+                'processRequest',
+            ],
+        ],
+        'inheritNavigationComponentFromMainModule' => false,
     ],
     'example_feusers' => [
         'parent' => 'example',

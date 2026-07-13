@@ -24,6 +24,7 @@ use TYPO3\CMS\Core\Database\Query\Restriction\EndTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\StartTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use TYPO3\CMS\Core\Exception\SiteNotFoundException;
 use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Imaging\IconFactory;
@@ -45,6 +46,7 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
+use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
 use Xima\XimaTypo3Recordlist\Utility\RelationResolver;
@@ -85,6 +87,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected ModuleTemplate $moduleTemplate;
 
     protected Site $site;
+
+    /**
+     * Cache for resolved accessible pages.
+     *
+     * @var array<int, array{uid: int, title: string, siteIdentifier: string|null, siteTitle: string|null}>|null
+     */
+    protected ?array $accessiblePagesCache = null;
 
     protected array $additionalConstraints = [];
 
@@ -174,8 +183,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // Get site
         $this->setSite();
 
-        // check access + redirect
-        $this->accessCheck();
+        // No accessible record storage found
+        if ($this->getAccessiblePids() === []) {
+            return $this->renderNoStorageResponse();
+        }
 
         if (!in_array($this->getCurrentPid(), $this->getAccessiblePids(), true)) {
             return new RedirectResponse($this->getCurrentUrl());
@@ -199,6 +210,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         );
         $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
             JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-doc-new-record.js')
+        );
+        $this->pageRenderer->getJavaScriptRenderer()->addJavaScriptModuleInstruction(
+            JavaScriptModuleInstruction::create('@xima/recordlist/recordlist-action-groups.js')
         );
 
         $this->setLanguages();
@@ -274,60 +288,188 @@ abstract class AbstractBackendController extends ActionController implements Bac
         return null;
     }
 
-    protected function accessCheck(): void
+    /**
+     * Render the module with a "no record storage" infobox instead of crashing
+     * when no accessible storage pid is configured/available yet.
+     */
+    protected function renderNoStorageResponse(): ResponseInterface
     {
-        $accessiblePids = $this->getAccessiblePids();
-        if (!count($accessiblePids)) {
-            throw new RouteNotFoundException('No accessible child pages found.', 403);
-        }
-    }
+        $this->moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+        $this->setLanguages();
+        $this->assignViewVariables();
+        $this->moduleTemplate->assignMultiple([
+            'noStorage' => true,
+            'records' => [],
+            'recordCount' => 0,
+        ]);
 
-    protected function getAccessiblePids(): array
-    {
-        $accessiblePages = $this->getRecordPid() === 0 ? [['uid' => 0]] : $this->getAccessibleChildPages();
-        return array_column($accessiblePages, 'uid');
+        return $this->moduleTemplate->renderResponse($this->getTemplateName());
     }
 
     /**
-     * @throws \Doctrine\DBAL\Exception
+     * Legacy single entry point.
+     *
+     * @deprecated since 14.6.0, will be removed in 15.0.0. Implement getRecordSources() instead.
      */
-    protected function getAccessibleChildPages(): array
+    public function getRecordPid(): int
     {
-        $pageUid = $this->getRecordPid();
-        if ($pageUid === 0) {
-            return [['uid' => 0]];
+        return 0;
+    }
+
+    /**
+     * Entry points from which records are collected.
+     *
+     * Override this to expose records from multiple pages/folders (optionally
+     * across several sites) instead of a single one. The default reproduces the
+     * legacy behaviour: the deprecated {@see getRecordPid()} plus its direct
+     * child pages.
+     *
+     * @return RecordSource[]
+     */
+    protected function getRecordSources(): array
+    {
+        // BC: derive from the deprecated getRecordPid() while a subclass still implements it.
+        if ((new \ReflectionMethod($this, 'getRecordPid'))->getDeclaringClass()->getName() !== self::class) {
+            trigger_error(
+                'getRecordPid() is deprecated since 14.6.0 and will be removed in 15.0.0. Implement getRecordSources() instead.',
+                E_USER_DEPRECATED
+            );
         }
 
-        $qb = $this->connectionPool->getQueryBuilderForTable('pages');
-        $pages = $qb->select('uid', 'title')
-            ->from('pages')
-            ->where(
-                $qb->expr()->or(
-                    $qb->expr()->eq('uid', $qb->createNamedParameter($pageUid, Connection::PARAM_INT)),
-                    $qb->expr()->eq('pid', $qb->createNamedParameter($pageUid, Connection::PARAM_INT))
-                )
-            )
-            ->executeQuery()
-            ->fetchAllAssociative();
+        return [new RecordSource($this->getRecordPid(), includeSubpages: true, depth: 1)];
+    }
 
-        $accessiblePages = [];
-        foreach ($pages as $page) {
-            if (!is_int($page['uid'])) {
+    /**
+     * @return int[]
+     */
+    protected function getAccessiblePids(): array
+    {
+        return array_map(static fn (array $page): int => $page['uid'], $this->getAccessiblePages());
+    }
+
+    /**
+     * Resolve all configured record sources into a flat, de-duplicated list of
+     * accessible pages, enriched with the owning site (used for label prefixing
+     * when sources span multiple sites).
+     *
+     * @return array<int, array{uid: int, title: string, siteIdentifier: string|null, siteTitle: string|null}>
+     */
+    protected function getAccessiblePages(): array
+    {
+        if ($this->accessiblePagesCache !== null) {
+            return $this->accessiblePagesCache;
+        }
+
+        $pageRepository = GeneralUtility::makeInstance(PageRepository::class);
+        $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
+
+        // Resolve sources to a de-duplicated uid list, preserving source order.
+        $uids = [];
+        foreach ($this->getRecordSources() as $source) {
+            $sourceUids = [$source->pid];
+            if ($source->includeSubpages && $source->pid > 0) {
+                // bypassEnableFieldsCheck keeps hidden folders visible in the backend
+                $sourceUids = array_merge(
+                    $sourceUids,
+                    $pageRepository->getDescendantPageIdsRecursive($source->pid, $source->depth, 0, [], true)
+                );
+            }
+            foreach ($sourceUids as $uid) {
+                $uids[(int)$uid] = true;
+            }
+        }
+
+        $permsClause = $this->getBackendAuthentication()->getPagePermsClause(Permission::PAGE_SHOW);
+        $pages = [];
+        foreach (array_keys($uids) as $uid) {
+            if ($uid === 0) {
+                // Root: no page record exists; kept accessible for root-level records (legacy behaviour).
+                $pages[] = [
+                    'uid' => 0,
+                    'title' => $this->getRootPageTitle(),
+                    'siteIdentifier' => null,
+                    'siteTitle' => null,
+                ];
                 continue;
             }
 
-            $access = BackendUtility::readPageAccess(
-                $page['uid'],
-                $this->getBackendAuthentication()->getPagePermsClause(Permission::PAGE_SHOW)
-            ) ?: [];
-
+            $access = BackendUtility::readPageAccess($uid, $permsClause) ?: [];
             if (empty($access)) {
                 continue;
             }
 
-            $accessiblePages[] = $page;
+            $site = $this->findSiteForPage($uid, $siteFinder);
+            $pages[] = [
+                'uid' => $uid,
+                'title' => (string)($access['title'] ?? ('#' . $uid)),
+                'siteIdentifier' => $site?->getIdentifier(),
+                'siteTitle' => $site instanceof Site ? $this->getSiteTitle($site) : null,
+            ];
         }
-        return $accessiblePages;
+
+        return $this->accessiblePagesCache = $pages;
+    }
+
+    /**
+     * BC wrapper returning the legacy [uid, title] shape.
+     *
+     * @return array<int, array{uid: int, title: string}>
+     */
+    protected function getAccessibleChildPages(): array
+    {
+        return array_map(
+            static fn (array $page): array => ['uid' => $page['uid'], 'title' => $page['title']],
+            $this->getAccessiblePages()
+        );
+    }
+
+    protected function findSiteForPage(int $pageUid, SiteFinder $siteFinder): ?Site
+    {
+        if ($pageUid <= 0) {
+            return null;
+        }
+        try {
+            return $siteFinder->getSiteByPageId($pageUid);
+        } catch (SiteNotFoundException) {
+            return null;
+        }
+    }
+
+    protected function getSiteTitle(Site $site): string
+    {
+        $title = (string)($site->getConfiguration()['websiteTitle'] ?? '');
+        return $title !== '' ? $title : $site->getIdentifier();
+    }
+
+    protected function getRootPageTitle(): string
+    {
+        return $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'pidSelection.root') ?: 'Root';
+    }
+
+    /**
+     * Whether the accessible pages belong to more than one site. When true,
+     * page labels are prefixed with the site title to disambiguate folders that
+     * share the same name across sites (mandants).
+     */
+    protected function accessiblePagesSpanMultipleSites(): bool
+    {
+        $identifiers = array_filter(array_map(
+            static fn (array $page): ?string => $page['siteIdentifier'],
+            $this->getAccessiblePages()
+        ));
+        return count(array_unique($identifiers)) > 1;
+    }
+
+    /**
+     * @param array{uid: int, title: string, siteIdentifier: string|null, siteTitle: string|null} $page
+     */
+    protected function getPageDisplayTitle(array $page): string
+    {
+        $title = $page['title'] !== '' ? $page['title'] : '#' . $page['uid'];
+        if ($this->accessiblePagesSpanMultipleSites() && !empty($page['siteTitle'])) {
+            return $page['siteTitle'] . ' › ' . $title;
+        }
+        return $title;
     }
 
     protected function getBackendAuthentication(): BackendUserAuthentication
@@ -533,6 +675,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     protected function getFullRecordCount(): int
     {
+        if ($this->getRequestedPids() === []) {
+            return 0;
+        }
+
         $tableName = $this->getTableName();
         $qb = $this->connectionPool->getQueryBuilderForTable($tableName);
         $qb->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, $this::WORKSPACE_ID));
@@ -551,7 +697,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function getRequestedPids(): array
     {
-        return $this->getCurrentPid() === $this->getAccessiblePids()[0] ? $this->getAccessiblePids() : [$this->getCurrentPid()];
+        if ($this->getCurrentScope() === 'all') {
+            return $this->getAccessiblePids();
+        }
+        return [$this->getCurrentPid()];
+    }
+
+    /**
+     * Whether the directory dropdown aggregates all accessible pages ('all') or
+     * filters to the currently selected one ('single'). Defaults to 'all'.
+     */
+    protected function getCurrentScope(): string
+    {
+        return ($this->request->getQueryParams()['scope'] ?? 'all') === 'single' ? 'single' : 'all';
     }
 
     protected function getTableName(): string
@@ -1605,14 +1763,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
         ksort($columns);
 
         $groupActions = [
-            'Translate',
-            'TranslateDeepl',
             'Edit',
             'HiddenToggle',
-            'Duplicate',
-            'Changelog',
-            'Revert',
+            'Delete',
             'View',
+            'Translate',
+            'TranslateDeepl',
+            'Duplicate',
         ];
 
         // prepend manual sorting buttons only when the list is shown in its `sortby` order
@@ -1626,7 +1783,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'showIconColumn' => true,
             'groupActions' => $groupActions,
             'actions' => [
+                'Changelog',
                 'EditOriginal',
+                'Revert',
                 'ReadyToPublish',
                 'RequestChanges',
                 'Publish',
@@ -1698,22 +1857,18 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             $config = $GLOBALS['TCA'][$this->getTableName()]['columns'][$columnName] ?? [];
             if ($column['filter']['partial'] === 'Select') {
-                if ($config['config']['foreign_table'] ?? '') {
-                    $foreignTable = $config['config']['foreign_table'];
-                    $foreignTableLabel = $GLOBALS['TCA'][$foreignTable]['ctrl']['label'] ?? 'uid';
-                    $qb = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-                    $records = $qb->select('uid', $foreignTableLabel)
-                        ->from($foreignTable)
-                        ->executeQuery()
-                        ->fetchAllAssociative();
-                    foreach ($records as $record) {
-                        $column['filter']['items'][$record['uid']] = [
-                            'label' => $record[$foreignTableLabel],
-                            'value' => $record['uid'],
-                        ];
+                if (($config['config']['type'] ?? '') === 'select') {
+                    $column['filter']['items'] = $this->relationResolver->resolveSelectFilterItems(
+                        $this->getTableName(),
+                        $columnName,
+                        $this->getCurrentPid(),
+                        $this->request
+                    );
+                    if ($config['config']['foreign_table'] ?? '') {
+                        $foreignTable = $config['config']['foreign_table'];
+                        $column['filter']['iconIdentifier'] = $GLOBALS['TCA'][$foreignTable]['ctrl']['typeicon_classes']['default'] ?? '';
+                        $column['filter']['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$foreignTable]['ctrl']['title'] ?? '');
                     }
-                    $column['filter']['iconIdentifier'] = $GLOBALS['TCA'][$foreignTable]['ctrl']['typeicon_classes']['default'] ?? '';
-                    $column['filter']['label'] = $this->getLanguageService()->sL($GLOBALS['TCA'][$foreignTable]['ctrl']['title'] ?? '');
                 }
             }
 
@@ -1915,9 +2070,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     protected function addPreviewButton(): void
     {
         // check if preview is possible
-        $previewSettings = BackendUtility::getPagesTSconfig($this->getRecordPid())['TCEMAIN.']['preview.'][$this->getTableName() . '.'] ?? [];
-        $previewPageId = $previewSettings['previewPageId'] ?? 0;
-        if ($this->getTableName() !== 'pages' && $this->getTableName() !== 'tt_content' && !MathUtility::canBeInterpretedAsInteger($previewPageId)) {
+        $previewSettings = BackendUtility::getPagesTSconfig($this->getAccessiblePids()[0] ?? 0)['TCEMAIN.']['preview.'][$this->getTableName() . '.'] ?? [];
+        $configuredPreviewPageId = $previewSettings['previewPageId'] ?? 0;
+        if ($this->getTableName() !== 'pages' && $this->getTableName() !== 'tt_content' && !MathUtility::canBeInterpretedAsInteger($configuredPreviewPageId)) {
             return;
         }
 
@@ -1932,6 +2087,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if ($isWorkspaceAware) {
                 $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
             }
+
+            // A configured previewPageId (TSconfig) wins; otherwise fall back to the record's own pid
+            $previewPageId = $configuredPreviewPageId ?: ($record['pid'] ?? 0);
 
             if ($this->getTableName() === 'pages') {
                 $previewPageId = $record['uid'];
@@ -1997,23 +2155,55 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        $accessiblePages = $this->getAccessibleChildPages();
+        $accessiblePages = $this->getAccessiblePages();
+        if ($accessiblePages === []) {
+            return;
+        }
+
         $activeLanguage = $this->getActiveLanguage();
         $tableName = $this->getTableName();
-        foreach ($accessiblePages as $key => $page) {
-            $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
-            $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->addButton(
-                $this->moduleTemplate->getDocHeaderComponent()->getButtonBar()->makeLinkButton()
-                    ->setHref($this->backendUriBuilder->buildUriFromRoute(
-                        'record_edit',
-                        ['edit' => [$tableName => [$page['uid'] => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals, 'module' => $this->getModuleName(), 'workspaceId' => $this::WORKSPACE_ID]
-                    ))
-                    ->setClasses($key === 0 ? 'new-record-in-page' : 'new-record-in-page hidden')
-                    ->setTitle($key === 0 ? 'New ' . $this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']) : $page['title'])
+        $defVals = $activeLanguage > 0 ? [$tableName => ['sys_language_uid' => $activeLanguage]] : [];
+        $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
+        $newLabel = 'New ' . $this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']);
+
+        $buildHref = fn (int $pid): string => (string)$this->backendUriBuilder->buildUriFromRoute(
+            'record_edit',
+            ['edit' => [$tableName => [$pid => 'new']], 'returnUrl' => $this->getCurrentUrl(), 'defVals' => $defVals, 'module' => $this->getModuleName(), 'workspaceId' => $this::WORKSPACE_ID]
+        );
+
+        // Single target: a plain link button that navigates directly.
+        if (count($accessiblePages) === 1) {
+            $buttonBar->addButton(
+                $buttonBar->makeLinkButton()
+                    ->setHref($buildHref($accessiblePages[0]['uid']))
+                    ->setClasses('new-record-in-page')
+                    ->setTitle($newLabel)
                     ->setShowLabelText(true)
                     ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
             );
+            return;
         }
+
+        // Multiple targets: a single button carrying the selectable pages as a
+        // data attribute. The modal (JS) builds the picker from it — avoiding
+        // extra hidden buttons that disturbed the doc header layout.
+        $pages = [];
+        foreach ($accessiblePages as $page) {
+            $pages[] = [
+                'href' => $buildHref($page['uid']),
+                'title' => $this->getPageDisplayTitle($page),
+            ];
+        }
+
+        $buttonBar->addButton(
+            $buttonBar->makeLinkButton()
+                ->setHref('#')
+                ->setClasses('new-record-trigger')
+                ->setTitle($newLabel)
+                ->setShowLabelText(true)
+                ->setIcon($this->iconFactory->getIcon('actions-add', IconSize::SMALL))
+                ->setDataAttributes(['pages' => (string)json_encode($pages)])
+        );
     }
 
     protected function addShowColumnsButtonToViewDropdown(): void
@@ -2197,7 +2387,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ->setTitle($language['title'])
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
-                        ['id' => $this->getCurrentPid(), 'language' => $languageKey]
+                        ['id' => $this->getCurrentPid(), 'language' => $languageKey, 'scope' => $this->getCurrentScope()]
                     ));
                 if ($this->getActiveLanguage() === $languageKey) {
                     $menuItem->setActive(true);
@@ -2217,7 +2407,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 ->setLabel($language['title'])
                 ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                     $this->getModuleName(),
-                    ['id' => $this->getCurrentPid(), 'language' => $languageKey]
+                    ['id' => $this->getCurrentPid(), 'language' => $languageKey, 'scope' => $this->getCurrentScope()]
                 ))
                 ->setTitle($language['title']);
             if ($this->getActiveLanguage() === $languageKey) {
@@ -2245,23 +2435,36 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        $accessiblePages = $this->getAccessiblePids();
+        $accessiblePages = $this->getAccessiblePages();
         if (count($accessiblePages) > 1) {
+            $language = $this->getActiveLanguage() ?? 0;
+            $isAllScope = $this->getCurrentScope() === 'all';
+
             $pageMenu = $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->makeMenu();
             $pageMenu->setIdentifier('pageSelector');
             $pageMenu->setLabel('');
-            foreach ($accessiblePages as $pageUid) {
-                $page = BackendUtility::getRecord('pages', $pageUid);
-                $menuItem = $pageMenu
+
+            // Aggregate entry: records from every accessible page.
+            $pageMenu->addMenuItem(
+                $pageMenu
                     ->makeMenuItem()
-                    ->setTitle($page['title'])
+                    ->setTitle($this->getLanguageService()->sL(self::TRANSLATION_PATH . 'pidSelection.all') ?: 'All directories')
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
-                        ['id' => $page['uid'], 'language' => $this->getActiveLanguage() ?? 0]
-                    ));
-                if ($this->getCurrentPid() === $page['uid']) {
-                    $menuItem->setActive(true);
-                }
+                        ['id' => $accessiblePages[0]['uid'], 'language' => $language, 'scope' => 'all']
+                    ))
+                    ->setActive($isAllScope)
+            );
+
+            foreach ($accessiblePages as $page) {
+                $menuItem = $pageMenu
+                    ->makeMenuItem()
+                    ->setTitle($this->getPageDisplayTitle($page))
+                    ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
+                        $this->getModuleName(),
+                        ['id' => $page['uid'], 'language' => $language, 'scope' => 'single']
+                    ))
+                    ->setActive(!$isAllScope && $this->getCurrentPid() === $page['uid']);
                 $pageMenu->addMenuItem($menuItem);
             }
             $this->moduleTemplate->getDocHeaderComponent()->getMenuRegistry()->addMenu($pageMenu);
@@ -2290,7 +2493,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     ->setTitle($this->getLanguageService()->sL($GLOBALS['TCA'][$tableName]['ctrl']['title']))
                     ->setHref((string)$this->backendUriBuilder->buildUriFromRoute(
                         $this->getModuleName(),
-                        ['id' => $this->getCurrentPid(), 'language' => $this->getActiveLanguage() ?? 0, 'table' => $tableName]
+                        ['id' => $this->getCurrentPid(), 'language' => $this->getActiveLanguage() ?? 0, 'table' => $tableName, 'scope' => $this->getCurrentScope()]
                     ));
                 if ($this->getTableName() === $tableName) {
                     $menuItem->setActive(true);

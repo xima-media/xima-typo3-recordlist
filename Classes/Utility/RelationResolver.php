@@ -2,6 +2,9 @@
 
 namespace Xima\XimaTypo3Recordlist\Utility;
 
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Backend\Form\FormDataCompiler;
+use TYPO3\CMS\Backend\Form\FormDataGroup\TcaDatabaseRecord;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -9,6 +12,7 @@ use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Schema\Struct\SelectItem;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 
@@ -17,10 +21,18 @@ class RelationResolver
     public function __construct(
         private readonly ConnectionPool $connectionPool,
         private readonly LanguageServiceFactory $languageServiceFactory,
+        private readonly FormDataCompiler $formDataCompiler,
     ) {
     }
 
     private int $workspaceId = 0;
+
+    /**
+     * Cache of fully-processed select items per "table:pid", keyed by field name.
+     *
+     * @var array<string, array<string, array>>
+     */
+    private array $processedSelectItemsCache = [];
 
     /**
      * Resolve related records for display, indexed by parent UID.
@@ -204,6 +216,83 @@ class RelationResolver
         }
 
         return $result;
+    }
+
+    /**
+     * Build filter dropdown items for a select field, fully resolved through
+     * FormEngine instead of a raw `foreign_table` query.
+     *
+     * This honours the column's complete TCA `config`: `foreign_table` +
+     * `foreign_table_where` (incl. ###markers###), static `items`,
+     * `itemsProcFunc`, pageTsConfig add/keep/removeItems, enable-field /
+     * language / workspace restrictions, and translated labels + icons —
+     * matching exactly what the edit form would offer for the field.
+     *
+     * @return array<string, array{value: string, label: string, icon: string}>
+     */
+    public function resolveSelectFilterItems(string $parentTable, string $columnName, int $pid, ServerRequestInterface $request): array
+    {
+        $items = $this->compileProcessedSelectItems($parentTable, $pid, $request)[$columnName] ?? null;
+        if ($items === null) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($items as $item) {
+            $item = $item instanceof SelectItem ? $item->toArray() : $item;
+            $value = (string)($item['value'] ?? '');
+            // Skip optgroup dividers and the empty "no selection" entry
+            if ($value === '' || $value === '--div--') {
+                continue;
+            }
+            $result[$value] = [
+                'value' => $value,
+                'label' => (string)($item['label'] ?? $value),
+                'icon' => (string)($item['icon'] ?? ''),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Compile a (vanilla "new") record of $table at $pid through FormEngine once
+     * and return the processed `config.items` of every select column, keyed by
+     * field name. Cached per "table:pid" so multiple select columns of the same
+     * table share a single compilation.
+     *
+     * @return array<string, array> processedTca items, keyed by field name
+     */
+    private function compileProcessedSelectItems(string $table, int $pid, ServerRequestInterface $request): array
+    {
+        $cacheKey = $table . ':' . $pid;
+        if (isset($this->processedSelectItemsCache[$cacheKey])) {
+            return $this->processedSelectItemsCache[$cacheKey];
+        }
+
+        try {
+            $formData = $this->formDataCompiler->compile(
+                [
+                    'request' => $request,
+                    'command' => 'new',
+                    'tableName' => $table,
+                    'vanillaUid' => $pid,
+                ],
+                GeneralUtility::makeInstance(TcaDatabaseRecord::class)
+            );
+        } catch (\Throwable) {
+            // A failed compilation must not break the module — degrade to no items.
+            return $this->processedSelectItemsCache[$cacheKey] = [];
+        }
+
+        $items = [];
+        foreach ($formData['processedTca']['columns'] ?? [] as $field => $fieldConfig) {
+            if (isset($fieldConfig['config']['items'])) {
+                $items[$field] = $fieldConfig['config']['items'];
+            }
+        }
+
+        return $this->processedSelectItemsCache[$cacheKey] = $items;
     }
 
     // -------------------------------------------------------------------------

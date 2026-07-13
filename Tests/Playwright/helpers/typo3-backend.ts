@@ -66,6 +66,25 @@ export async function selectLanguage(contentFrame: FrameLocator, languageName: s
   }
 }
 
+// Locator matching the directory (pid) menu entries across both backend versions.
+export function directoryMenuItems(contentFrame: FrameLocator): Locator {
+  // v13: <select name="pageSelector"> with <option>s; v14: a.dropdown-item links
+  return contentFrame.locator('select[name="pageSelector"] option, a.dropdown-item.dropdown-item-spaced');
+}
+
+export async function selectDirectory(contentFrame: FrameLocator, label: string): Promise<void> {
+  // v13: pid selection renders as <select name="pageSelector"> (makeMenu())
+  // v14: renders as a.dropdown-item links inside a dropdown
+  const select = contentFrame.locator('select[name="pageSelector"]');
+  if (await select.count() > 0) {
+    await select.selectOption({ label });
+    return;
+  }
+  const link = contentFrame.locator(`a.dropdown-item.dropdown-item-spaced[title="${label}"]`);
+  const href = await link.getAttribute('href');
+  await contentFrame.locator('html').evaluate((_, url) => window.location.assign(url), href as string);
+}
+
 export async function moveRecord(contentFrame: FrameLocator, row: Locator, direction: 'up' | 'down'): Promise<void> {
   // Sorting buttons POST via AJAX and reload the iframe on success
   await row.locator(`a[data-sorting-move="${direction}"]`).evaluate((el) => (el as HTMLElement).click());

@@ -1,0 +1,18 @@
+<html
+    xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+    xmlns:be="http://typo3.org/ns/TYPO3/CMS/Backend/ViewHelpers"
+    data-namespace-typo3-fluid="true">
+
+<f:comment>
+    Shown when no accessible record storage exists yet (e.g. the storage folder
+    has not been created). Override this partial — or the "NoStorage" template
+    section — to adjust the message or switch the infobox state from error (2)
+    to an informational hint (-1) once the editor can resolve it themselves.
+</f:comment>
+
+<f:be.infobox
+    title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:noStorage.headline')}"
+    state="2">
+    {f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:noStorage.text')}
+</f:be.infobox>
+</html>

@@ -6,6 +6,12 @@
 			<trans-unit id="newRecordinPageModalTitle">
 				<source>Select page for new record</source>
 			</trans-unit>
+			<trans-unit id="pidSelection.root">
+				<source>Root</source>
+			</trans-unit>
+			<trans-unit id="pidSelection.all">
+				<source>All directories</source>
+			</trans-unit>
 			<trans-unit id="table.column.language">
 				<source>Language</source>
 			</trans-unit>
@@ -84,14 +90,17 @@
 			<trans-unit id="table.button.requestChanges">
 				<source>Request changes</source>
 			</trans-unit>
-			<trans-unit id="table.button.original">
-				<source>Original</source>
-			</trans-unit>
 			<trans-unit id="table.button.editOriginal">
 				<source>Edit original</source>
 			</trans-unit>
 			<trans-unit id="table.button.edit">
 				<source>Edit</source>
+			</trans-unit>
+			<trans-unit id="table.button.workspaceActions">
+				<source>Workspace actions</source>
+			</trans-unit>
+			<trans-unit id="table.button.translations">
+				<source>Translations</source>
 			</trans-unit>
 			<trans-unit id="table.button.changelog">
 				<source>View changes</source>
@@ -128,6 +137,12 @@
 			</trans-unit>
 			<trans-unit id="emptyState.text">
 				<source>There are no records here yet. Once the first record is created, it will appear in this list.</source>
+			</trans-unit>
+			<trans-unit id="noStorage.headline">
+				<source>No record storage available</source>
+			</trans-unit>
+			<trans-unit id="noStorage.text">
+				<source>No accessible storage was found for this module. This could be due to missing permissions or a misconfiguration. Please contact your administrator.</source>
 			</trans-unit>
 			<trans-unit id="table.button.save">
 				<source>Save</source>
