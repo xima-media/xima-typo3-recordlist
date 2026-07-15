@@ -30,7 +30,7 @@ class CategoryTreeManipulation implements MiddlewareInterface
         $uid = $params['uid'] ?? '';
 
         // make sure it is the right request
-        if (empty($overrideValues) || $command !== 'new' || $fieldName !== 'categories' || $uid !== '1') {
+        if (empty($overrideValues) || $command !== 'new' || $fieldName !== 'categories') {
             return $handler->handle($request);
         }
 
