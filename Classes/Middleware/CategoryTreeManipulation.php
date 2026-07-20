@@ -26,11 +26,9 @@ class CategoryTreeManipulation implements MiddlewareInterface
         $params = $request->getQueryParams();
         $overrideValues = json_decode($params['overrideValues'] ?? '[]', true, 512, JSON_THROW_ON_ERROR);
         $command = $params['command'] ?? '';
-        $fieldName = $params['fieldName'] ?? '';
-        $uid = $params['uid'] ?? '';
 
         // make sure it is the right request
-        if (empty($overrideValues) || $command !== 'new' || $fieldName !== 'categories') {
+        if (empty($overrideValues) || $command !== 'new') {
             return $handler->handle($request);
         }
 
