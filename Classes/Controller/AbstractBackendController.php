@@ -116,6 +116,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected array $viewDropdownButtons = [];
 
+    protected ?int $fullRecordCount = null;
+
     protected ConnectionPool $connectionPool;
 
     protected IconFactory $iconFactory;
@@ -674,8 +676,12 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     protected function getFullRecordCount(): int
     {
+        if ($this->fullRecordCount !== null) {
+            return $this->fullRecordCount;
+        }
+
         if ($this->getRequestedPids() === []) {
-            return 0;
+            return $this->fullRecordCount = 0;
         }
 
         $tableName = $this->getTableName();
@@ -691,7 +697,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ->executeQuery()
             ->fetchNumeric();
 
-        return $count ? $count[0] : 0;
+        return $this->fullRecordCount = ($count ? $count[0] : 0);
     }
 
     protected function getRequestedPids(): array
@@ -2182,6 +2188,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addDownloadButtonToModuleTemplate(): void
     {
+        // With no records at all the export would be empty; skip the button.
+        if ($this->getFullRecordCount() === 0) {
+            return;
+        }
+
         if (!$this->isActionAllowedInCurrentTemplate('download')) {
             return;
         }
@@ -2238,6 +2249,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addToggleFiltersButtonToNewModuleTemplate(): void
     {
+        // With no records at all there is nothing to filter; skip the button.
+        if ($this->getFullRecordCount() === 0) {
+            return;
+        }
+
         if (!$this->isActionAllowedInCurrentTemplate('toggleFilters')) {
             return;
         }
@@ -2498,6 +2514,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function addViewDropdownButtonToModuleTemplate(): void
     {
+        // With no records at all there is no table to configure; skip the button.
+        if ($this->getFullRecordCount() === 0) {
+            return;
+        }
+
         if (empty($this->viewDropdownButtons)) {
             return;
         }
