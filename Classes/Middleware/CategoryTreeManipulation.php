@@ -25,10 +25,11 @@ class CategoryTreeManipulation implements MiddlewareInterface
 
         $params = $request->getQueryParams();
         $overrideValues = json_decode($params['overrideValues'] ?? '[]', true, 512, JSON_THROW_ON_ERROR);
+        $recordTypeValue = $params['recordTypeValue'] ?? '';
         $command = $params['command'] ?? '';
 
         // make sure it is the right request
-        if (empty($overrideValues) || $command !== 'new') {
+        if ($recordTypeValue !== 'tx-ximatypo3recordlist-filter' || $command !== 'new') {
             return $handler->handle($request);
         }
 
@@ -38,6 +39,8 @@ class CategoryTreeManipulation implements MiddlewareInterface
             $treeData = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
             foreach ($treeData as &$treeItem) {
                 if (!in_array((int)$treeItem['identifier'], $overrideValues, true)) {
+                    // uncheck items that are not within $overrideValues (possibly set via TSconfig TCAdefaults for new records)
+                    $treeItem['checked'] = false;
                     continue;
                 }
                 $treeItem['checked'] = true;
