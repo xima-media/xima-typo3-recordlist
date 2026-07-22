@@ -39,12 +39,7 @@ class CategoryTreeManipulation implements MiddlewareInterface
             $response = $handler->handle($request);
             $treeData = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
             foreach ($treeData as &$treeItem) {
-                if (in_array((int)$treeItem['identifier'], $overrideValues, true)) {
-                    $treeItem['checked'] = true;
-                } else {
-                    // uncheck items that are not within $overrideValues (possibly set via TSconfig TCAdefaults for new records)
-                    $treeItem['checked'] = false;
-                }
+                $treeItem['checked'] = in_array((int)$treeItem['identifier'], $overrideValues, true);
             }
             return new JsonResponse($treeData);
         } catch (\Exception) {
