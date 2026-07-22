@@ -25,6 +25,7 @@ class CategoryTreeManipulation implements MiddlewareInterface
 
         $params = $request->getQueryParams();
         $overrideValues = json_decode($params['overrideValues'] ?? '[]', true, 512, JSON_THROW_ON_ERROR);
+        $overrideValues = array_map(static fn ($value): int => (int)$value, $overrideValues);
         $recordTypeValue = $params['recordTypeValue'] ?? '';
         $command = $params['command'] ?? '';
 
