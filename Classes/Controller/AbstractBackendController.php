@@ -49,6 +49,7 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
+use Xima\XimaTypo3Recordlist\Context\WorkspacePreviewState;
 use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
@@ -1993,13 +1994,14 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        // save current workspace
+        // save current workspace and preview state
         $currentWorkspace = $this->getBackendAuthentication()->workspace;
+        $workspacePreviewState = GeneralUtility::makeInstance(WorkspacePreviewState::class);
+        $previousPreviewState = $workspacePreviewState->isActive();
 
-        // Since TYPO3 v13 the preview URI listener of EXT:workspaces
-        // (Workspaces\Hook\BackendUtilityHook::createPageUriForWorkspaceVersion) evaluates the workspace aspect of
-        // the Context instead of the backend user. Overriding the backend user alone therefore no longer rewrites
-        // the URI to the workspace preview, so the module workspace has to be passed in via an own Context.
+        // Since TYPO3 v13 workspace aware preview URIs are built based on the workspace aspect of the Context
+        // instead of the backend user, so the module workspace has to be passed in via an own Context.
+        // WorkspacePreviewUriRewriter picks it up from there.
         // The visibility aspect mirrors the one PreviewUriBuilder sets up internally for its default Context.
         $previewContext = null;
         if ($this::WORKSPACE_ID !== 0) {
@@ -2012,9 +2014,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             // check if controller + record is workspace aware
             $isWorkspaceAware = $this::WORKSPACE_ID !== 0 && isset($record['t3ver_wsid']) && $record['t3ver_wsid'] > 0;
 
-            // override user workspace, the record resolution of PreviewUriBuilder still relies on it
+            // override user workspace, the record resolution of PreviewUriBuilder still relies on it, and let
+            // WorkspacePreviewUriRewriter turn the workspace preview URI into a frontend URI
             if ($isWorkspaceAware) {
                 $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
+                $workspacePreviewState->setActive(true);
             }
 
             // A configured previewPageId (TSconfig) wins; otherwise fall back to the record's own pid
@@ -2038,11 +2042,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 )->buildUri(null, $isWorkspaceAware ? $previewContext : null);
             }
 
-            // add workspace id to url + restore user workspace
+            // restore user workspace and preview state
             if ($isWorkspaceAware) {
-                $record['url'] .= '&workspaceId=' . $this::WORKSPACE_ID;
-                // restore user workspace
                 $this->getBackendAuthentication()->workspace = $currentWorkspace;
+                $workspacePreviewState->setActive($previousPreviewState);
             }
         }
     }

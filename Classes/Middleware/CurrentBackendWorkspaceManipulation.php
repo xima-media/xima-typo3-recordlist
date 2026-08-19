@@ -12,6 +12,7 @@ use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\WorkspaceAspect;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
+use Xima\XimaTypo3Recordlist\Context\WorkspacePreviewState;
 
 /**
  * Middleware to manipulate the current backend workspace based on a custom parameter.
@@ -28,7 +29,6 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
         $routesToHandle = [
             'ajax_workspace_dispatch',
             'record_edit',
-            'workspace_previewcontrols',
             'ajax_xima_recordlist_delete',
             'ajax_xima_recordlist_inline_edit',
         ];
@@ -54,10 +54,13 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
         // Overwrite current workspace for this request
         $backendUser->workspace = (int)$workspaceId;
 
-        // Keep the Context in sync: consumers like Workspaces\Controller\PreviewController resolve the current
-        // workspace from the Context, not from the backend user
+        // Keep the Context in sync, the workspace aspect is what makes TYPO3 build workspace aware preview URIs
         GeneralUtility::makeInstance(Context::class)
             ->setAspect('workspace', new WorkspaceAspect((int)$workspaceId));
+
+        // Mark the request so that WorkspacePreviewUriRewriter points preview URIs to the frontend instead of the
+        // native workspace split preview module
+        GeneralUtility::makeInstance(WorkspacePreviewState::class)->setActive(true);
 
         // Grant access to workspaces_publish module if not already granted (use more precise check)
         $modules = explode(',', $backendUser->groupData['modules'] ?? '');

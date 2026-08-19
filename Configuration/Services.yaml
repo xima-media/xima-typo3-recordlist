@@ -9,3 +9,8 @@ services:
 
   Xima\XimaTypo3Recordlist\Controller\AjaxController:
     public: true
+
+  # Shared state, has to be retrievable via GeneralUtility::makeInstance() so that middleware, controllers and the
+  # event listener operate on the same instance
+  Xima\XimaTypo3Recordlist\Context\WorkspacePreviewState:
+    public: true
