@@ -17,6 +17,9 @@ use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\VisibilityAspect;
+use TYPO3\CMS\Core\Context\WorkspaceAspect;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
@@ -1993,11 +1996,23 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // save current workspace
         $currentWorkspace = $this->getBackendAuthentication()->workspace;
 
+        // Since TYPO3 v13 the preview URI listener of EXT:workspaces
+        // (Workspaces\Hook\BackendUtilityHook::createPageUriForWorkspaceVersion) evaluates the workspace aspect of
+        // the Context instead of the backend user. Overriding the backend user alone therefore no longer rewrites
+        // the URI to the workspace preview, so the module workspace has to be passed in via an own Context.
+        // The visibility aspect mirrors the one PreviewUriBuilder sets up internally for its default Context.
+        $previewContext = null;
+        if ($this::WORKSPACE_ID !== 0) {
+            $previewContext = clone GeneralUtility::makeInstance(Context::class);
+            $previewContext->setAspect('visibility', new VisibilityAspect(true, false, false, true));
+            $previewContext->setAspect('workspace', new WorkspaceAspect($this::WORKSPACE_ID));
+        }
+
         foreach ($this->records as &$record) {
             // check if controller + record is workspace aware
             $isWorkspaceAware = $this::WORKSPACE_ID !== 0 && isset($record['t3ver_wsid']) && $record['t3ver_wsid'] > 0;
 
-            // override user workspace
+            // override user workspace, the record resolution of PreviewUriBuilder still relies on it
             if ($isWorkspaceAware) {
                 $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
             }
@@ -2020,7 +2035,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->getTableName(),
                     $record['uid'],
                     $previewPageId
-                )->buildUri();
+                )->buildUri(null, $isWorkspaceAware ? $previewContext : null);
             }
 
             // add workspace id to url + restore user workspace

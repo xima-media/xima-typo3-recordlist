@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- **Workspace Draft Preview**: The preview button of a workspace-aware controller opened the live version instead of the draft. Since TYPO3 v13 the preview URI listener of `EXT:workspaces` evaluates the workspace aspect of the `Context` rather than the backend user, so the module workspace is now passed to `PreviewUriBuilder::buildUri()` via a dedicated `Context`. The `workspace_previewcontrols` route is handled by `CurrentBackendWorkspaceManipulation`, and `CurrentFrontendWorkspaceManipulation` now runs before page resolution and `PreviewSimulator` so that preview mode and the cache bypass are actually activated — previously workspace content could be written into the live page cache. The frontend middleware additionally verifies that the backend user may access the requested workspace.
 - **Root/First Page Selectable on Create**: The new-record modal now lists every accessible page (including the configured root/first page), which was previously excluded so only subpages could be chosen.
 - **First Directory Filterable**: The directory dropdown now has an explicit "All directories" entry and uses a `scope` query parameter, so selecting the first directory filters to it instead of implicitly showing all pages.
 

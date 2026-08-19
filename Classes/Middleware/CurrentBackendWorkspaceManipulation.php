@@ -8,6 +8,8 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\WorkspaceAspect;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
 
@@ -26,6 +28,7 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
         $routesToHandle = [
             'ajax_workspace_dispatch',
             'record_edit',
+            'workspace_previewcontrols',
             'ajax_xima_recordlist_delete',
             'ajax_xima_recordlist_inline_edit',
         ];
@@ -50,6 +53,11 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
 
         // Overwrite current workspace for this request
         $backendUser->workspace = (int)$workspaceId;
+
+        // Keep the Context in sync: consumers like Workspaces\Controller\PreviewController resolve the current
+        // workspace from the Context, not from the backend user
+        GeneralUtility::makeInstance(Context::class)
+            ->setAspect('workspace', new WorkspaceAspect((int)$workspaceId));
 
         // Grant access to workspaces_publish module if not already granted (use more precise check)
         $modules = explode(',', $backendUser->groupData['modules'] ?? '');

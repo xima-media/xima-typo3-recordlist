@@ -22,18 +22,21 @@ class CurrentFrontendWorkspaceManipulation implements MiddlewareInterface
         }
 
         // validate workspaceId is set
-        $workspaceId = $request->getQueryParams()['workspaceId'] ?? false;
-        if (!$workspaceId) {
+        $workspaceId = (int)($request->getQueryParams()['workspaceId'] ?? 0);
+        if ($workspaceId === 0) {
+            return $handler->handle($request);
+        }
+
+        // validate the current backend user is allowed to access the requested workspace
+        $backendUser = $this->getBackendUser();
+        if (!$backendUser instanceof BackendUserAuthentication || $backendUser->checkWorkspace($workspaceId) === false) {
             return $handler->handle($request);
         }
 
         // set workspace aspect
-        $backendUser = $this->getBackendUser();
-        if ($backendUser instanceof BackendUserAuthentication) {
-            /** @var Context $context */
-            $context = GeneralUtility::makeInstance(Context::class);
-            $context->setAspect('workspace', GeneralUtility::makeInstance(WorkspaceAspect::class, (int)$workspaceId));
-        }
+        /** @var Context $context */
+        $context = GeneralUtility::makeInstance(Context::class);
+        $context->setAspect('workspace', new WorkspaceAspect($workspaceId));
 
         return $handler->handle($request);
     }
