@@ -51,8 +51,11 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        // Overwrite current workspace for this request
-        $backendUser->workspace = (int)$workspaceId;
+        // Overwrite current workspace for this request, this also loads the matching sys_workspace record, which
+        // carries live_edit, publish_access and the workspace mount points
+        if (!$backendUser->setTemporaryWorkspace((int)$workspaceId)) {
+            return $handler->handle($request);
+        }
 
         // Keep the Context in sync, the workspace aspect is what makes TYPO3 build workspace aware preview URIs
         GeneralUtility::makeInstance(Context::class)
