@@ -1999,9 +1999,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $workspacePreviewState = GeneralUtility::makeInstance(WorkspacePreviewState::class);
         $previousPreviewState = $workspacePreviewState->isActive();
 
-        // Since TYPO3 v13 workspace aware preview URIs are built based on the workspace aspect of the Context
-        // instead of the backend user, so the module workspace has to be passed in via an own Context.
-        // WorkspacePreviewUriRewriter picks it up from there.
         // The visibility aspect mirrors the one PreviewUriBuilder sets up internally for its default Context.
         $previewContext = null;
         if ($this::WORKSPACE_ID !== 0) {
@@ -2011,11 +2008,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         foreach ($this->records as &$record) {
-            // check if controller + record is workspace aware
             $isWorkspaceAware = $this::WORKSPACE_ID !== 0 && isset($record['t3ver_wsid']) && $record['t3ver_wsid'] > 0;
 
-            // override user workspace, the record resolution of PreviewUriBuilder still relies on it, and let
-            // WorkspacePreviewUriRewriter turn the workspace preview URI into a frontend URI
+            // the record resolution of PreviewUriBuilder still relies on the backend user workspace
             if ($isWorkspaceAware) {
                 $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
                 $workspacePreviewState->setActive(true);
@@ -2039,7 +2034,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->getTableName(),
                     $record['uid'],
                     $previewPageId
-                )->buildUri(null, $isWorkspaceAware ? $previewContext : null);
+                )->buildUri(null, $isWorkspaceAware ? clone $previewContext : null);
             }
 
             // restore user workspace and preview state

@@ -17,7 +17,8 @@ use Xima\XimaTypo3Recordlist\Context\WorkspacePreviewState;
  * native workspace GUI which the backend modules of this extension replace, and it expects the backend user to have
  * the workspace actively selected. Reset the workspace aspect for the URI generation instead, so that TYPO3 builds a
  * regular frontend URI, and let the CurrentFrontendWorkspaceManipulation middleware apply the workspace in the
- * frontend. Resetting the aspect is safe as PreviewUriBuilder operates on its own Context clone.
+ * frontend. PreviewUriBuilder passes a Context given to buildUri() into the event unchanged, so callers have to hand
+ * over a Context they can discard afterwards.
  *
  * This affects the view button of the record list as well as every preview URI TYPO3 core builds for the manipulated
  * workspace, most notably the view button of the record editing form (route "record_edit").
