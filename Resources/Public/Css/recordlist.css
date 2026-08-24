@@ -166,10 +166,16 @@ main.recordlist ul.pagination input.form-control {
 }
 
 /** A single group may still be wider than the column on a narrow window; let its buttons
-    wrap too rather than overflow the cell. */
+    wrap too rather than overflow the cell. Bootstrap lets a group button grow to fill the
+    line (`flex: 1 1 auto`), which a wrapped row would stretch across the whole cell — keep
+    every button at its content width instead. */
 .recordlist-actions .btn-group {
     flex-wrap: wrap;
     row-gap: 0.25rem;
+}
+
+.recordlist-actions .btn-group > .btn {
+    flex: 0 0 auto;
 }
 
 /** Inline labels next to an icon in the bar (icon-only actions carry their name in a
