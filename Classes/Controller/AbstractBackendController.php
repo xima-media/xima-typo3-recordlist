@@ -17,6 +17,9 @@ use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\VisibilityAspect;
+use TYPO3\CMS\Core\Context\WorkspaceAspect;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
@@ -46,6 +49,7 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Workspaces\Authorization\WorkspacePublishGate;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
+use Xima\XimaTypo3Recordlist\Context\WorkspacePreviewState;
 use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
@@ -1990,16 +1994,26 @@ abstract class AbstractBackendController extends ActionController implements Bac
             return;
         }
 
-        // save current workspace
+        // save current workspace and preview state
         $currentWorkspace = $this->getBackendAuthentication()->workspace;
+        $workspacePreviewState = GeneralUtility::makeInstance(WorkspacePreviewState::class);
+        $previousPreviewState = $workspacePreviewState->isActive();
+
+        // The visibility aspect mirrors the one PreviewUriBuilder sets up internally for its default Context.
+        $previewContext = null;
+        if ($this::WORKSPACE_ID !== 0) {
+            $previewContext = clone GeneralUtility::makeInstance(Context::class);
+            $previewContext->setAspect('visibility', new VisibilityAspect(true, false, false, true));
+            $previewContext->setAspect('workspace', new WorkspaceAspect($this::WORKSPACE_ID));
+        }
 
         foreach ($this->records as &$record) {
-            // check if controller + record is workspace aware
             $isWorkspaceAware = $this::WORKSPACE_ID !== 0 && isset($record['t3ver_wsid']) && $record['t3ver_wsid'] > 0;
 
-            // override user workspace
+            // the record resolution of PreviewUriBuilder still relies on the backend user workspace
             if ($isWorkspaceAware) {
                 $this->getBackendAuthentication()->workspace = $this::WORKSPACE_ID;
+                $workspacePreviewState->setActive(true);
             }
 
             // A configured previewPageId (TSconfig) wins; otherwise fall back to the record's own pid
@@ -2020,14 +2034,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $this->getTableName(),
                     $record['uid'],
                     $previewPageId
-                )->buildUri();
+                )->buildUri(null, $isWorkspaceAware ? clone $previewContext : null);
             }
 
-            // add workspace id to url + restore user workspace
+            // restore user workspace and preview state
             if ($isWorkspaceAware) {
-                $record['url'] .= '&workspaceId=' . $this::WORKSPACE_ID;
-                // restore user workspace
                 $this->getBackendAuthentication()->workspace = $currentWorkspace;
+                $workspacePreviewState->setActive($previousPreviewState);
             }
         }
     }

@@ -142,3 +142,11 @@ ON DUPLICATE KEY UPDATE
 		content_blocks_timestamp = VALUES(content_blocks_timestamp),
 		content_blocks_date      = VALUES(content_blocks_date),
 		content_blocks_datetime  = VALUES(content_blocks_datetime);
+
+-- Draft versions in workspace 1 for the two records below the newest one, so that the record list renders more than
+-- one workspace draft on the first page (sorted by datetime DESC) while leaving the first row a live record.
+INSERT INTO `tx_news_domain_model_news`
+		(`uid`, `pid`, `sys_language_uid`, `l10n_parent`, `title`, `path_segment`, `teaser`, `bodytext`, `datetime`, `author`, `sitemap_changefreq`, `t3ver_oid`, `t3ver_wsid`, `t3ver_state`, `t3ver_stage`)
+VALUES
+		(9101, 15, 0, 0, 'Year-End Performance Review', 'year-end-performance-review', 'Strong results position company for future growth', '<p>The year-end performance review shows strong results across all metrics.</p><p>Draft revision awaiting review.</p>', UNIX_TIMESTAMP('2024-08-06 10:00:00'), 'Joe Price', 'hourly', 59, 1, 0, 0),
+		(9102, 15, 0, 0, 'Knowledge Base Update Completed', 'knowledge-base-update-completed', 'Enhanced documentation improves user support', '<p>The updated knowledge base provides comprehensive documentation for all products.</p><p>Draft revision awaiting review.</p>', UNIX_TIMESTAMP('2024-08-02 13:45:00'), 'Doris Sanders', 'always', 58, 1, 0, 0);
