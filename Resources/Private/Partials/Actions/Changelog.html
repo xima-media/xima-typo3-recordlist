@@ -5,9 +5,13 @@
         href="#"
         class="btn btn-default"
         data-action-group="workspace"
-        title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.changelog')}"
-        data-bs-toggle="tooltip"
+        aria-label="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.changelog')}"
+        title="{f:if(condition: tableConfiguration.enableActionGroups, then: '{f:translate(key:\'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.changelog\')}')}"
+        data-bs-toggle="{f:if(condition: tableConfiguration.enableActionGroups, then: 'tooltip')}"
         data-action="changes">
         <core:icon identifier="actions-info" size="small" />
+        <f:if condition="!{tableConfiguration.enableActionGroups}">
+            <span class="recordlist-action-label">{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.changelog')}</span>
+        </f:if>
     </a>
 </f:if>

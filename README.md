@@ -494,7 +494,9 @@ column narrow. The grouping is markup-driven — `recordlist-action-groups.js` d
 groups from the DOM and needs no change to support a new one.
 
 To switch the dropdowns off for a table and render every action as a plain button in the
-bar:
+bar. The workflow actions (`actions`) then form their own button group beside the
+per-record ones (`groupActions`), and the icon-only workflow buttons carry a visible label
+instead of a tooltip:
 
 ```php
 class NewsController extends AbstractBackendController

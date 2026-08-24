@@ -10,10 +10,14 @@
         href="#"
         class="btn btn-danger"
         data-action-group="workspace"
-        title="{f:translate(key:label)}"
-        data-bs-toggle="tooltip"
+        aria-label="{f:translate(key:label)}"
+        title="{f:if(condition: tableConfiguration.enableActionGroups, then: '{f:translate(key:label)}')}"
+        data-bs-toggle="{f:if(condition: tableConfiguration.enableActionGroups, then: 'tooltip')}"
         data-workspace-action="remove"
         data-typo3-version="{typo3version}">
         <core:icon identifier="actions-undo" size="small" />
+        <f:if condition="!{tableConfiguration.enableActionGroups}">
+            <span class="recordlist-action-label">{f:translate(key:label)}</span>
+        </f:if>
     </a>
 </f:if>
