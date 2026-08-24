@@ -514,11 +514,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
             if ($isReset) {
                 $body = [];
                 $this->request = $this->request->withParsedBody([]);
-                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.isFilterButtonActive'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
+                unset($moduleData['settings']['language'], $moduleData['settings'][$tableName . '.onlyOfflineRecords'], $moduleData['settings'][$tableName . '.onlyReadyToPublish'], $moduleData['settings'][$tableName . '.itemsPerPage']);
             }
-
+            // additionally clear columns and visibility settings in reset view button
             if ($isResetView) {
-                unset($moduleData['settings'][$tableName . '.activeColumns']);
+                unset($moduleData['settings'][$tableName . '.activeColumns'], $moduleData['settings'][$tableName . '.isFilterButtonActive']);
             }
 
             $moduleData[$tableName . '.search'] = $body;
