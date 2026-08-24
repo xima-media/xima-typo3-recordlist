@@ -62,8 +62,11 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
             ->setAspect('workspace', new WorkspaceAspect((int)$workspaceId));
 
         // Mark the request so that WorkspacePreviewUriRewriter points preview URIs to the frontend instead of the
-        // native workspace split preview module
-        GeneralUtility::makeInstance(WorkspacePreviewState::class)->setActive(true);
+        // native workspace split preview module. Requests already carrying ADMCMD_prev=IGNORE originate from an
+        // active frontend preview and must keep their own preview handling untouched.
+        if (($request->getQueryParams()['ADMCMD_prev'] ?? null) !== 'IGNORE') {
+            GeneralUtility::makeInstance(WorkspacePreviewState::class)->setActive(true);
+        }
 
         // Grant access to workspaces_publish module if not already granted (use more precise check)
         $modules = explode(',', $backendUser->groupData['modules'] ?? '');
