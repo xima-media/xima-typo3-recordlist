@@ -174,4 +174,35 @@ test.describe('Action group dropdowns', () => {
 
     await expect(contentFrame.locator('#unprocessed-bar [data-action-group]')).toBeHidden();
   });
+
+  test('an ungrouped bar keeps its actions visible and in place', async ({ page }) => {
+    const contentFrame = await openModule(page, 'example_beusers');
+    // Mirrors a table with `enableActionGroups = false`: the bar carries the opt-out class
+    // and no dropdown shells are rendered.
+    await contentFrame.locator('main.recordlist').evaluate(main => {
+      const cell = document.createElement('div');
+      cell.id = 'ungrouped';
+      cell.className = 'recordlist-actions';
+      const bar = document.createElement('div');
+      bar.className = 'btn-group recordlist-actions-ungrouped';
+      bar.setAttribute('data-recordlist-actions', '');
+      ['workspace', 'translation'].forEach(group => {
+        const action = document.createElement('a');
+        action.className = 'btn btn-default';
+        action.href = '#';
+        action.setAttribute('data-action-group', group);
+        action.textContent = group;
+        bar.appendChild(action);
+      });
+      cell.appendChild(bar);
+      main.appendChild(cell);
+    });
+
+    await expect(contentFrame.locator('#ungrouped [data-action-group]')).toHaveCount(2);
+    await expect(contentFrame.locator('#ungrouped [data-action-group="workspace"]')).toBeVisible();
+    await expect(contentFrame.locator('#ungrouped [data-action-group="translation"]')).toBeVisible();
+    // The module leaves the bar alone — no labels added, nothing relocated.
+    await expect(contentFrame.locator('#ungrouped .recordlist-action-label')).toHaveCount(0);
+    await expect(contentFrame.locator('#ungrouped [data-recordlist-actions-processed]')).toHaveCount(0);
+  });
 });
