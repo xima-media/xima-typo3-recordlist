@@ -20,9 +20,13 @@ export default class RecordlistActionGroups {
     });
   }
 
+  // A bar marked `.recordlist-actions-ungrouped` opted out of grouping and keeps every
+  // action in the bar.
   groupAll() {
     document
-      .querySelectorAll(`[data-recordlist-actions]:not([${RecordlistActionGroups.PROCESSED_ATTR}])`)
+      .querySelectorAll(
+        `[data-recordlist-actions]:not(.recordlist-actions-ungrouped):not([${RecordlistActionGroups.PROCESSED_ATTR}])`
+      )
       .forEach(bar => this.groupBar(bar));
   }
 

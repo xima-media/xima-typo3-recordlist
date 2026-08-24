@@ -140,8 +140,9 @@ main.recordlist ul.pagination input.form-control {
 /** Semantic action dropdowns collapsing translation / workspace row actions. */
 /** Avoid a flash of ungrouped actions on load: hide the buttons destined for a dropdown
     until the module has processed the bar and relocated them (the move happens in the same
-    JS task, so they are never painted in the bar). Requires the JS module to run. */
-[data-recordlist-actions]:not([data-recordlist-actions-processed]) [data-action-group] {
+    JS task, so they are never painted in the bar). Requires the JS module to run — a bar
+    marked `.recordlist-actions-ungrouped` keeps every action in place and is exempt. */
+[data-recordlist-actions]:not(.recordlist-actions-ungrouped):not([data-recordlist-actions-processed]) [data-action-group] {
     display: none;
 }
 

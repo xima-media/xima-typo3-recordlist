@@ -196,7 +196,7 @@
                                             <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
                                                 <td>
                                                     <div class="recordlist-actions">
-                                                        <div class="btn-group" data-recordlist-actions>
+                                                        <div class="btn-group{f:if(condition: tableConfiguration.enableActionGroups, else: ' recordlist-actions-ungrouped')}" data-recordlist-actions>
                                                             <f:if condition="{tableConfiguration.groupActions}">
                                                                 <f:for each="{tableConfiguration.groupActions}" as="actionName">
                                                                     <f:render partial="Actions/{actionName}" arguments="{_all}" />
@@ -208,7 +208,9 @@
                                                                 </f:for>
                                                             </f:if>
                                                         </div>
-                                                        <f:render partial="ActionGroupDropdowns" arguments="{_all}" />
+                                                        <f:if condition="{tableConfiguration.enableActionGroups}">
+                                                            <f:render partial="ActionGroupDropdowns" arguments="{_all}" />
+                                                        </f:if>
                                                     </div>
                                                 </td>
                                             </f:if>

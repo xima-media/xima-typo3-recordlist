@@ -1695,6 +1695,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
             'columns' => $columns,
             'showCheckboxColumn' => true,
             'showIconColumn' => true,
+            'enableActionGroups' => true,
             'groupActions' => $groupActions,
             'actions' => [
                 'Changelog',

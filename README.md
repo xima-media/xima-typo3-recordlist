@@ -493,6 +493,19 @@ Translation and workspace row actions are collapsed into dropdowns to keep the a
 column narrow. The grouping is markup-driven — `recordlist-action-groups.js` discovers the
 groups from the DOM and needs no change to support a new one.
 
+To switch the dropdowns off for a table and render every action as a plain button in the
+bar:
+
+```php
+class NewsController extends AbstractBackendController
+{
+    protected function modifyTableConfiguration(): void
+    {
+        $this->tableConfiguration['tx_news_domain_model_news']['enableActionGroups'] = false;
+    }
+}
+```
+
 To add a group (e.g. `publishing`):
 
 1. **Add a dropdown shell** in your `ActionGroupDropdowns.html` partial, marked with
