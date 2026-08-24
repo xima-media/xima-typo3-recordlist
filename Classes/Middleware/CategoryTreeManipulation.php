@@ -25,12 +25,12 @@ class CategoryTreeManipulation implements MiddlewareInterface
 
         $params = $request->getQueryParams();
         $overrideValues = json_decode($params['overrideValues'] ?? '[]', true, 512, JSON_THROW_ON_ERROR);
+        $overrideValues = array_map(static fn ($value): int => (int)$value, $overrideValues);
+        $recordTypeValue = $params['recordTypeValue'] ?? '';
         $command = $params['command'] ?? '';
-        $fieldName = $params['fieldName'] ?? '';
-        $uid = $params['uid'] ?? '';
 
         // make sure it is the right request
-        if (empty($overrideValues) || $command !== 'new' || $fieldName !== 'categories' || $uid !== '1') {
+        if ($recordTypeValue !== 'tx-ximatypo3recordlist-filter' || $command !== 'new') {
             return $handler->handle($request);
         }
 
@@ -39,10 +39,7 @@ class CategoryTreeManipulation implements MiddlewareInterface
             $response = $handler->handle($request);
             $treeData = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
             foreach ($treeData as &$treeItem) {
-                if (!in_array((int)$treeItem['identifier'], $overrideValues, true)) {
-                    continue;
-                }
-                $treeItem['checked'] = true;
+                $treeItem['checked'] = in_array((int)$treeItem['identifier'], $overrideValues, true);
             }
             return new JsonResponse($treeData);
         } catch (\Exception) {

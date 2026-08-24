@@ -83,7 +83,8 @@
                                                 <f:form.submit
                                                     class="btn btn-default"
                                                     name="reset"
-                                                    value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}" />
+                                                    value="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.reset')}"
+                                                    additionalAttributes="{formaction: '#filterInputs'}" />
                                             </div>
                                         </div>
                                     </div>
@@ -195,19 +196,34 @@
                                             <f:if condition="{tableConfiguration.groupActions} || {tableConfiguration.actions}">
                                                 <td>
                                                     <div class="recordlist-actions">
-                                                        <div class="btn-group" data-recordlist-actions>
+                                                        <div class="btn-group{f:if(condition: tableConfiguration.enableActionGroups, else: ' recordlist-actions-ungrouped')}" data-recordlist-actions>
                                                             <f:if condition="{tableConfiguration.groupActions}">
                                                                 <f:for each="{tableConfiguration.groupActions}" as="actionName">
                                                                     <f:render partial="Actions/{actionName}" arguments="{_all}" />
                                                                 </f:for>
                                                             </f:if>
-                                                            <f:if condition="{tableConfiguration.actions}">
+                                                            <f:comment>
+                                                                Grouped: the workflow actions render into the same bar and the module
+                                                                relocates the tagged ones into their dropdown. Ungrouped: they render as
+                                                                their own button group beside it (see below), so the workflow cluster
+                                                                stays visually separate from the per-record actions.
+                                                            </f:comment>
+                                                            <f:if condition="{tableConfiguration.actions} && {tableConfiguration.enableActionGroups}">
                                                                 <f:for each="{tableConfiguration.actions}" as="actionName">
                                                                     <f:render partial="Actions/{actionName}" arguments="{_all}" />
                                                                 </f:for>
                                                             </f:if>
                                                         </div>
-                                                        <f:render partial="ActionGroupDropdowns" arguments="{_all}" />
+                                                        <f:if condition="{tableConfiguration.actions} && !{tableConfiguration.enableActionGroups}">
+                                                            <div class="btn-group recordlist-actions-ungrouped recordlist-actions-workflow">
+                                                                <f:for each="{tableConfiguration.actions}" as="actionName">
+                                                                    <f:render partial="Actions/{actionName}" arguments="{_all}" />
+                                                                </f:for>
+                                                            </div>
+                                                        </f:if>
+                                                        <f:if condition="{tableConfiguration.enableActionGroups}">
+                                                            <f:render partial="ActionGroupDropdowns" arguments="{_all}" />
+                                                        </f:if>
                                                     </div>
                                                 </td>
                                             </f:if>

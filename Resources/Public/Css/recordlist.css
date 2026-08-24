@@ -140,8 +140,9 @@ main.recordlist ul.pagination input.form-control {
 /** Semantic action dropdowns collapsing translation / workspace row actions. */
 /** Avoid a flash of ungrouped actions on load: hide the buttons destined for a dropdown
     until the module has processed the bar and relocated them (the move happens in the same
-    JS task, so they are never painted in the bar). Requires the JS module to run. */
-[data-recordlist-actions]:not([data-recordlist-actions-processed]) [data-action-group] {
+    JS task, so they are never painted in the bar). Requires the JS module to run — a bar
+    marked `.recordlist-actions-ungrouped` keeps every action in place and is exempt. */
+[data-recordlist-actions]:not(.recordlist-actions-ungrouped):not([data-recordlist-actions-processed]) [data-action-group] {
     display: none;
 }
 
@@ -154,9 +155,33 @@ main.recordlist ul.pagination input.form-control {
     display: none;
 }
 
-/** Standalone dropdowns sit beside the action button bar, not joined into it. */
-.recordlist-action-group {
-    margin-inline-start: 0.5rem;
+/** The action cell lays its button groups out as flex items so a group that does not fit
+    the column wraps onto its own line with vertical spacing, instead of flowing inline and
+    carrying a left indent into the new line. */
+.recordlist-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+/** A single group may still be wider than the column on a narrow window; let its buttons
+    wrap too rather than overflow the cell. Bootstrap lets a group button grow to fill the
+    line (`flex: 1 1 auto`), which a wrapped row would stretch across the whole cell — keep
+    every button at its content width instead. */
+.recordlist-actions .btn-group {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+}
+
+.recordlist-actions .btn-group > .btn {
+    flex: 0 0 auto;
+}
+
+/** Inline labels next to an icon in the bar (icon-only actions carry their name in a
+    tooltip only, which reads as a gap beside the labelled workflow buttons). */
+.recordlist-actions-ungrouped .btn > .recordlist-action-label {
+    margin-inline-start: 0.375rem;
 }
 
 /** Icon-only toggles — suppress the default Bootstrap caret. */

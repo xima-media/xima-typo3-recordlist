@@ -8,8 +8,11 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Backend\Routing\Route;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\WorkspaceAspect;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Workspaces\Service\WorkspaceService;
+use Xima\XimaTypo3Recordlist\Context\WorkspacePreviewState;
 
 /**
  * Middleware to manipulate the current backend workspace based on a custom parameter.
@@ -48,8 +51,22 @@ class CurrentBackendWorkspaceManipulation implements MiddlewareInterface
             return $handler->handle($request);
         }
 
-        // Overwrite current workspace for this request
-        $backendUser->workspace = (int)$workspaceId;
+        // Overwrite current workspace for this request, this also loads the matching sys_workspace record, which
+        // carries live_edit, publish_access and the workspace mount points
+        if (!$backendUser->setTemporaryWorkspace((int)$workspaceId)) {
+            return $handler->handle($request);
+        }
+
+        // Keep the Context in sync, the workspace aspect is what makes TYPO3 build workspace aware preview URIs
+        GeneralUtility::makeInstance(Context::class)
+            ->setAspect('workspace', new WorkspaceAspect((int)$workspaceId));
+
+        // Mark the request so that WorkspacePreviewUriRewriter points preview URIs to the frontend instead of the
+        // native workspace split preview module. Requests already carrying ADMCMD_prev=IGNORE originate from an
+        // active frontend preview and must keep their own preview handling untouched.
+        if (($request->getQueryParams()['ADMCMD_prev'] ?? null) !== 'IGNORE') {
+            GeneralUtility::makeInstance(WorkspacePreviewState::class)->setActive(true);
+        }
 
         // Grant access to workspaces_publish module if not already granted (use more precise check)
         $modules = explode(',', $backendUser->groupData['modules'] ?? '');
