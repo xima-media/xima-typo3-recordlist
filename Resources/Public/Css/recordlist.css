@@ -155,21 +155,27 @@ main.recordlist ul.pagination input.form-control {
     display: none;
 }
 
-/** Without the dropdowns the workflow actions form their own button group, set apart from
-    the per-record actions rather than joined into them. */
-.recordlist-actions-workflow {
-    margin-inline-start: 0.5rem;
+/** The action cell lays its button groups out as flex items so a group that does not fit
+    the column wraps onto its own line with vertical spacing, instead of flowing inline and
+    carrying a left indent into the new line. */
+.recordlist-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+/** A single group may still be wider than the column on a narrow window; let its buttons
+    wrap too rather than overflow the cell. */
+.recordlist-actions .btn-group {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
 }
 
 /** Inline labels next to an icon in the bar (icon-only actions carry their name in a
     tooltip only, which reads as a gap beside the labelled workflow buttons). */
 .recordlist-actions-ungrouped .btn > .recordlist-action-label {
     margin-inline-start: 0.375rem;
-}
-
-/** Standalone dropdowns sit beside the action button bar, not joined into it. */
-.recordlist-action-group {
-    margin-inline-start: 0.5rem;
 }
 
 /** Icon-only toggles — suppress the default Bootstrap caret. */
