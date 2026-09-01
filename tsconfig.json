@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"target": "es6",
+		"module": "esnext",
+		"outDir": "dist",
+		"rootDir": "Resources/Private/TypeScript",
+		"strict": false,
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"skipLibCheck": true,
+		"paths": {
+			"@typo3/*": [
+				"node_modules/typo3-typescript-sources/*"
+			]
+		},
+		"typeRoots": [
+			"node_modules/@types",
+			"types"
+		]
+	},
+	"exclude": ["node_modules"]
+}
