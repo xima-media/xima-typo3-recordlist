@@ -1,7 +1,7 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
 <f:if condition="{item.{colConfig.columnName}}">
-    <f:if condition="{item.editable}">
+    <f:if condition="{item._editable}">
         <f:then>
             <xm:link.editRecord
                 title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
@@ -9,13 +9,13 @@
                 table="{table}"
                 uid="{item.uid}"
                 workspaceId="{workspaceId}">
-                <span class="workspace-state-{item.state}">
+                <span class="workspace-state-{item._state}">
                     <f:format.date format="{colConfig.dateFormat}">{item.{colConfig.columnName}}</f:format.date>
                 </span>
             </xm:link.editRecord>
         </f:then>
         <f:else>
-            <span class="workspace-state-{item.state}">
+            <span class="workspace-state-{item._state}">
                 <f:format.date format="{colConfig.dateFormat}">{item.{colConfig.columnName}}</f:format.date>
             </span>
         </f:else>

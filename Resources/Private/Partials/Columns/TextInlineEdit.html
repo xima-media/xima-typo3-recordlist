@@ -2,7 +2,7 @@
 
 <f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-inline-edit.js'}" />
 
-<f:if condition="{item.editable}">
+<f:if condition="{item._editable}">
     <f:then>
         <div class="text-inline-edit" data-column="{colConfig.columnName}">
             <span
@@ -27,6 +27,6 @@
         </div>
     </f:then>
     <f:else>
-        <span class="workspace-state-{item.state}">{item.{colConfig.columnName}}</span>
+        <span class="workspace-state-{item._state}">{item.{colConfig.columnName}}</span>
     </f:else>
 </f:if>

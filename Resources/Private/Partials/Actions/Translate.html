@@ -1,4 +1,4 @@
-<f:for each="{item.possible_translations}" key="translationUid" as="link">
+<f:for each="{item._possibleTranslations}" key="translationUid" as="link">
     <f:for each="{languages}" as="language">
         <f:if condition="{language.uid} > 0 && {language.uid} == {translationUid}">
             <a
