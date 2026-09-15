@@ -2,7 +2,7 @@
 
 <f:be.pageRenderer includeJavaScriptModules="{0: '@xima/recordlist/recordlist-action-hidden-toggle.js'}" />
 
-<f:if condition="{item.editable} && {hiddenField}">
+<f:if condition="{item._editable} && {hiddenField}">
     <a
         href="#"
         class="btn btn-default {f:if(condition: '{item.{hiddenField}}', then: 'hidden')}"

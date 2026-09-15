@@ -10,7 +10,7 @@
     <f:if condition="{item._{colConfig.columnName}}">
         <f:for each="{item._{colConfig.columnName}}" as="relations" key="tableName">
             <f:for each="{relations}" as="relation" iteration="i">
-                <f:if condition="{item.editable}">
+                <f:if condition="{item._editable}">
                     <f:then>
                         <xm:link.editRecord
                             title="{relation.label}"
