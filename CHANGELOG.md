@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- **Preview URI Key**: The preview URI moved from the record key `url` to `_previewUrl`. Controllers setting their own view links in `modifyPaginatedRecords()` and templates overriding `Actions/View.html` must use the new key.
+
 ### Features
 
 - **Optional Action Grouping**: `enableActionGroups` in the table configuration switches the translation/workspace action dropdowns off per table, rendering every row action as a plain button again.
@@ -12,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- **Preview Action for `url` Columns**: The preview URI was stored in the record key `url` and collided with a database column of the same name, so the view button linked to the column value, or the column showed the preview URI. The URI now lives in `_previewUrl`.
 - **Workspace Draft Preview**: The preview button of a workspace-aware controller opened the live version instead of the draft. The preview URI listener of `EXT:workspaces` evaluates the workspace aspect of the `Context` rather than the backend user, so the module workspace is now passed to `PreviewUriBuilder::buildUri()` via a dedicated `Context` per record. `CurrentFrontendWorkspaceManipulation` now runs before page resolution and `PreviewSimulator` so that preview mode and the cache bypass are actually activated — previously workspace content could be written into the live page cache. The middleware additionally verifies that the backend user may access the requested workspace.
 - **Workspace Preview from the Editing Form**: The view button of the record editing form (route `record_edit`) linked to the native workspace split preview module, which expects the workspace to be actively selected, and resulted in an error. The new `WorkspacePreviewUriRewriter` event listener keeps `EXT:workspaces` from redirecting there, so every preview URI TYPO3 builds for a manipulated workspace is a direct frontend URI and behaves like the record list view button. Scoped to requests of this extension via `WorkspacePreviewState`, regular workspace usage of the installation is unaffected.
 - **Root/First Page Selectable on Create**: The new-record modal now lists every accessible page (including the configured root/first page), which was previously excluded so only subpages could be chosen.

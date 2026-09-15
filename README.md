@@ -481,7 +481,7 @@ class UserController extends AbstractBackendController
 
         foreach ($this->records as &$record) {
             // Add custom frontend URL
-            $record['url'] = 'https://example.com/user/' . $record['uid'];
+            $record['_previewUrl'] = 'https://example.com/user/' . $record['uid'];
         }
     }
 }

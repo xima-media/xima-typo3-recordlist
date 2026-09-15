@@ -2029,9 +2029,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             if ($this->getTableName() === 'sys_file_metadata') {
-                $record['url'] = $record['file']?->getPublicUrl() ?? '';
+                $record['_previewUrl'] = $record['file']?->getPublicUrl() ?? '';
             } else {
-                $record['url'] = PreviewUriBuilder::createForRecordPreview(
+                $record['_previewUrl'] = PreviewUriBuilder::createForRecordPreview(
                     $this->getTableName(),
                     $record['uid'],
                     $previewPageId
