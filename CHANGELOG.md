@@ -4,26 +4,60 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [15.0.0] - 2026-09-15
+
 ### Breaking Changes
 
 - **Preview URI Key**: The preview URI moved from the record key `url` to `_previewUrl`. Controllers setting their own view links in `modifyPaginatedRecords()` and templates overriding `Actions/View.html` must use the new key.
 - **Meta Field Keys**: The computed record keys `state`, `editable`, `referencesToPublish`, `possible_translations` and `possible_translations_deepl` are prefixed and camel-cased as `_state`, `_editable`, `_referencesToPublish`, `_possibleTranslations` and `_possibleTranslationsDeepl`, so they no longer collide with database columns of the same name. Custom templates reading them must use the new keys. The rendered `data-state` attribute and the `workspace-state-*` CSS classes are unchanged.
 
-### Features
-
-- **Optional Action Grouping**: `enableActionGroups` in the table configuration switches the translation/workspace action dropdowns off per table, rendering every row action as a plain button again.
-- **Multiple Record Sources**: New `getRecordSources()` override exposes records from several pages/folders at once via `RecordSource` objects, each with an optional recursive `includeSubpages` flag and `depth`. Replaces the implicit "single pid + direct children" entry point.
-- **Multi-Site Directories**: Accessible pages spanning more than one site get site-prefixed labels (e.g. `Site A › News`) in the directory dropdown and the new-record modal, disambiguating identically named folders across mandants.
-
 ### Bug Fixes
 
 - **Columns Outside a Record Type**: For tables with record types (`ctrl.type`), the list rendered every active column for every record, so a column that is not part of a record's type showed its database default — a value the editor can neither see nor change in FormEngine. Such cells now stay empty. The type of each record is resolved via `BackendUtility::getTCAtypeValue()`, so pointer fields in the `field:relationField` form are covered, and columns a type adds only through `columnsOverrides` count as configured. Columns that no type lists at all — system fields such as `crdate`, `sorting` or `sys_language_uid` — belong to every record and keep their value.
 - **Preview Action for `url` Columns**: The preview URI was stored in the record key `url` and collided with a database column of the same name, so the view button linked to the column value, or the column showed the preview URI. The URI now lives in `_previewUrl`.
+- **Multiple New Buttons**: Overriding `addNewButtonToModuleTemplate()` to register more than one "New" button rendered each of them with fully rounded corners instead of one joined button group. The v14 border fix is now scoped to the trailing button of the group.
+
+## [14.8.0] - 2026-08-24
+
+### Features
+
+- **Optional Action Grouping**: `enableActionGroups` in the table configuration switches the translation/workspace action dropdowns off per table, rendering every row action as a plain button again.
+
+### Bug Fixes
+
 - **Workspace Draft Preview**: The preview button of a workspace-aware controller opened the live version instead of the draft. The preview URI listener of `EXT:workspaces` evaluates the workspace aspect of the `Context` rather than the backend user, so the module workspace is now passed to `PreviewUriBuilder::buildUri()` via a dedicated `Context` per record. `CurrentFrontendWorkspaceManipulation` now runs before page resolution and `PreviewSimulator` so that preview mode and the cache bypass are actually activated — previously workspace content could be written into the live page cache. The middleware additionally verifies that the backend user may access the requested workspace.
 - **Workspace Preview from the Editing Form**: The view button of the record editing form (route `record_edit`) linked to the native workspace split preview module, which expects the workspace to be actively selected, and resulted in an error. The new `WorkspacePreviewUriRewriter` event listener keeps `EXT:workspaces` from redirecting there, so every preview URI TYPO3 builds for a manipulated workspace is a direct frontend URI and behaves like the record list view button. Scoped to requests of this extension via `WorkspacePreviewState`, regular workspace usage of the installation is unaffected.
+- **Filter Panel After Search Reset**: Resetting the search form no longer collapses the filter panel.
+- **Category Filter Defaults**: The category filter ignores `TCAdefaults` configured for the category field, which otherwise preselected categories nobody asked for.
+
+## [14.7.1] - 2026-07-20
+
+### Bug Fixes
+
+- **Category Filter Storage**: The category filter form element uses the current pid, so the category tree is read from the page the module actually lists.
+
+## [14.7.0] - 2026-07-05
+
+### Features
+
+- **Filter Items via FormDataCompiler**: Select and category filter items are resolved through the `FormDataCompiler`, so filters see the same items FormEngine does, including items added by TCA item procs.
+
+### Bug Fixes
+
+- **Preview Link Fallback**: Preview link generation falls back to the record pid when no `previewPageId` is configured.
+
+## [14.6.0] - 2026-06-22
+
+### Features
+
+- **Multiple Record Sources**: New `getRecordSources()` override exposes records from several pages/folders at once via `RecordSource` objects, each with an optional recursive `includeSubpages` flag and `depth`. Replaces the implicit "single pid + direct children" entry point.
+- **Multi-Site Directories**: Accessible pages spanning more than one site get site-prefixed labels (e.g. `Site A › News`) in the directory dropdown and the new-record modal, disambiguating identically named folders across mandants.
+- **Missing Storage Message**: Modules without an accessible record storage show an explicit error message instead of an empty list.
+
+### Bug Fixes
+
 - **Root/First Page Selectable on Create**: The new-record modal now lists every accessible page (including the configured root/first page), which was previously excluded so only subpages could be chosen.
 - **First Directory Filterable**: The directory dropdown now has an explicit "All directories" entry and uses a `scope` query parameter, so selecting the first directory filters to it instead of implicitly showing all pages.
-- **Multiple New Buttons**: Overriding `addNewButtonToModuleTemplate()` to register more than one "New" button rendered each of them with fully rounded corners instead of one joined button group. The v14 border fix is now scoped to the trailing button of the group.
 
 ### Deprecations
 
@@ -33,7 +67,29 @@ All notable changes to this project will be documented in this file.
 
 - Controllers implementing only the deprecated `getRecordPid()` are unaffected at runtime — the default `getRecordSources()` reproduces the previous "configured page + direct children" behaviour.
 
-## [14.x] - Multiple Tables Support, Template Configuration, View Dropdown & Row Selection
+## [14.5.0] - 2026-06-21
+
+### Features
+
+- **Sorting Actions**: Row actions to move a record up or down in manual sort order.
+- **Grouped Workspace and Language Actions**: Workspace and translation actions are collapsed into dropdowns to keep the action column narrow.
+
+### Bug Fixes
+
+- **Start- and Endtime Restriction**: The list no longer hides records whose start/endtime lies outside the current time.
+- **Composer Package Type**: The package declares `typo3-cms-extension` instead of `library`, so strict extension discovery (the TYPO3 testing framework in particular) recognizes it and registers its `Services.yaml`.
+
+## [14.4.0] - 2026-06-10
+
+### Features
+
+- **Default Filters**: Filters can be preset per table, applied on first visit of the module.
+- **Workspace Status Filter**: The workspace status filter uses select inputs.
+- **crdate and tstamp Columns**: Both timestamps are available as columns.
+- **Reset View Button**: Restores the default columns, filters and sorting of a table.
+- **Empty State Message**: Lists without records show an explicit message.
+
+## [14.0.0 - 14.3.0] - Multiple Tables Support, Template Configuration, View Dropdown & Row Selection
 
 ### Features
 
@@ -70,7 +126,7 @@ All notable changes to this project will be documented in this file.
 
 See [MIGRATION.md](MIGRATION.md) for detailed migration instructions from 13.x to 14.x.
 
-## [13.x] - Initial Release
+## [13.0.0] - Initial Release
 
 ### Features
 
