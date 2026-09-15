@@ -54,6 +54,7 @@ use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
 use Xima\XimaTypo3Recordlist\Utility\RelationResolver;
+use Xima\XimaTypo3Recordlist\Utility\TypeColumnResolver;
 
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
@@ -136,6 +137,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected RelationResolver $relationResolver;
 
+    protected TypeColumnResolver $typeColumnResolver;
+
     public function injectConnectionPool(ConnectionPool $connectionPool): void
     {
         $this->connectionPool = $connectionPool;
@@ -174,6 +177,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public function injectRelationResolver(RelationResolver $relationResolver): void
     {
         $this->relationResolver = $relationResolver;
+    }
+
+    public function injectTypeColumnResolver(TypeColumnResolver $typeColumnResolver): void
+    {
+        $this->typeColumnResolver = $typeColumnResolver;
     }
 
     /**
@@ -1864,6 +1872,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addSysFiles();
         $this->addPreviewButton();
         $this->addRelations();
+        $this->addRenderableColumns();
     }
 
     protected function addTranslationButtons(): void
@@ -2653,5 +2662,33 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             unset($record);
         }
+    }
+
+    /**
+     * Flags every active column as renderable or not for each record. A column that is not part of the record's
+     * type holds nothing but its database default, which the editor can neither see nor change in FormEngine.
+     */
+    protected function addRenderableColumns(): void
+    {
+        $tableName = $this->getTableName();
+
+        $activeColumns = [];
+        foreach ($this->tableConfiguration[$tableName]['columns'] ?? [] as $column) {
+            if ($column['active'] ?? false) {
+                $activeColumns[] = $column['columnName'];
+            }
+        }
+
+        foreach ($this->records as &$record) {
+            $typeColumns = $this->typeColumnResolver->resolveForRecord($tableName, $record);
+            $renderableColumns = [];
+            foreach ($activeColumns as $columnName) {
+                $renderableColumns[$columnName] = $typeColumns === null
+                    || !isset($GLOBALS['TCA'][$tableName]['columns'][$columnName])
+                    || isset($typeColumns[$columnName]);
+            }
+            $record['_renderableColumns'] = $renderableColumns;
+        }
+        unset($record);
     }
 }
