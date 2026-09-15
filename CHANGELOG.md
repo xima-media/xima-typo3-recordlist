@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Breaking Changes
 
 - **Preview URI Key**: The preview URI moved from the record key `url` to `_previewUrl`. Controllers setting their own view links in `modifyPaginatedRecords()` and templates overriding `Actions/View.html` must use the new key.
+- **Meta Field Keys**: The computed record keys `state`, `editable`, `referencesToPublish`, `possible_translations` and `possible_translations_deepl` are prefixed and camel-cased as `_state`, `_editable`, `_referencesToPublish`, `_possibleTranslations` and `_possibleTranslationsDeepl`, so they no longer collide with database columns of the same name. Custom templates reading them must use the new keys. The rendered `data-state` attribute and the `workspace-state-*` CSS classes are unchanged.
 
 ### Features
 

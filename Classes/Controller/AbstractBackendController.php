@@ -1075,8 +1075,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $record['editable'] = true;
-            $record['state'] = 'live';
+            $record['_editable'] = true;
+            $record['_state'] = 'live';
 
             // Look up the workspace version once. Cache it for addWorkspaceMetadata() so that
             // only paginated records pay the full overlay + referencesToPublish query cost.
@@ -1138,7 +1138,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     /**
      * Apply workspace overlay and compute display metadata for the current page of records.
      * Called as the first step of modifyPaginatedRecords() so subsequent methods receive
-     * workspace-version data (uid, t3ver_oid, state, editable, referencesToPublish).
+     * workspace-version data (uid, t3ver_oid, _state, _editable, _referencesToPublish).
      */
     protected function addWorkspaceMetadata(): void
     {
@@ -1155,8 +1155,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $children = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
                     unset($record['_referencesToPublish']);
                     if ($children !== []) {
-                        $record['referencesToPublish'] = $children;
-                        $record['state'] = 'children-modified';
+                        $record['_referencesToPublish'] = $children;
+                        $record['_state'] = 'children-modified';
                         $stages = array_values(array_unique(array_column($children, 't3ver_stage')));
                         $record['t3ver_stage'] = ($stages === [self::WORKSPACE_STAGE_READY_TO_PUBLISH])
                             ? self::WORKSPACE_STAGE_READY_TO_PUBLISH
@@ -1172,8 +1172,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             // Replace live record data with workspace version data.
             $record = $vRecord;
-            $record['editable'] = true;
-            $record['state'] = 'modified';
+            $record['_editable'] = true;
+            $record['_state'] = 'modified';
 
             $workspaceStatus = [
                 'level' => 'warning',
@@ -1181,21 +1181,21 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ];
 
             if ($record['t3ver_oid'] === 0) {
-                $record['state'] = 'new';
+                $record['_state'] = 'new';
             }
 
             if ($record['t3ver_state'] === self::VERSION_STATE_DELETED) {
-                $record['state'] = 'deleted';
+                $record['_state'] = 'deleted';
             }
 
             if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
                 $workspaceStatus['level'] = 'success';
                 $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.waiting');
-                $record['editable'] = $this->isWorkspaceAdmin();
-                $record['state'] = 'pending';
+                $record['_editable'] = $this->isWorkspaceAdmin();
+                $record['_state'] = 'pending';
             }
 
-            $record['referencesToPublish'] = $this->collectReferencesToPublish($record);
+            $record['_referencesToPublish'] = $this->collectReferencesToPublish($record);
 
             $record['status'] ??= [];
             $record['status'][] = $workspaceStatus;
@@ -1920,8 +1920,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         'redirect' => $redirectUrl,
                     ]
                 );
-                $record['possible_translations'] ??= [];
-                $record['possible_translations'][$languageUid] = $targetUrl;
+                $record['_possibleTranslations'] ??= [];
+                $record['_possibleTranslations'][$languageUid] = $targetUrl;
 
                 if (ExtensionManagementUtility::isLoaded('deepltranslate_core')
                     && \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
@@ -1939,8 +1939,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                             ],
                         ],
                     ]);
-                    $record['possible_translations_deepl'] ??= [];
-                    $record['possible_translations_deepl'][$languageUid] = $deeplUrl;
+                    $record['_possibleTranslationsDeepl'] ??= [];
+                    $record['_possibleTranslationsDeepl'][$languageUid] = $deeplUrl;
                 }
             }
         }

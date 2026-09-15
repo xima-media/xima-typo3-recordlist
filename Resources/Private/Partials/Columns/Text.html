@@ -1,6 +1,6 @@
 {namespace xm=Xima\XimaTypo3Recordlist\ViewHelpers}
 
-<f:if condition="{item.editable}">
+<f:if condition="{item._editable}">
     <f:then>
         <xm:link.editRecord
             title="{f:translate(key:'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:table.button.edit')}"
@@ -8,13 +8,13 @@
             table="{table}"
             uid="{item.uid}"
             workspaceId="{workspaceId}">
-            <span class="workspace-state-{item.state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters:
+            <span class="workspace-state-{item._state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters:
                 255)}
             </span>
         </xm:link.editRecord>
     </f:then>
     <f:else>
-        <span class="workspace-state-{item.state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters:
+        <span class="workspace-state-{item._state}">{item.{colConfig.columnName} -> f:format.stripTags() -> f:format.crop(maxCharacters:
             255)}
         </span>
     </f:else>
