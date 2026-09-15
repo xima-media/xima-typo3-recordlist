@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - **Workspace Preview from the Editing Form**: The view button of the record editing form (route `record_edit`) linked to the native workspace split preview module, which expects the workspace to be actively selected, and resulted in an error. The new `WorkspacePreviewUriRewriter` event listener keeps `EXT:workspaces` from redirecting there, so every preview URI TYPO3 builds for a manipulated workspace is a direct frontend URI and behaves like the record list view button. Scoped to requests of this extension via `WorkspacePreviewState`, regular workspace usage of the installation is unaffected.
 - **Root/First Page Selectable on Create**: The new-record modal now lists every accessible page (including the configured root/first page), which was previously excluded so only subpages could be chosen.
 - **First Directory Filterable**: The directory dropdown now has an explicit "All directories" entry and uses a `scope` query parameter, so selecting the first directory filters to it instead of implicitly showing all pages.
+- **Multiple New Buttons**: Overriding `addNewButtonToModuleTemplate()` to register more than one "New" button rendered each of them with fully rounded corners instead of one joined button group. The v14 border fix is now scoped to the trailing button of the group.
 
 ### Deprecations
 
