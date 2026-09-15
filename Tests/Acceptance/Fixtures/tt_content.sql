@@ -5,3 +5,6 @@ INSERT INTO tt_content (uid, pid, CType, header, bodytext, colPos, sorting, sys_
 	(11, 3, 'text', 'Second Element', 'Second body text', 0, 512, 0, 0, ''),
 	(12, 3, 'text', 'Third Element', 'Third body text', 0, 768, 0, 0, ''),
 	(13, 3, 'header', 'Fourth Element', 'Fourth body text', 0, 1024, 0, 0, '');
+
+-- crdate/tstamp for the columns that no record type lists in its showitem
+UPDATE `tt_content` SET `crdate` = UNIX_TIMESTAMP('2024-01-15 10:00:00'), `tstamp` = UNIX_TIMESTAMP('2024-01-15 10:00:00') WHERE `pid` = 3;

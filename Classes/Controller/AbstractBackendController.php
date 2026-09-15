@@ -2665,8 +2665,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
     }
 
     /**
-     * Flags every active column as renderable or not for each record. A column that is not part of the record's
-     * type holds nothing but its database default, which the editor can neither see nor change in FormEngine.
+     * Flags every active column as renderable or not for each record. A column another record type configures but
+     * this one does not holds nothing but its database default, which the editor can neither see nor change in
+     * FormEngine.
      */
     protected function addRenderableColumns(): void
     {
@@ -2680,12 +2681,10 @@ abstract class AbstractBackendController extends ActionController implements Bac
         }
 
         foreach ($this->records as &$record) {
-            $typeColumns = $this->typeColumnResolver->resolveForRecord($tableName, $record);
+            $columnsOutsideType = $this->typeColumnResolver->resolveForRecord($tableName, $record) ?? [];
             $renderableColumns = [];
             foreach ($activeColumns as $columnName) {
-                $renderableColumns[$columnName] = $typeColumns === null
-                    || !isset($GLOBALS['TCA'][$tableName]['columns'][$columnName])
-                    || isset($typeColumns[$columnName]);
+                $renderableColumns[$columnName] = !isset($columnsOutsideType[$columnName]);
             }
             $record['_renderableColumns'] = $renderableColumns;
         }

@@ -15,9 +15,16 @@ class TypeColumnResolver
     /** @var array<string, array<string, array<string, true>>> */
     private array $columnsByType = [];
 
+    /** @var array<string, array<string, true>> */
+    private array $typedColumns = [];
+
     /**
+     * Columns the record's type does not configure, although another type of the table does. Columns no type
+     * mentions at all — system fields like `crdate` and `sorting`, or fields attached outside the type system —
+     * are not part of the answer, they are valid for every record.
+     *
      * @param array<string, mixed> $record
-     * @return array<string, true>|null The columns of the record's type, or null if the table has no record types
+     * @return array<string, true>|null Null if the table has no record types
      */
     public function resolveForRecord(string $tableName, array $record): ?array
     {
@@ -30,7 +37,27 @@ class TypeColumnResolver
             return null;
         }
 
-        return $this->columnsByType[$tableName][$type] ??= $this->resolveForType($tableName, $type);
+        $columnsOfType = $this->columnsByType[$tableName][$type] ??= $this->resolveForType($tableName, $type);
+
+        return array_diff_key($this->resolveTypedColumns($tableName), $columnsOfType);
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function resolveTypedColumns(string $tableName): array
+    {
+        if (isset($this->typedColumns[$tableName])) {
+            return $this->typedColumns[$tableName];
+        }
+
+        $columns = [];
+        foreach (array_keys($GLOBALS['TCA'][$tableName]['types'] ?? []) as $type) {
+            $columns += $this->columnsByType[$tableName][(string)$type]
+                ??= $this->resolveForType($tableName, (string)$type);
+        }
+
+        return $this->typedColumns[$tableName] = $columns;
     }
 
     /**
