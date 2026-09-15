@@ -188,7 +188,9 @@
                                             <f:for each="{tableConfiguration.columns}" as="colConfig">
                                                 <f:if condition="{colConfig.active}">
                                                     <td>
-                                                        <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
+                                                        <f:if condition="{item._renderableColumns.{colConfig.columnName}}">
+                                                            <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
+                                                        </f:if>
                                                     </td>
                                                 </f:if>
                                             </f:for>
