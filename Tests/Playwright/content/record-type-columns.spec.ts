@@ -7,9 +7,12 @@ import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-erro
 // tt_content is typed via `CType`. The fixtures hold three `text` elements, whose type has `bodytext`
 // in its showitem, and one `header` element, whose type has not — all four carry a body text in the
 // database, so only the type decides whether the cell is filled.
+// The column label of `bodytext` differs between TYPO3 versions, so the column is located by the
+// order links of its header, which carry the column name.
 async function bodytextCells(contentFrame: FrameLocator): Promise<string[]> {
-  const headers = await contentFrame.locator('thead th').allTextContents();
-  const column = headers.findIndex(text => text.includes('Table content')) + 1;
+  const column = await contentFrame.locator('thead th').evaluateAll(
+    cells => cells.findIndex(cell => cell.querySelector('a[data-order-field="bodytext"]')) + 1
+  );
   expect(column).toBeGreaterThan(0);
 
   const cells = await contentFrame.locator(`tr[data-uid] td:nth-child(${column})`).allTextContents();
