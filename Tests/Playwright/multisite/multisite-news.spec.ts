@@ -98,4 +98,32 @@ test.describe('Multi-Site News (record sources across sites)', () => {
     }).toBeGreaterThan(2);
     await expect(contentFrame.locator('body')).not.toContainText(SECOND_NEWS);
   });
+
+  test('keeps the selected directory after re-opening the module', async ({ page }) => {
+    // Regression guard: the selection lives in the menu links only, so a reload
+    // without those query parameters used to fall back to "All directories".
+    const contentFrame = await openModule(page, 'example_multisite_news');
+    await searchFor(contentFrame, '');
+
+    await selectDirectory(contentFrame, 'Second Site \u203a News');
+    try {
+      await expect.poll(async () => {
+        try {
+          return await contentFrame.locator('tr[data-uid]').count();
+        } catch {
+          return -1;
+        }
+      }).toBe(2);
+
+      // Re-entering via the module menu carries neither id nor scope.
+      const reopenedFrame = await openModule(page, 'example_multisite_news');
+
+      await expect(reopenedFrame.locator('tr[data-uid]')).toHaveCount(2);
+      await expect(reopenedFrame.locator('body')).toContainText(SECOND_NEWS);
+      await expect(reopenedFrame.locator('body')).not.toContainText(MAIN_NEWS);
+    } finally {
+      // The selection now outlives the test — restore it for the ones that follow.
+      await selectDirectory(contentFrame, 'All directories');
+    }
+  });
 });
