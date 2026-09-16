@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- **Directory Selection**: The directory selected in the doc header lived in the query parameters of the menu links only, so re-entering the module reset the list to "All directories". The selected page and scope are now stored in the backend user settings and restored on the next visit.
+
 ## [15.0.0] - 2026-09-15
 
 ### Breaking Changes

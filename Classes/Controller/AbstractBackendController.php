@@ -494,7 +494,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
         if ($id > 0) {
             return $id;
         }
-        return (int)($this->request->getParsedBody()['id'] ?? 0);
+        $id = (int)($this->request->getParsedBody()['id'] ?? 0);
+        if ($id > 0) {
+            return $id;
+        }
+
+        $persistedPid = $this->getModuleDataSetting('currentPid');
+        return MathUtility::canBeInterpretedAsInteger($persistedPid) ? (int)$persistedPid : 0;
     }
 
     protected function getCurrentUrl(): string
@@ -536,9 +542,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $moduleData[$tableName . '.search'] = $body;
             $this->getBackendAuthentication()->pushModuleData($this->getModuleName(), $moduleData);
         } elseif (!empty($moduleData[$tableName . '.search'])) {
-            // fake request body from moduleData
-            $this->request = $this->request->withParsedBody($moduleData[$tableName . '.search']);
+            // fake request body from moduleData; the directory lives in its own
+            // setting, so a stale page id from an earlier submit must not win
+            $persistedSearch = $moduleData[$tableName . '.search'];
+            unset($persistedSearch['id']);
+            $this->request = $this->request->withParsedBody($persistedSearch);
         }
+
+        // add requested directory selection to module settings
+        $this->persistDirectorySelection();
 
         // add requested language to module settings
         $requestedLanguage = $this->request->getQueryParams()['language'] ?? null;
@@ -561,6 +573,31 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // demand: items per page (3/3)
         if (isset($body['items_per_page']) && MathUtility::canBeInterpretedAsInteger($body['items_per_page'])) {
             $this->addToModuleDataSettings([$this->getTableName() . '.itemsPerPage' => (int)$body['items_per_page']]);
+        }
+    }
+
+    /**
+     * Remember the directory dropdown selection (page and scope) so that it
+     * survives a reload, which arrives without the query parameters the menu
+     * links carry.
+     */
+    protected function persistDirectorySelection(): void
+    {
+        $queryParams = $this->request->getQueryParams();
+        $settings = [];
+
+        $requestedPid = $queryParams['id'] ?? null;
+        if (MathUtility::canBeInterpretedAsInteger($requestedPid)) {
+            $settings['currentPid'] = (int)$requestedPid;
+        }
+
+        $requestedScope = $queryParams['scope'] ?? null;
+        if (in_array($requestedScope, ['all', 'single'], true)) {
+            $settings['currentScope'] = $requestedScope;
+        }
+
+        if ($settings !== []) {
+            $this->addToModuleDataSettings($settings);
         }
     }
 
@@ -720,7 +757,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     protected function getCurrentScope(): string
     {
-        return ($this->request->getQueryParams()['scope'] ?? 'all') === 'single' ? 'single' : 'all';
+        $scope = $this->request->getQueryParams()['scope'] ?? null;
+        if (!in_array($scope, ['all', 'single'], true)) {
+            $scope = $this->getModuleDataSetting('currentScope');
+        }
+        return $scope === 'single' ? 'single' : 'all';
     }
 
     protected function getTableName(): string
