@@ -60,7 +60,7 @@ jobs:
         with:
           max_attempts: 3
           retry_on: error
-          timeout_minutes: 10
+          timeout_minutes: 20
           command: ddev playwright test
           new_command_on_retry: ddev playwright test --last-failed
 

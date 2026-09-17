@@ -125,9 +125,10 @@ main.recordlist ul.pagination input.form-control {
     }
 }
 
-/** v14 fix to apply button border */
-.btn-group > .new-record-in-page.btn.btn-sm.btn-default,
-.btn-group > .new-record-trigger.btn.btn-sm.btn-default {
+/** v14 fix to apply button border. Restricted to the trailing button of the group,
+    so several new-record buttons still render as one joined group. */
+.btn-group > .new-record-in-page.btn.btn-sm.btn-default:last-child,
+.btn-group > .new-record-trigger.btn.btn-sm.btn-default:last-child {
     border-end-end-radius: var(--typo3-input-border-radius);
     border-start-end-radius: var(--typo3-input-border-radius);
 }

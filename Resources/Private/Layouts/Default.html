@@ -164,11 +164,11 @@
                                             data-pid="{item.pid}"
                                             data-t3ver_oid="{f:if(condition: item.t3ver_oid, then: item.t3ver_oid, else: item.uid)}"
                                             data-t3ver_wsid="{workspaceId}"
-                                            data-state="{item.state}"
+                                            data-state="{item._state}"
                                             data-sys_language_uid="{item.sys_language_uid}"
                                             data-stage="{item.t3ver_stage}"
                                             data-table="{table}"
-                                            data-sys-file-references="{f:if(condition: item.referencesToPublish, then: '{item.referencesToPublish->f:format.json()}')}"
+                                            data-sys-file-references="{f:if(condition: item._referencesToPublish, then: '{item._referencesToPublish->f:format.json()}')}"
                                             data-next-stage="{f:if(condition:'{item.t3ver_stage}===-10', then: '-20', else: '-10')}">
 
                                             <f:if condition="{tableConfiguration.showCheckboxColumn}">
@@ -188,7 +188,9 @@
                                             <f:for each="{tableConfiguration.columns}" as="colConfig">
                                                 <f:if condition="{colConfig.active}">
                                                     <td>
-                                                        <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
+                                                        <f:if condition="{item._renderableColumns.{colConfig.columnName}}">
+                                                            <f:render partial="Columns/{colConfig.partial}" arguments="{_all}" />
+                                                        </f:if>
                                                     </td>
                                                 </f:if>
                                             </f:for>

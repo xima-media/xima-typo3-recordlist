@@ -54,6 +54,7 @@ use Xima\XimaTypo3Recordlist\Dto\RecordSource;
 use Xima\XimaTypo3Recordlist\Pagination\EditableArrayPaginator;
 use Xima\XimaTypo3Recordlist\Utility\RelationFilterResult;
 use Xima\XimaTypo3Recordlist\Utility\RelationResolver;
+use Xima\XimaTypo3Recordlist\Utility\TypeColumnResolver;
 
 abstract class AbstractBackendController extends ActionController implements BackendControllerInterface
 {
@@ -136,6 +137,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected RelationResolver $relationResolver;
 
+    protected TypeColumnResolver $typeColumnResolver;
+
     public function injectConnectionPool(ConnectionPool $connectionPool): void
     {
         $this->connectionPool = $connectionPool;
@@ -174,6 +177,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
     public function injectRelationResolver(RelationResolver $relationResolver): void
     {
         $this->relationResolver = $relationResolver;
+    }
+
+    public function injectTypeColumnResolver(TypeColumnResolver $typeColumnResolver): void
+    {
+        $this->typeColumnResolver = $typeColumnResolver;
     }
 
     /**
@@ -486,7 +494,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
         if ($id > 0) {
             return $id;
         }
-        return (int)($this->request->getParsedBody()['id'] ?? 0);
+        $id = (int)($this->request->getParsedBody()['id'] ?? 0);
+        if ($id > 0) {
+            return $id;
+        }
+
+        $persistedPid = $this->getModuleDataSetting('currentPid');
+        return MathUtility::canBeInterpretedAsInteger($persistedPid) ? (int)$persistedPid : 0;
     }
 
     protected function getCurrentUrl(): string
@@ -528,9 +542,15 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $moduleData[$tableName . '.search'] = $body;
             $this->getBackendAuthentication()->pushModuleData($this->getModuleName(), $moduleData);
         } elseif (!empty($moduleData[$tableName . '.search'])) {
-            // fake request body from moduleData
-            $this->request = $this->request->withParsedBody($moduleData[$tableName . '.search']);
+            // fake request body from moduleData; the directory lives in its own
+            // setting, so a stale page id from an earlier submit must not win
+            $persistedSearch = $moduleData[$tableName . '.search'];
+            unset($persistedSearch['id']);
+            $this->request = $this->request->withParsedBody($persistedSearch);
         }
+
+        // add requested directory selection to module settings
+        $this->persistDirectorySelection();
 
         // add requested language to module settings
         $requestedLanguage = $this->request->getQueryParams()['language'] ?? null;
@@ -553,6 +573,31 @@ abstract class AbstractBackendController extends ActionController implements Bac
         // demand: items per page (3/3)
         if (isset($body['items_per_page']) && MathUtility::canBeInterpretedAsInteger($body['items_per_page'])) {
             $this->addToModuleDataSettings([$this->getTableName() . '.itemsPerPage' => (int)$body['items_per_page']]);
+        }
+    }
+
+    /**
+     * Remember the directory dropdown selection (page and scope) so that it
+     * survives a reload, which arrives without the query parameters the menu
+     * links carry.
+     */
+    protected function persistDirectorySelection(): void
+    {
+        $queryParams = $this->request->getQueryParams();
+        $settings = [];
+
+        $requestedPid = $queryParams['id'] ?? null;
+        if (MathUtility::canBeInterpretedAsInteger($requestedPid)) {
+            $settings['currentPid'] = (int)$requestedPid;
+        }
+
+        $requestedScope = $queryParams['scope'] ?? null;
+        if (in_array($requestedScope, ['all', 'single'], true)) {
+            $settings['currentScope'] = $requestedScope;
+        }
+
+        if ($settings !== []) {
+            $this->addToModuleDataSettings($settings);
         }
     }
 
@@ -712,7 +757,11 @@ abstract class AbstractBackendController extends ActionController implements Bac
      */
     protected function getCurrentScope(): string
     {
-        return ($this->request->getQueryParams()['scope'] ?? 'all') === 'single' ? 'single' : 'all';
+        $scope = $this->request->getQueryParams()['scope'] ?? null;
+        if (!in_array($scope, ['all', 'single'], true)) {
+            $scope = $this->getModuleDataSetting('currentScope');
+        }
+        return $scope === 'single' ? 'single' : 'all';
     }
 
     protected function getTableName(): string
@@ -1100,8 +1149,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                 continue;
             }
 
-            $record['editable'] = true;
-            $record['state'] = 'live';
+            $record['_editable'] = true;
+            $record['_state'] = 'live';
 
             // Look up the workspace version once. Cache it for addWorkspaceMetadata() so that
             // only paginated records pay the full overlay + referencesToPublish query cost.
@@ -1163,7 +1212,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
     /**
      * Apply workspace overlay and compute display metadata for the current page of records.
      * Called as the first step of modifyPaginatedRecords() so subsequent methods receive
-     * workspace-version data (uid, t3ver_oid, state, editable, referencesToPublish).
+     * workspace-version data (uid, t3ver_oid, _state, _editable, _referencesToPublish).
      */
     protected function addWorkspaceMetadata(): void
     {
@@ -1180,8 +1229,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                     $children = $record['_referencesToPublish'] ?? $this->collectReferencesToPublish($record);
                     unset($record['_referencesToPublish']);
                     if ($children !== []) {
-                        $record['referencesToPublish'] = $children;
-                        $record['state'] = 'children-modified';
+                        $record['_referencesToPublish'] = $children;
+                        $record['_state'] = 'children-modified';
                         $stages = array_values(array_unique(array_column($children, 't3ver_stage')));
                         $record['t3ver_stage'] = ($stages === [self::WORKSPACE_STAGE_READY_TO_PUBLISH])
                             ? self::WORKSPACE_STAGE_READY_TO_PUBLISH
@@ -1197,8 +1246,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
             // Replace live record data with workspace version data.
             $record = $vRecord;
-            $record['editable'] = true;
-            $record['state'] = 'modified';
+            $record['_editable'] = true;
+            $record['_state'] = 'modified';
 
             $workspaceStatus = [
                 'level' => 'warning',
@@ -1206,21 +1255,21 @@ abstract class AbstractBackendController extends ActionController implements Bac
             ];
 
             if ($record['t3ver_oid'] === 0) {
-                $record['state'] = 'new';
+                $record['_state'] = 'new';
             }
 
             if ($record['t3ver_state'] === self::VERSION_STATE_DELETED) {
-                $record['state'] = 'deleted';
+                $record['_state'] = 'deleted';
             }
 
             if ($record['t3ver_stage'] === self::WORKSPACE_STAGE_READY_TO_PUBLISH) {
                 $workspaceStatus['level'] = 'success';
                 $workspaceStatus['text'] = $this->getLanguageService()->sL(self::TRANSLATION_PATH . 'table.label.waiting');
-                $record['editable'] = $this->isWorkspaceAdmin();
-                $record['state'] = 'pending';
+                $record['_editable'] = $this->isWorkspaceAdmin();
+                $record['_state'] = 'pending';
             }
 
-            $record['referencesToPublish'] = $this->collectReferencesToPublish($record);
+            $record['_referencesToPublish'] = $this->collectReferencesToPublish($record);
 
             $record['status'] ??= [];
             $record['status'][] = $workspaceStatus;
@@ -1897,6 +1946,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $this->addSysFiles();
         $this->addPreviewButton();
         $this->addRelations();
+        $this->addRenderableColumns();
     }
 
     protected function addTranslationButtons(): void
@@ -1953,8 +2003,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                         'redirect' => $redirectUrl,
                     ]
                 );
-                $record['possible_translations'] ??= [];
-                $record['possible_translations'][$languageUid] = $targetUrl;
+                $record['_possibleTranslations'] ??= [];
+                $record['_possibleTranslations'][$languageUid] = $targetUrl;
 
                 if (ExtensionManagementUtility::isLoaded('deepltranslate_core')
                     && \WebVision\Deepltranslate\Core\Utility\DeeplBackendUtility::isDeeplApiKeySet()
@@ -1972,8 +2022,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
                             ],
                         ],
                     ]);
-                    $record['possible_translations_deepl'] ??= [];
-                    $record['possible_translations_deepl'][$languageUid] = $deeplUrl;
+                    $record['_possibleTranslationsDeepl'] ??= [];
+                    $record['_possibleTranslationsDeepl'][$languageUid] = $deeplUrl;
                 }
             }
         }
@@ -2062,9 +2112,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
 
             if ($this->getTableName() === 'sys_file_metadata') {
-                $record['url'] = $record['file']?->getPublicUrl() ?? '';
+                $record['_previewUrl'] = $record['file']?->getPublicUrl() ?? '';
             } else {
-                $record['url'] = PreviewUriBuilder::createForRecordPreview(
+                $record['_previewUrl'] = PreviewUriBuilder::createForRecordPreview(
                     $this->getTableName(),
                     $record['uid'],
                     $previewPageId
@@ -2686,5 +2736,32 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             unset($record);
         }
+    }
+
+    /**
+     * Flags every active column as renderable or not for each record. A column another record type configures but
+     * this one does not holds nothing but its database default, which the editor can neither see nor change in
+     * FormEngine.
+     */
+    protected function addRenderableColumns(): void
+    {
+        $tableName = $this->getTableName();
+
+        $activeColumns = [];
+        foreach ($this->tableConfiguration[$tableName]['columns'] ?? [] as $column) {
+            if ($column['active'] ?? false) {
+                $activeColumns[] = $column['columnName'];
+            }
+        }
+
+        foreach ($this->records as &$record) {
+            $columnsOutsideType = $this->typeColumnResolver->resolveForRecord($tableName, $record) ?? [];
+            $renderableColumns = [];
+            foreach ($activeColumns as $columnName) {
+                $renderableColumns[$columnName] = !isset($columnsOutsideType[$columnName]);
+            }
+            $record['_renderableColumns'] = $renderableColumns;
+        }
+        unset($record);
     }
 }

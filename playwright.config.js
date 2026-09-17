@@ -5,6 +5,7 @@ console.log(`Testing against: ${baseURL}`);
 
 export default defineConfig({
   globalSetup: "./Tests/Playwright/global-setup.ts",
+  outputDir: "Tests/Playwright/test-results",
   timeout: 30 * 1000,
   forbidOnly: !!process.env.CI,
   fullyParallel: false,
