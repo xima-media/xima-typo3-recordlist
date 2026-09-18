@@ -5,14 +5,14 @@ import ShortcutButtonsPlugin from "shortcut-buttons-flatpickr";
 import "@typo3/backend/input/clearable.js";
 
 /**
- * Enhances date-column filters with a flatpickr range picker (two month views,
- * two-click range selection) plus preset shortcut buttons. Reuses the flatpickr
- * bundle that TYPO3 core already ships, so no extra dependency is introduced.
- *
- * The picker only drives two hidden inputs (`[value]` start, `[valueEnd]` end);
- * the operator `<select>` decides whether the field behaves as a range
- * (`between`) or a single-boundary comparison (lt/gt/eq/neq).
- */
+* Enhances date-column filters with a flatpickr range picker (two month views,
+* two-click range selection) plus preset shortcut buttons. Reuses the flatpickr
+* bundle that TYPO3 core already ships, so no extra dependency is introduced.
+*
+* The picker only drives two hidden inputs (`[value]` start, `[valueEnd]` end);
+* the operator `<select>` decides whether the field behaves as a range
+* (`between`) or a single-boundary comparison (lt/gt/eq/neq).
+*/
 class RecordlistFilterDaterange {
 
   constructor() {
@@ -79,16 +79,14 @@ class RecordlistFilterDaterange {
       if (!fp || !fp.altInput) {
         return;
       }
-      const selected = fp.selectedDates;
-      if (!selected.length || !exprSelect || !exprSelect.selectedOptions.length) {
-        return;
-      }
       // Rebuild the whole string rather than prefixing the current one: flatpickr
       // fires several value hooks per selection, and prefixing would stack up.
       const fmt = date => flatpickr.formatDate(date, 'd.m.Y');
-      const dates = selected.map(fmt).join(fp.l10n.rangeSeparator);
-      const label = exprSelect.selectedOptions[0].label.trim();
-      fp.altInput.value = label ? `${label} ${dates}` : dates;
+      const dates = fp.selectedDates.map(fmt).join(fp.l10n.rangeSeparator);
+      const label = exprSelect && exprSelect.selectedOptions.length
+        ? exprSelect.selectedOptions[0].label.trim()
+        : '';
+      fp.altInput.value = dates && label ? `${label} ${dates}` : dates;
       // Core's clearable button tracks the value through input events, which never
       // fire for a field written programmatically.
       fp.altInput.dispatchEvent(new Event('keyup'));
@@ -139,6 +137,13 @@ class RecordlistFilterDaterange {
           decorate(fp);
         },
         onReady: (dates, str, fp) => decorate(fp),
+        // Abandoning a half-picked range drops flatpickr's own value, but only after
+        // the close hook has run — resync a frame later so the hidden bounds and the
+        // clear button cannot outlive what the field shows.
+        onClose: (dates, str, fp) => requestAnimationFrame(() => {
+          writeHidden(fp.selectedDates);
+          decorate(fp);
+        }),
         onValueUpdate: (dates, str, fp) => decorate(fp),
       };
 
@@ -213,10 +218,10 @@ class RecordlistFilterDaterange {
   }
 
   /**
-   * Concrete start/end dates for a preset button (static, resolved at click time).
-   * @param {number} index button index matching the configured preset order
-   * @returns {Date[]} [start, end]
-   */
+  * Concrete start/end dates for a preset button (static, resolved at click time).
+  * @param {number} index button index matching the configured preset order
+  * @returns {Date[]} [start, end]
+  */
   presetRange(index) {
     const today = new Date();
     const start = new Date(today);
