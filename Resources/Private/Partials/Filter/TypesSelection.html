@@ -2,7 +2,7 @@
     {f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.expr.label')}
 </label>
 <f:form.select
-    value="{colConfig.filter.expr}"
+    value="{f:if(condition: colConfig.filter.expr, then: colConfig.filter.expr, else: defaultExpr)}"
     class="form-select"
     name="filter[{colConfig.columnName}][expr]">
     <f:for each="{options}" as="option">

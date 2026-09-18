@@ -24,16 +24,26 @@
             data-preset-lastmonth="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.date.preset.lastMonth')}"
         >
             <div class="input-group">
+                <button
+                    type="button"
+                    class="btn btn-default"
+                    data-daterange-trigger
+                    aria-label="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.date.open')}">
+                    <core:icon identifier="actions-calendar" />
+                </button>
                 <input
                     type="text"
                     id="daterange-{colConfig.columnName}"
                     class="form-control form-control-clearable input"
                     autocomplete="off"
                     data-daterange-display />
-                <label class="mb-0 btn btn-default" data-daterange-trigger for="daterange-{colConfig.columnName}">
-                    <core:icon identifier="actions-calendar" />
-                </label>
             </div>
+
+            <f:if condition="{colConfig}">
+                <div class="xima-recordlist-daterange-expr" data-daterange-expr>
+                    <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'lt', 1: 'gt', 2: 'eq', 3: 'neq', 4: 'between'}, defaultExpr: 'between'}" />
+                </div>
+            </f:if>
 
             <input
                 type="hidden"
@@ -47,9 +57,4 @@
                 value="{f:if(condition: fieldValueEnd, then: '{f:format.date(format:\'Y-m-d\', date: fieldValueEnd)}')}" />
         </div>
     </div>
-    <f:if condition="{colConfig}">
-        <div class="col col-2">
-                <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'between', 1: 'lt', 2: 'gt', 3: 'eq', 4: 'neq'}}" />
-        </div>
-    </f:if>
 </div>

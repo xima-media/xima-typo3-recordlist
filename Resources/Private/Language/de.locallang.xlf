@@ -355,6 +355,10 @@
 				<source />
 				<target>Zwischen</target>
 			</trans-unit>
+			<trans-unit id="filter.date.open" approved="yes">
+				<source />
+				<target>Datumsauswahl öffnen</target>
+			</trans-unit>
 			<trans-unit id="filter.date.preset.last7days" approved="yes">
 				<source />
 				<target>Letzte 7 Tage</target>

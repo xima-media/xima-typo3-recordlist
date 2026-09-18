@@ -32,9 +32,11 @@ class RecordlistFilterDaterange {
     const display = container.querySelector('[data-daterange-display]');
     const startInput = container.querySelector('[data-daterange-start]');
     const endInput = container.querySelector('[data-daterange-end]');
+    const exprHost = container.querySelector('[data-daterange-expr]');
+    const trigger = container.querySelector('[data-daterange-trigger]');
     const exprName = container.dataset.exprName;
     const exprSelect = exprName
-      ? document.querySelector(`select[name="${exprName}"]`)
+      ? container.querySelector(`select[name="${exprName}"]`)
       : null;
 
     if (!display || !startInput || !endInput) {
@@ -50,6 +52,7 @@ class RecordlistFilterDaterange {
 
     const locale = this.resolveLocale();
     let instance = null;
+    let mode = null;
 
     const isRange = () => (exprSelect ? exprSelect.value === 'between' : true);
 
@@ -66,13 +69,41 @@ class RecordlistFilterDaterange {
         : '';
     };
 
+    // Flatpickr only shows the bare date(s), which reads the same for "before",
+    // "after" and "is". Prefix the field with the chosen operator so the selection
+    // is unambiguous — the option label keeps it localised and in sync with the list.
+    // `fp` is passed on the hooks that run while flatpickr is still constructing,
+    // before the instance has been assigned.
+    const decorate = (fp = instance) => {
+      if (!fp || !fp.altInput) {
+        return;
+      }
+      const selected = fp.selectedDates;
+      if (!selected.length || !exprSelect || !exprSelect.selectedOptions.length) {
+        return;
+      }
+      // Rebuild the whole string rather than prefixing the current one: flatpickr
+      // fires several value hooks per selection, and prefixing would stack up.
+      const fmt = date => flatpickr.formatDate(date, 'd.m.Y');
+      const dates = selected.map(fmt).join(fp.l10n.rangeSeparator);
+      const label = exprSelect.selectedOptions[0].label.trim();
+      fp.altInput.value = label ? `${label} ${dates}` : dates;
+    };
+
     const build = () => {
+      const wasOpen = Boolean(instance && instance.isOpen);
       if (instance) {
+        // Rescue the operator select before destroy: it lives inside the
+        // calendar, which flatpickr removes from the DOM along with its children.
+        if (exprHost) {
+          container.appendChild(exprHost);
+        }
         instance.destroy();
         instance = null;
       }
 
       const range = isRange();
+      mode = range ? 'range' : 'single';
       const seed = [startInput.value, range ? endInput.value : '']
         .filter(value => value !== '');
 
@@ -89,7 +120,12 @@ class RecordlistFilterDaterange {
         locale,
         defaultDate: seed,
         allowInput: false,
-        onChange: selectedDates => writeHidden(selectedDates),
+        onChange: (selectedDates, str, fp) => {
+          writeHidden(selectedDates);
+          decorate(fp);
+        },
+        onReady: (dates, str, fp) => decorate(fp),
+        onValueUpdate: (dates, str, fp) => decorate(fp),
       };
 
       if (range) {
@@ -106,12 +142,49 @@ class RecordlistFilterDaterange {
       }
 
       instance = flatpickr(display, options);
+
+      if (exprHost) {
+        instance.calendarContainer.prepend(exprHost);
+      }
+
+      // Switching the operator rebuilds the picker; keep it visible so the new
+      // mode (range vs single month) is immediately apparent.
+      if (wasOpen) {
+        requestAnimationFrame(() => instance.open());
+      }
     };
 
     build();
 
+    // The visible field is flatpickr's alt input, so a `<label for>` can no longer
+    // reach it — drive the picker from the button directly.
+    if (trigger) {
+      trigger.addEventListener('click', () => {
+        if (!instance) {
+          return;
+        }
+        if (instance.isOpen) {
+          instance.close();
+        } else {
+          instance.open();
+        }
+      });
+    }
+
+    // Only the range/single switch changes the calendar layout; rebuilding for
+    // the other operators would drop the current selection for nothing.
     if (exprSelect) {
-      exprSelect.addEventListener('change', () => build());
+      exprSelect.addEventListener('change', () => {
+        if ((isRange() ? 'range' : 'single') !== mode) {
+          build();
+          return;
+        }
+        writeHidden(instance ? instance.selectedDates : []);
+        if (instance) {
+          instance.setDate(instance.selectedDates, false);
+          decorate();
+        }
+      });
     }
   }
 

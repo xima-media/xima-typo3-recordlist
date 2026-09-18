@@ -1,4 +1,4 @@
-import { test, expect, FrameLocator, Page } from '@playwright/test';
+import { test, expect, FrameLocator, Locator, Page } from '@playwright/test';
 import {loginAsAdmin, openModule, toggleColumn, waitForReload} from '../helpers/typo3-backend';
 
 /**
@@ -37,22 +37,25 @@ test.describe('News Date Filter', () => {
         date: string,
         endDate: string = '',
     ): Promise<void> {
-        // Use the expr <select> for visibility checks — the value inputs are hidden
-        // fields driven by the flatpickr range picker, so isVisible() is always false.
+        // Use the picker container for visibility checks — the value inputs are
+        // hidden fields, and the expr <select> lives inside the calendar popup.
+        const container = contentFrame.locator(
+            `[data-recordlist-daterange][data-expr-name="filter[${field}][expr]"]`,
+        );
         const exprSelect = contentFrame.locator(`select[name="filter[${field}][expr]"]`);
 
         // Column might not be active yet — enable it via the columns modal
-        if (!await exprSelect.isVisible()) {
+        if (!await container.isVisible()) {
             await toggleColumn(page, contentFrame, field);
         }
 
         // Filter panel may be collapsed (independently of column state)
-        if (!await exprSelect.isVisible()) {
+        if (!await container.isVisible()) {
             await contentFrame.locator('.toggleFiltersButton:not(.hidden)').click();
-            await exprSelect.waitFor({ state: 'visible', timeout: 5000 });
+            await container.waitFor({ state: 'visible', timeout: 5000 });
         }
 
-        await exprSelect.selectOption(expr);
+        await setExpr(exprSelect, expr);
 
         // Clear all other date-range hidden inputs so stale saved filters from previous
         // tests don't get submitted alongside and reduce the result set to 0.
@@ -74,6 +77,17 @@ test.describe('News Date Filter', () => {
 
         await contentFrame.locator('button[type="submit"][name="search"]').first().click();
         await waitForReload(contentFrame);
+    }
+
+    // The operator <select> lives inside the flatpickr calendar, so it is only
+    // rendered while the picker is open and moves between DOM parents whenever the
+    // range/single layout changes. Setting the value and dispatching `change`
+    // exercises the same handler without racing those moves.
+    async function setExpr(exprSelect: Locator, expr: string): Promise<void> {
+        await exprSelect.evaluate((el: HTMLSelectElement, value: string) => {
+            el.value = value;
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        }, expr);
     }
 
     async function visibleUids(contentFrame: FrameLocator): Promise<string[]> {
@@ -150,15 +164,19 @@ test.describe('News Date Filter', () => {
         const field = 'content_blocks_date';
         const contentFrame = await openModule(page, 'example_news');
 
+        const container = contentFrame.locator(
+            `[data-recordlist-daterange][data-expr-name="filter[${field}][expr]"]`,
+        );
         const exprSelect = contentFrame.locator(`select[name="filter[${field}][expr]"]`);
-        if (!await exprSelect.isVisible()) {
+        if (!await container.isVisible()) {
             await toggleColumn(page, contentFrame, field);
         }
-        if (!await exprSelect.isVisible()) {
+        if (!await container.isVisible()) {
             await contentFrame.locator('.toggleFiltersButton:not(.hidden)').click();
-            await exprSelect.waitFor({ state: 'visible', timeout: 5000 });
+            await container.waitFor({ state: 'visible', timeout: 5000 });
         }
-        await exprSelect.selectOption('between');
+
+        await setExpr(exprSelect, 'between');
 
         // Clear other date-range inputs so stale saved filters don't leak in.
         await contentFrame.locator('input[data-daterange-start], input[data-daterange-end]').evaluateAll(
