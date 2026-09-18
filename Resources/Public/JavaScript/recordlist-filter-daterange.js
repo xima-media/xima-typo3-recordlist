@@ -143,6 +143,12 @@ class RecordlistFilterDaterange {
 
       instance = flatpickr(display, options);
 
+      // flatpickr hides the original input and renders its own; carry an id over
+      // so the field label keeps pointing at the input the user actually sees.
+      if (instance.altInput && display.id) {
+        instance.altInput.id = `${display.id}-visible`;
+      }
+
       if (exprHost) {
         instance.calendarContainer.prepend(exprHost);
       }
