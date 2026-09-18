@@ -245,7 +245,12 @@ main.recordlist ul.pagination input.form-control {
     min-width: 0;
 }
 
-.xima-recordlist-daterange .flatpickr-wrapper > .form-control {
+.xima-recordlist-daterange .flatpickr-wrapper .form-control {
+    width: 100%;
+}
+
+/* Core wraps a clearable input in an extra div; keep it filling the group. */
+.xima-recordlist-daterange .form-control-clearable-wrapper {
     width: 100%;
 }
 
@@ -332,7 +337,7 @@ main.recordlist ul.pagination input.form-control {
 /* The calendar button leads the group; Bootstrap's radius and focus rules target
    the flatpickr wrapper, not the input it wraps, so square off the input itself
    and lift it over the shared border while focused. */
-.xima-recordlist-daterange .input-group > .flatpickr-wrapper > .form-control {
+.xima-recordlist-daterange .input-group .flatpickr-wrapper .form-control {
     border-start-start-radius: 0;
     border-end-start-radius: 0;
 }

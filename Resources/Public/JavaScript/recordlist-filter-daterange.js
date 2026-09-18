@@ -2,6 +2,7 @@ import DocumentService from "@typo3/core/document-service.js";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/l10n";
 import ShortcutButtonsPlugin from "shortcut-buttons-flatpickr";
+import "@typo3/backend/input/clearable.js";
 
 /**
  * Enhances date-column filters with a flatpickr range picker (two month views,
@@ -88,6 +89,9 @@ class RecordlistFilterDaterange {
       const dates = selected.map(fmt).join(fp.l10n.rangeSeparator);
       const label = exprSelect.selectedOptions[0].label.trim();
       fp.altInput.value = label ? `${label} ${dates}` : dates;
+      // Core's clearable button tracks the value through input events, which never
+      // fire for a field written programmatically.
+      fp.altInput.dispatchEvent(new Event('keyup'));
     };
 
     const build = () => {
@@ -100,6 +104,13 @@ class RecordlistFilterDaterange {
         }
         instance.destroy();
         instance = null;
+        // destroy() takes the alt input with it and leaves core's clearable
+        // wrapper behind; drop the empty shell before the next one is built.
+        container.querySelectorAll('.form-control-clearable-wrapper').forEach(wrapper => {
+          if (!wrapper.querySelector('input')) {
+            wrapper.remove();
+          }
+        });
       }
 
       const range = isRange();
@@ -150,6 +161,10 @@ class RecordlistFilterDaterange {
       // so the field label keeps pointing at the input the user actually sees.
       if (instance.altInput && display.id) {
         instance.altInput.id = `${display.id}-visible`;
+      }
+
+      if (typeof instance.altInput.clearable === 'function') {
+        instance.altInput.clearable({ onClear: () => instance.clear() });
       }
 
       if (exprHost) {
