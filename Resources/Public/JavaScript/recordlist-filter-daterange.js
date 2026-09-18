@@ -117,6 +117,9 @@ class RecordlistFilterDaterange {
         // so flatpickr's default body-appended popup flips up and detaches from
         // the input. Static positioning keeps it anchored under the field.
         static: true,
+        // Without this, the document-click handler closes the calendar before the
+        // trigger's own handler runs, so the button could never toggle it shut.
+        ignoredFocusElements: trigger ? [trigger] : [],
         locale,
         defaultDate: seed,
         allowInput: false,
