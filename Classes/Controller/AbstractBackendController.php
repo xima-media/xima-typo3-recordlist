@@ -822,7 +822,7 @@ abstract class AbstractBackendController extends ActionController implements Bac
      * Returns default filter values applied when no user-submitted filter exists for a field.
      * Override in concrete controllers to configure pre-applied filters.
      *
-     * @return array<string, array{value: string, expr?: string}>
+     * @return array<string, array{value: string, valueEnd?: string, expr?: string}>
      */
     protected function getDefaultFilters(): array
     {
