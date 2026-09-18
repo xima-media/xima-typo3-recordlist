@@ -208,10 +208,10 @@ class RecordlistFilterDaterange {
 
     switch (index) {
       case 0: // Last 7 days
-        start.setDate(today.getDate() - 7);
+        start.setDate(today.getDate() - 6);
         return [start, today];
       case 1: // Last 30 days
-        start.setDate(today.getDate() - 30);
+        start.setDate(today.getDate() - 29);
         return [start, today];
       case 2: // This month
         return [new Date(today.getFullYear(), today.getMonth(), 1), today];
