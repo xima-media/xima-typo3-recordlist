@@ -325,6 +325,10 @@ months line up column-for-column. */
     border-radius: 0;
 }
 
+.xima-recordlist-daterange .flatpickr-day.today {
+    --flatpickr-day-border-color: currentColor;
+}
+
 .flatpickr-calendar.multiMonth .flatpickr-current-month {
     position: static;
     left: auto;
