@@ -233,8 +233,11 @@ class RecordlistFilterDaterange {
       case 1: // Last 30 days
         start.setDate(today.getDate() - 29);
         return [start, today];
-      case 2: // This month
-        return [new Date(today.getFullYear(), today.getMonth(), 1), today];
+      case 2: { // This month
+        const first = new Date(today.getFullYear(), today.getMonth(), 1);
+        const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        return [first, last];
+      }
       case 3: { // Last month
         const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         const last = new Date(today.getFullYear(), today.getMonth(), 0);
