@@ -41,7 +41,7 @@
 
             <f:if condition="{colConfig}">
                 <div class="xima-recordlist-daterange-expr" data-daterange-expr>
-                    <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'lt', 1: 'gt', 2: 'eq', 3: 'neq', 4: 'between'}, defaultExpr: 'between'}" />
+                    <f:render partial="Filter/TypesSelection" arguments="{colConfig: colConfig, options: {0: 'lt', 1: 'gt', 2: 'eq', 3: 'neq', 4: 'between'}, defaultExpr: 'between', exprKeyPrefix: 'filter.expr.date.'}" />
                 </div>
             </f:if>
 

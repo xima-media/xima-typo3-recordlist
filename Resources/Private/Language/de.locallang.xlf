@@ -355,6 +355,26 @@
 				<source />
 				<target>Zwischen</target>
 			</trans-unit>
+			<trans-unit id="filter.expr.date.lt" approved="yes">
+				<source />
+				<target>Vor dem</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.gt" approved="yes">
+				<source />
+				<target>Nach dem</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.eq" approved="yes">
+				<source />
+				<target>Am</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.neq" approved="yes">
+				<source />
+				<target>Nicht am</target>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.between" approved="yes">
+				<source />
+				<target>Zwischen</target>
+			</trans-unit>
 			<trans-unit id="filter.date.open" approved="yes">
 				<source />
 				<target>Datumsauswahl öffnen</target>
