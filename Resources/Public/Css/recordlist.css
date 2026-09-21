@@ -299,6 +299,27 @@ months line up column-for-column. */
     width: var(--flatpickr-width, 246px);
 }
 
+.flatpickr-calendar.multiMonth .flatpickr-months {
+    position: relative;
+    width: calc(var(--flatpickr-width, 246px) * 2);
+}
+
+.flatpickr-calendar.multiMonth .flatpickr-months .flatpickr-prev-month,
+.flatpickr-calendar.multiMonth .flatpickr-months .flatpickr-next-month {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    z-index: 1;
+}
+
+.flatpickr-calendar.multiMonth .flatpickr-months .flatpickr-prev-month {
+    inset-inline-start: 0;
+}
+
+.flatpickr-calendar.multiMonth .flatpickr-months .flatpickr-next-month {
+    inset-inline-end: 0;
+}
+
 .flatpickr-calendar.multiMonth .flatpickr-current-month {
     position: static;
     left: auto;
