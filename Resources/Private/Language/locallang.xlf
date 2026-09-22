@@ -264,6 +264,39 @@
 			<trans-unit id="filter.expr.notIn">
 				<source>Contains not</source>
 			</trans-unit>
+			<trans-unit id="filter.expr.between">
+				<source>Between</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.lt">
+				<source>Before</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.gt">
+				<source>After</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.eq">
+				<source>On</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.neq">
+				<source>Not on</source>
+			</trans-unit>
+			<trans-unit id="filter.expr.date.between">
+				<source>Between</source>
+			</trans-unit>
+			<trans-unit id="filter.date.open">
+				<source>Open date picker</source>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.last7days">
+				<source>Last 7 days</source>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.last30days">
+				<source>Last 30 days</source>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.thisMonth">
+				<source>This month</source>
+			</trans-unit>
+			<trans-unit id="filter.date.preset.lastMonth">
+				<source>Last month</source>
+			</trans-unit>
 			<trans-unit id="pagination.page">
 				<source>Page</source>
 			</trans-unit>
