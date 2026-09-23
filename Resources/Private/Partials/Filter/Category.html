@@ -10,7 +10,12 @@
     <f:variable name="tableName" value="{table}" />
 </f:if>
 
-<div class="row">
+<div
+    class="row"
+    data-filter-default="{f:if(condition: colConfig.filter.default, then: 'category')}"
+    data-default-value="{colConfig.filter.default.value}"
+    data-default-expr="{colConfig.filter.default.expr}"
+    data-revert-label="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.default.restore')}">
     <div class="col">
         <label class="form-label" for="{fieldName}"> {label}</label>
         <typo3-formengine-element-category

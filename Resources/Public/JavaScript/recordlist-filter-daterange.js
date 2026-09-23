@@ -3,6 +3,7 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/l10n";
 import ShortcutButtonsPlugin from "shortcut-buttons-flatpickr";
 import "@typo3/backend/input/clearable.js";
+import { createRevertButton, toggleRevertButton } from "@xima/recordlist/recordlist-filter-revert-button.js";
 
 /**
 * Enhances date-column filters with a flatpickr range picker (two month views,
@@ -56,6 +57,7 @@ class RecordlistFilterDaterange {
     let mode = null;
 
     const isRange = () => (exprSelect ? exprSelect.value === 'between' : true);
+    const hasDefault = container.dataset.filterDefault === 'date';
 
     const writeHidden = selectedDates => {
       if (!selectedDates.length) {
@@ -169,7 +171,12 @@ class RecordlistFilterDaterange {
       }
 
       if (typeof instance.altInput.clearable === 'function') {
-        instance.altInput.clearable({ onClear: () => instance.clear() });
+        const altInput = instance.altInput;
+        altInput.clearable({ onClear: () => instance.clear() }).then(() => {
+          if (hasDefault) {
+            attachRevert(altInput);
+          }
+        });
       }
 
       if (exprHost) {
@@ -181,6 +188,28 @@ class RecordlistFilterDaterange {
       if (wasOpen) {
         requestAnimationFrame(() => instance.open());
       }
+    };
+
+    // The revert lives in core's clearable wrapper, which a rebuild throws away
+    // together with the alt input, so every build attaches a fresh one.
+    const attachRevert = altInput => {
+      const button = createRevertButton(container.dataset.revertLabel || '');
+      altInput.parentElement.appendChild(button);
+      const update = () => toggleRevertButton(button, startInput.value === '');
+      altInput.addEventListener('keyup', update);
+      update();
+
+      button.addEventListener('click', e => {
+        e.preventDefault();
+        // Write the operator silently: its change handler would resync the
+        // hidden bounds from the still empty picker and wipe the restored dates.
+        if (exprSelect && container.dataset.defaultExpr) {
+          exprSelect.value = container.dataset.defaultExpr;
+        }
+        startInput.value = container.dataset.defaultValue || '';
+        endInput.value = isRange() ? (container.dataset.defaultValueEnd || '') : '';
+        build();
+      });
     };
 
     build();

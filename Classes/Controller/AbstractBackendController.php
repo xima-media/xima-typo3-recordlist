@@ -819,32 +819,74 @@ abstract class AbstractBackendController extends ActionController implements Bac
     }
 
     /**
-     * Returns default filter values applied when no user-submitted filter exists for a field.
+     * Returns the initial filter values of a fresh or reset module. They are shown
+     * in the filter panel and can be removed by the user like any other value.
      * Override in concrete controllers to configure pre-applied filters.
      *
-     * @return array<string, array{value: string, valueEnd?: string, expr?: string}>
+     * @return array<string, array{value: string, valueEnd?: string, expr?: string, dataType?: string}>
      */
     protected function getDefaultFilters(): array
     {
         return [];
     }
 
-    protected function addFilterConstraint(): void
+    /**
+     * Submitted filters merged with the defaults. A field the form carried belongs
+     * to the user, even when emptied, so a removed default stays removed; only
+     * fields the form never carried fall back to their default.
+     *
+     * @return array<string, mixed>
+     */
+    protected function getActiveFilters(): array
     {
         $body = $this->request->getParsedBody();
-        $body = is_array($body) ? $body : [];
-        $bodyFilters = (array)($body['filter'] ?? []);
+        $filters = is_array($body) && is_array($body['filter'] ?? null) ? $body['filter'] : [];
+        foreach ($this->getNormalizedDefaultFilters() as $field => $data) {
+            if (!array_key_exists($field, $filters)) {
+                $filters[$field] = $data;
+            }
+        }
+        return $filters;
+    }
+
+    /**
+     * Default filters in the shape the filter form would submit them.
+     *
+     * @return array<string, array<string, string>>
+     */
+    protected function getNormalizedDefaultFilters(): array
+    {
+        $columns = $GLOBALS['TCA'][$this->getTableName()]['columns'] ?? [];
+        $filters = [];
+        foreach ($this->getDefaultFilters() as $field => $data) {
+            // the date partial submits its data type; a default never went through it
+            if ($this->isDateFilterField($field)) {
+                $data['dataType'] ??= 'date';
+            } elseif (!in_array($columns[$field]['config']['type'] ?? '', ['select', 'category', 'group', 'inline'], true)) {
+                // the text partial lists "like" first, so an omitted operator would show a different one than the query applies
+                $data['expr'] ??= 'eq';
+            }
+            $filters[$field] = $data;
+        }
+        return $filters;
+    }
+
+    protected function isDateFilterField(string $field): bool
+    {
+        $tableTca = $GLOBALS['TCA'][$this->getTableName()] ?? [];
+        if (in_array($field, [$tableTca['ctrl']['crdate'] ?? null, $tableTca['ctrl']['tstamp'] ?? null], true)) {
+            return true;
+        }
+        return ($tableTca['columns'][$field]['config']['type'] ?? '') === 'datetime';
+    }
+
+    protected function addFilterConstraint(): void
+    {
         $tableName = $this->getTableName();
         $tableTca = is_array($GLOBALS['TCA'][$tableName] ?? null) ? $GLOBALS['TCA'][$tableName] : [];
         $columns = is_array($tableTca['columns'] ?? null) ? $tableTca['columns'] : [];
 
-        // Merge default filters — user-submitted values take precedence per field
-        $filters = $bodyFilters;
-        foreach ($this->getDefaultFilters() as $field => $data) {
-            if (!isset($filters[$field]) || ($filters[$field]['value'] ?? '') === '') {
-                $filters[$field] = $data;
-            }
-        }
+        $filters = $this->getActiveFilters();
 
         if (!empty($filters)) {
             $ctrl = $GLOBALS['TCA'][$this->getTableName()]['ctrl'] ?? [];
@@ -1792,7 +1834,6 @@ abstract class AbstractBackendController extends ActionController implements Bac
 
     protected function processTableConfiguration(): void
     {
-        $body = $this->request->getParsedBody();
         $tableName = $this->getTableName();
 
         $activeColumns = array_filter(GeneralUtility::trimExplode(',', $this->getModuleDataSetting($tableName . '.activeColumns') ?? ''));
@@ -1805,7 +1846,8 @@ abstract class AbstractBackendController extends ActionController implements Bac
             $activeColumns = array_keys($defaultColumns);
         }
 
-        $defaultFilters = $this->getDefaultFilters();
+        $defaultFilters = $this->getNormalizedDefaultFilters();
+        $activeFilters = $this->getActiveFilters();
 
         foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => &$column) {
             // translate label
@@ -1814,28 +1856,16 @@ abstract class AbstractBackendController extends ActionController implements Bac
             }
             $column['label'] = $this->getLanguageService()->sL($column['label']);
 
-            // set filter value — body takes precedence, then default filter
-            $bodyValue = $body['filter'][$columnName]['value'] ?? '';
-            if ($bodyValue !== '') {
-                $column['filter']['value'] = $bodyValue;
-            } elseif (isset($defaultFilters[$columnName]['value']) && $defaultFilters[$columnName]['value'] !== '') {
-                $column['filter']['value'] = $defaultFilters[$columnName]['value'];
+            foreach (['value', 'valueEnd', 'expr'] as $filterKey) {
+                $filterValue = $activeFilters[$columnName][$filterKey] ?? '';
+                if ($filterValue !== '') {
+                    $column['filter'][$filterKey] = $filterValue;
+                }
             }
-
-            // set filter end value (date range upper bound) — body takes precedence, then default filter
-            $bodyValueEnd = $body['filter'][$columnName]['valueEnd'] ?? '';
-            if ($bodyValueEnd !== '') {
-                $column['filter']['valueEnd'] = $bodyValueEnd;
-            } elseif (isset($defaultFilters[$columnName]['valueEnd']) && $defaultFilters[$columnName]['valueEnd'] !== '') {
-                $column['filter']['valueEnd'] = $defaultFilters[$columnName]['valueEnd'];
-            }
-
-            // set filter expr — body takes precedence, then default filter
-            $bodyExpr = $body['filter'][$columnName]['expr'] ?? '';
-            if ($bodyExpr !== '') {
-                $column['filter']['expr'] = $bodyExpr;
-            } elseif (isset($defaultFilters[$columnName]['expr'])) {
-                $column['filter']['expr'] = $defaultFilters[$columnName]['expr'];
+            if (isset($defaultFilters[$columnName])) {
+                $column['filter']['default'] = $defaultFilters[$columnName];
+                // a hidden filter would apply its default without the user ever seeing it
+                $column['filterVisible'] = true;
             }
 
             // set active state

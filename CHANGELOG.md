@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Features
+
+- **Default Filters**: Default filter values are now initial values the user can remove: an emptied default no longer falls back to the default on the next request, and stays removed until the filters are reset. While a field with a default is empty, a revert icon in the place of the clear icon restores it. Filters with a default are always rendered, and date defaults are applied as dates.
+
 ### Bug Fixes
 
 - **Directory Selection**: The directory selected in the doc header lived in the query parameters of the menu links only, so re-entering the module reset the list to "All directories". The selected page and scope are now stored in the backend user settings and restored on the next visit.

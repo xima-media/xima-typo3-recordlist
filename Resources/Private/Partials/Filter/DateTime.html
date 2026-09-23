@@ -16,6 +16,11 @@
         <div
             class="xima-recordlist-daterange"
             data-recordlist-daterange
+            data-filter-default="{f:if(condition: colConfig.filter.default, then: 'date')}"
+            data-default-value="{f:if(condition: colConfig.filter.default.value, then: '{f:format.date(format:\'Y-m-d\', date: colConfig.filter.default.value)}')}"
+            data-default-value-end="{f:if(condition: colConfig.filter.default.valueEnd, then: '{f:format.date(format:\'Y-m-d\', date: colConfig.filter.default.valueEnd)}')}"
+            data-default-expr="{colConfig.filter.default.expr}"
+            data-revert-label="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.default.restore')}"
             data-expr-name="filter[{colConfig.columnName}][expr]"
             data-initial-expr="{fieldExpr}"
             data-preset-last7days="{f:translate(key: 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/locallang.xlf:filter.date.preset.last7days')}"
