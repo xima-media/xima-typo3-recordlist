@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - **Directory Selection**: The directory selected in the doc header lived in the query parameters of the menu links only, so re-entering the module reset the list to "All directories". The selected page and scope are now stored in the backend user settings and restored on the next visit.
+- **Relation Badge Icons**: Badges of `group` fields and of `select` fields with a `foreign_table` always showed the default icon of the related table, so a shortcut page, a root page or a news record of type "External link" looked like any other record of its table. Each badge now shows the icon of its record's type, resolved via `ctrl.typeicon_column` like everywhere else in the backend.
 
 ## [15.0.0] - 2026-09-15
 

@@ -10,6 +10,8 @@ use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
+use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Schema\Struct\SelectItem;
@@ -22,6 +24,7 @@ class RelationResolver
         private readonly ConnectionPool $connectionPool,
         private readonly LanguageServiceFactory $languageServiceFactory,
         private readonly FormDataCompiler $formDataCompiler,
+        private readonly IconFactory $iconFactory,
     ) {
     }
 
@@ -322,12 +325,17 @@ class RelationResolver
             $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
         }
 
+        $rows = $qb->executeQuery()->fetchAllAssociative();
+        $iconMap = $this->resolveIconIdentifiers($foreignTable, array_column($rows, 'foreign_uid'));
+
         $result = [];
-        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+        foreach ($rows as $row) {
             $parentUid = (int)$row[$localField];
+            $uid = (int)$row['foreign_uid'];
             $result[$parentUid][] = [
-                'value' => (string)(int)$row['foreign_uid'],
+                'value' => (string)$uid,
                 'label' => (string)($row['label'] ?? ''),
+                'icon' => $iconMap[$uid] ?? '',
             ];
         }
 
@@ -366,6 +374,7 @@ class RelationResolver
         foreach ($rows as $row) {
             $labelMap[(int)$row['uid']] = (string)($row[$labelField] ?? '');
         }
+        $iconMap = $this->resolveIconIdentifiers($foreignTable, array_keys($labelMap));
 
         $result = [];
         foreach ($records as $record) {
@@ -377,7 +386,7 @@ class RelationResolver
             foreach (GeneralUtility::trimExplode(',', $raw, true) as $uid) {
                 $uid = (int)$uid;
                 if (isset($labelMap[$uid])) {
-                    $relations[] = ['value' => (string)$uid, 'label' => $labelMap[$uid]];
+                    $relations[] = ['value' => (string)$uid, 'label' => $labelMap[$uid], 'icon' => $iconMap[$uid] ?? ''];
                 }
             }
             if (!empty($relations)) {
@@ -461,13 +470,17 @@ class RelationResolver
                 $qb->andWhere($qb->expr()->eq('mm.' . $matchField, $qb->createNamedParameter($matchValue)));
             }
 
-            foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
+            $rows = $qb->executeQuery()->fetchAllAssociative();
+            $iconMap = $this->resolveIconIdentifiers($relatedTable, array_column($rows, 'foreign_uid'));
+
+            foreach ($rows as $row) {
                 $parentUid = (int)$row[$localField];
                 $uid = (int)$row['foreign_uid'];
                 $result[$parentUid][$relatedTable][] = [
                     'value' => (string)$uid,
                     'storedValue' => $relatedTable . '_' . $uid,
                     'label' => (string)($row['label'] ?? ''),
+                    'icon' => $iconMap[$uid] ?? '',
                 ];
             }
         }
@@ -529,6 +542,7 @@ class RelationResolver
 
         // Batch-query labels per table (one query per table)
         $labelMaps = [];
+        $iconMaps = [];
         foreach ($tableUids as $tableName => $uids) {
             if (!isset($GLOBALS['TCA'][$tableName])) {
                 continue;
@@ -543,6 +557,7 @@ class RelationResolver
             foreach ($rows as $row) {
                 $labelMaps[$tableName][(int)$row['uid']] = (string)($row[$labelField] ?? '');
             }
+            $iconMaps[$tableName] = $this->resolveIconIdentifiers($tableName, array_keys($labelMaps[$tableName] ?? []));
         }
 
         // Build result indexed by parent UID
@@ -558,6 +573,7 @@ class RelationResolver
                         'value' => (string)$uid,
                         'storedValue' => $entry['storedValue'],
                         'label' => $labelMaps[$tableName][$uid],
+                        'icon' => $iconMaps[$tableName][$uid] ?? '',
                     ];
                 }
             }
@@ -900,6 +916,38 @@ class RelationResolver
     {
         $searchFields = GeneralUtility::trimExplode(',', ($GLOBALS['TCA'][$table]['ctrl']['searchFields'] ?? ''), true);
         return empty($searchFields) ? [$GLOBALS['TCA'][$table]['ctrl']['label']] : $searchFields;
+    }
+
+    /**
+     * Per-record type icons, honouring ctrl.typeicon_column (e.g. page doktype, content CType).
+     *
+     * @param array<int|string> $uids
+     * @return array<int, string> Icon identifier indexed by record UID
+     */
+    private function resolveIconIdentifiers(string $table, array $uids): array
+    {
+        $uids = array_unique(array_map('intval', $uids));
+        if ($uids === []) {
+            return [];
+        }
+
+        $ctrl = $GLOBALS['TCA'][$table]['ctrl'] ?? [];
+        if (!isset($ctrl['typeicon_column'])) {
+            return array_fill_keys($uids, (string)($ctrl['typeicon_classes']['default'] ?? ''));
+        }
+
+        $qb = $this->getQueryBuilder($table);
+        $rows = $qb->select('*')
+            ->from($table)
+            ->where($qb->expr()->in('uid', $qb->quoteArrayBasedValueListToIntegerList($uids)))
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        $iconMap = [];
+        foreach ($rows as $row) {
+            $iconMap[(int)$row['uid']] = $this->iconFactory->getIconForRecord($table, $row, IconSize::SMALL)->getIdentifier();
+        }
+        return $iconMap;
     }
 
     private function getQueryBuilder(string $table): QueryBuilder
