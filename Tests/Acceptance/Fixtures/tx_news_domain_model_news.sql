@@ -131,6 +131,10 @@ UPDATE `tx_news_domain_model_news` SET `crdate` = UNIX_TIMESTAMP('2024-01-15 10:
 UPDATE `tx_news_domain_model_news` SET `crdate` = UNIX_TIMESTAMP('2024-01-15 14:30:00'), `tstamp` = UNIX_TIMESTAMP('2024-01-15 14:30:00') WHERE `uid` = 2;
 UPDATE `tx_news_domain_model_news` SET `crdate` = UNIX_TIMESTAMP('2024-02-01 09:15:00'), `tstamp` = UNIX_TIMESTAMP('2024-02-01 09:15:00') WHERE `uid` = 3;
 
+-- Record types for relation badge icon tests (typeicon_column = type)
+UPDATE `tx_news_domain_model_news` SET `type` = 1 WHERE `uid` = 2;
+UPDATE `tx_news_domain_model_news` SET `type` = 2 WHERE `uid` = 3;
+
 -- Date filter test data for content block date fields (three dbType variants)
 INSERT INTO `tx_news_domain_model_news`
 		(`uid`, `content_blocks_timestamp`, `content_blocks_date`, `content_blocks_datetime`)
