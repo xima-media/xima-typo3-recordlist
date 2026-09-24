@@ -27,6 +27,7 @@ test.describe('Relation badge icons', () => {
       uid: link.getAttribute('data-uid'),
       icon: link.querySelector('[data-identifier]')?.getAttribute('data-identifier'),
     })));
+    icons.sort((a, b) => Number(a.uid) - Number(b.uid));
     expect(icons).toEqual([
       { uid: '2', icon: 'ext-news-type-internal' },
       { uid: '3', icon: 'ext-news-type-external' },

@@ -945,7 +945,11 @@ class RelationResolver
 
         $iconMap = [];
         foreach ($rows as $row) {
-            $iconMap[(int)$row['uid']] = $this->iconFactory->getIconForRecord($table, $row, IconSize::SMALL)->getIdentifier();
+            $uid = (int)$row['uid'];
+            if ($this->workspaceId > 0) {
+                $row = BackendUtility::getWorkspaceVersionOfRecord($this->workspaceId, $table, $uid) ?: $row;
+            }
+            $iconMap[$uid] = $this->iconFactory->getIconForRecord($table, $row, IconSize::SMALL)->getIdentifier();
         }
         return $iconMap;
     }
