@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [15.1.0] - 2026-09-24
+
 ### Features
 
 - **Default Filters**: Default filter values are now initial values the user can remove: an emptied default no longer falls back to the default on the next request, and stays removed until the filters are reset. While a field with a default is empty, a revert icon in the place of the clear icon restores it. Filters with a default are always rendered, and date defaults are applied as dates.
+- **Date Range Filter**: Date filters open a range picker with presets for the last 7 and 30 days, this month and last month. The new `between` expression matches both bounds inclusively and is the default for date filters; `lt`, `gt`, `eq` and `neq` remain available. Default filters set the upper bound via `valueEnd`.
 
 ### Bug Fixes
 
+- **Pagination Range Indicator**: The range label of the pagination showed its placeholders instead of the element numbers, because the arguments were passed under named keys. They are now passed positionally, matching the placeholders of the label.
 - **Directory Selection**: The directory selected in the doc header lived in the query parameters of the menu links only, so re-entering the module reset the list to "All directories". The selected page and scope are now stored in the backend user settings and restored on the next visit.
 - **Relation Badge Icons**: Badges of `group` fields and of `select` fields with a `foreign_table` always showed the default icon of the related table, so a shortcut page, a root page or a news record of type "External link" looked like any other record of its table. Each badge now shows the icon of its record's type, resolved via `ctrl.typeicon_column` like everywhere else in the backend.
 
