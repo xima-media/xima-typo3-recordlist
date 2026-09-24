@@ -2,6 +2,7 @@
 
 use Xima\XimaTypo3Recordlist\Controller\Example\BeUsersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\ContentController;
+use Xima\XimaTypo3Recordlist\Controller\Example\DefaultFiltersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\FeUsersController;
 use Xima\XimaTypo3Recordlist\Controller\Example\FilesController;
 use Xima\XimaTypo3Recordlist\Controller\Example\MultiSiteNewsController;
@@ -129,6 +130,21 @@ return [
         'extensionName' => 'XimaTypo3RecordlistExamples',
         'controllerActions' => [
             ContentController::class => [
+                'processRequest',
+            ],
+        ],
+        'inheritNavigationComponentFromMainModule' => false,
+    ],
+    'example_default_filters' => [
+        'parent' => 'example',
+        'position' => ['after' => 'list'],
+        'access' => 'user',
+        'iconIdentifier' => 'module-example-2',
+        'workspaces' => '*',
+        'labels' => 'LLL:EXT:xima_typo3_recordlist/Resources/Private/Language/Example/locallang_default_filters_module.xlf',
+        'extensionName' => 'XimaTypo3RecordlistExamples',
+        'controllerActions' => [
+            DefaultFiltersController::class => [
                 'processRequest',
             ],
         ],

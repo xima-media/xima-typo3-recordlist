@@ -150,3 +150,8 @@ INSERT INTO `tx_news_domain_model_news`
 VALUES
 		(9101, 15, 0, 0, 'Year-End Performance Review', 'year-end-performance-review', 'Strong results position company for future growth', '<p>The year-end performance review shows strong results across all metrics.</p><p>Draft revision awaiting review.</p>', UNIX_TIMESTAMP('2024-08-06 10:00:00'), 'Joe Price', 'hourly', 59, 1, 0, 0),
 		(9102, 15, 0, 0, 'Knowledge Base Update Completed', 'knowledge-base-update-completed', 'Enhanced documentation improves user support', '<p>The updated knowledge base provides comprehensive documentation for all products.</p><p>Draft revision awaiting review.</p>', UNIX_TIMESTAMP('2024-08-02 13:45:00'), 'Doris Sanders', 'always', 58, 1, 0, 0);
+
+-- relation counters for tx_news_domain_model_news_related_mm.sql and tx_news_domain_model_link.sql
+UPDATE `tx_news_domain_model_news` SET `related` = 1 WHERE `uid` IN (11, 13, 15, 19, 21, 23, 33, 58, 71);
+UPDATE `tx_news_domain_model_news` SET `related_from` = 9 WHERE `uid` = 60;
+UPDATE `tx_news_domain_model_news` SET `related_links` = 1 WHERE `uid` IN (11, 13, 15, 19, 21, 23, 26, 33, 58, 71);
