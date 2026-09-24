@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [15.1.0] - 2026-09-24
+
 ### Features
 
 - **Default Filters**: Default filter values are now initial values the user can remove: an emptied default no longer falls back to the default on the next request, and stays removed until the filters are reset. While a field with a default is empty, a revert icon in the place of the clear icon restores it. Filters with a default are always rendered, and date defaults are applied as dates.
