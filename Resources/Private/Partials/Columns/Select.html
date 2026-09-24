@@ -12,8 +12,9 @@
                 data-bs-toggle="tooltip"
                 data-field-name="{colConfig.columnName}"
                 data-value="{relation.value}">
-                <f:if condition="{colConfig.filter.iconIdentifier}">
-                    <core:icon identifier="{colConfig.filter.iconIdentifier}" size="small" />
+                <f:variable name="iconIdentifier" value="{f:if(condition: relation.icon, then: relation.icon, else: colConfig.filter.iconIdentifier)}" />
+                <f:if condition="{iconIdentifier}">
+                    <core:icon identifier="{iconIdentifier}" size="small" />
                 </f:if>
                 {relation.label->f:format.crop(maxCharacters: colConfig.badgeMaxCharacters)}
             </a>
