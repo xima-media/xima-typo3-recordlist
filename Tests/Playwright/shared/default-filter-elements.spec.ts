@@ -136,6 +136,24 @@ test.describe('Default value per filter element', () => {
     }
   });
 
+  test('date: clearing and reverting leave the calendar closed', async ({ page }) => {
+    const frame = await openModule(page, 'example_default_filters');
+    await clickResetView(page, frame);
+    await openFilters(frame);
+    const picker = frame.locator('[data-recordlist-daterange]');
+    const calendar = picker.locator('.flatpickr-calendar');
+
+    await picker.locator('button.close:not(.xima-recordlist-filter-revert)').click();
+    await expect(calendar).not.toHaveClass(/\bopen\b/);
+
+    await picker.locator('.xima-recordlist-filter-revert').click();
+    await expect(valueInput(frame, 'datetime')).toHaveValue('2024-01-01');
+    await expect(calendar).not.toHaveClass(/\bopen\b/);
+
+    await picker.locator('input.form-control[type="text"]').click();
+    await expect(calendar).toHaveClass(/\bopen\b/);
+  });
+
   for (const element of ELEMENTS) {
     test(`${element.name}: the default can be removed and restored`, async ({ page }) => {
       const frame = await openModule(page, 'example_default_filters');

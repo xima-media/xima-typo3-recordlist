@@ -131,6 +131,9 @@ class RecordlistFilterDaterange {
         // Without this, the document-click handler closes the calendar before the
         // trigger's own handler runs, so the button could never toggle it shut.
         ignoredFocusElements: trigger ? [trigger] : [],
+        // Core's clearable wrapper hands focus back to the field after the clear
+        // and revert buttons are clicked; opening on focus would pop the calendar.
+        clickOpens: false,
         locale,
         defaultDate: seed,
         allowInput: false,
@@ -169,6 +172,8 @@ class RecordlistFilterDaterange {
       if (instance.altInput && display.id) {
         instance.altInput.id = `${display.id}-visible`;
       }
+      const fp = instance;
+      fp.altInput.addEventListener('click', () => fp.open());
 
       if (typeof instance.altInput.clearable === 'function') {
         const altInput = instance.altInput;
