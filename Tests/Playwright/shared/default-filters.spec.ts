@@ -8,6 +8,7 @@ import { trackConsoleErrors, ConsoleErrorTracker } from '../helpers/console-erro
 const FOLDER_ROW = 'tr[data-uid="17"]';
 const DOKTYPE = 'select[name="filter[doktype][value]"]';
 const REVERT = '[data-filter-default="select"] .xima-recordlist-filter-revert';
+const FILTER_TOGGLE = '.toggleFiltersButton.show';
 
 async function openFilters(contentFrame: FrameLocator): Promise<void> {
   // the panel remembers being open, so only toggle it when it is closed
@@ -38,6 +39,7 @@ test.describe('Default filter values', () => {
   test('the default applies on first open and is visible in its filter', async ({ page }) => {
     const contentFrame = await openModule(page, 'example_pages');
     await expect(contentFrame.locator(FOLDER_ROW)).toHaveCount(0);
+    await expect(contentFrame.locator(FILTER_TOGGLE)).toHaveAttribute('data-filter-count', '1');
 
     await openFilters(contentFrame);
     await expect(contentFrame.locator(DOKTYPE)).toHaveValue('1');
@@ -52,6 +54,7 @@ test.describe('Default filter values', () => {
     await expect(contentFrame.locator(REVERT)).toBeVisible();
     await submitFilters(contentFrame);
     await expect(contentFrame.locator(FOLDER_ROW)).toHaveCount(1);
+    await expect(contentFrame.locator(FILTER_TOGGLE)).toHaveAttribute('data-filter-count', '0');
 
     contentFrame = await openModule(page, 'example_pages');
     await expect(contentFrame.locator(FOLDER_ROW)).toHaveCount(1);

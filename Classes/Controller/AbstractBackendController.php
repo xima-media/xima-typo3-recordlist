@@ -831,22 +831,19 @@ abstract class AbstractBackendController extends ActionController implements Bac
     }
 
     /**
-     * Submitted filters merged with the defaults. A field the form carried belongs
-     * to the user, even when emptied, so a removed default stays removed; only
-     * fields the form never carried fall back to their default.
+     * The submitted filters, or the defaults while nothing was submitted yet. Once
+     * the form was submitted, its values are the truth, so a removed default stays
+     * removed.
      *
      * @return array<string, mixed>
      */
     protected function getActiveFilters(): array
     {
         $body = $this->request->getParsedBody();
-        $filters = is_array($body) && is_array($body['filter'] ?? null) ? $body['filter'] : [];
-        foreach ($this->getNormalizedDefaultFilters() as $field => $data) {
-            if (!array_key_exists($field, $filters)) {
-                $filters[$field] = $data;
-            }
+        if (is_array($body) && is_array($body['filter'] ?? null)) {
+            return $body['filter'];
         }
-        return $filters;
+        return $this->getNormalizedDefaultFilters();
     }
 
     /**
@@ -1849,6 +1846,13 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $defaultFilters = $this->getNormalizedDefaultFilters();
         $activeFilters = $this->getActiveFilters();
 
+        // a default the user cannot see is a constraint they cannot remove
+        foreach (array_keys($defaultFilters) as $field) {
+            if (!isset($this->tableConfiguration[$tableName]['columns'][$field]['filter']['partial'])) {
+                throw new \LogicException('Default filter "' . $field . '" of table "' . $tableName . '" has no filter element to show or remove it.', 1790236800);
+            }
+        }
+
         foreach ($this->tableConfiguration[$tableName]['columns'] as $columnName => &$column) {
             // translate label
             if (!isset($column['label'])) {
@@ -2342,13 +2346,9 @@ abstract class AbstractBackendController extends ActionController implements Bac
         $count = 0;
         $tableName = $this->getTableName();
 
-        // Count dynamic filters from request
-        $body = $this->request->getParsedBody();
-        if (!empty($body['filter'])) {
-            foreach ($body['filter'] as $data) {
-                if (isset($data['value']) && $data['value'] !== '') {
-                    $count++;
-                }
+        foreach ($this->getActiveFilters() as $data) {
+            if (is_array($data) && isset($data['value']) && $data['value'] !== '') {
+                $count++;
             }
         }
 

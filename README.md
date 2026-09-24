@@ -326,7 +326,7 @@ class NewsController extends AbstractBackendController
 }
 ```
 
-Each entry maps a field name to `value` (required), `expr` (optional, defaults to equals) and, for date ranges, `valueEnd`. All standard filter expressions are supported: `eq`, `neq`, `like`, `notLike`, `lt`, `gt`, `in`, `notIn`, `between`. Date values accept anything `strtotime()` understands, e.g. `-30 days`.
+Each entry maps a field name to `value` (required), `expr` (optional, defaults to equals) and, for date ranges, `valueEnd`. All standard filter expressions are supported: `eq`, `neq`, `like`, `notLike`, `lt`, `gt`, `in`, `notIn`, and `between` for date filters only. Date values accept anything `strtotime()` understands, e.g. `-30 days`. A default needs a filter element to be shown and removed in, so a default for a field without one, such as `uid`, throws an exception.
 
 A default is an initial value, not an enforced constraint:
 
