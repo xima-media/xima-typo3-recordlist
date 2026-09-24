@@ -172,7 +172,8 @@ class RecordlistFilterDaterange {
 
       if (typeof instance.altInput.clearable === 'function') {
         const altInput = instance.altInput;
-        altInput.clearable({ onClear: () => instance.clear() }).then(() => {
+        // v13 builds the wrapper synchronously and returns nothing, v14 returns a promise
+        Promise.resolve(altInput.clearable({ onClear: () => instance.clear() })).then(() => {
           if (hasDefault) {
             attachRevert(altInput);
           }
