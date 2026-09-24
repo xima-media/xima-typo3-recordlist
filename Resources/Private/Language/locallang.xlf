@@ -282,6 +282,9 @@
 			<trans-unit id="filter.expr.date.between">
 				<source>Between</source>
 			</trans-unit>
+			<trans-unit id="filter.default.restore">
+				<source>Restore default value</source>
+			</trans-unit>
 			<trans-unit id="filter.date.open">
 				<source>Open date picker</source>
 			</trans-unit>

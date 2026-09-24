@@ -312,7 +312,7 @@ class UserController extends AbstractBackendController
 
 #### Default Filters
 
-Configure filters that are applied automatically when the module first opens — before any user interaction. Override `getDefaultFilters()` in your controller:
+Configure filter values that are pre-filled when the module is opened for the first time and after a reset. Override `getDefaultFilters()` in your controller:
 
 ```php
 class NewsController extends AbstractBackendController
@@ -326,7 +326,16 @@ class NewsController extends AbstractBackendController
 }
 ```
 
-User-submitted filter values always override defaults. Each entry maps a field name to `value` (required) and `expr` (optional, defaults to equals). All standard filter expressions are supported: `eq`, `neq`, `like`, `notLike`, `lt`, `gt`, `in`, `notIn`.
+Each entry maps a field name to `value` (required), `expr` (optional, defaults to equals) and, for date ranges, `valueEnd`. All standard filter expressions are supported: `eq`, `neq`, `like`, `notLike`, `lt`, `gt`, `in`, `notIn`, and `between` for date filters only. Date values accept anything `strtotime()` understands, e.g. `-30 days`. A default needs a filter element to be shown and removed in, so a default for a field without one, such as `uid`, throws an exception. The [DefaultFiltersController](Classes/Controller/Example/DefaultFiltersController.php) example sets one default per filter element and shows the value format each one expects.
+
+A default is an initial value, not an enforced constraint:
+
+- It is visible in its filter, which is always rendered, even when its column is hidden.
+- Removing it (emptying the field or clicking the clear icon) removes it from the query, and it stays removed on later visits.
+- While the field is empty, a revert icon in the place of the clear icon puts the default back. Like clearing, this changes the form only; the list updates on the next search.
+- The reset and reset view buttons bring all defaults back.
+
+Constraints that must always apply belong in `modifyQueryBuilder()` instead (see below).
 
 #### Filter Visibility Independent of Columns
 

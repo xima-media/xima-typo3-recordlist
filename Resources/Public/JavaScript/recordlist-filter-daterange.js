@@ -3,6 +3,7 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/l10n";
 import ShortcutButtonsPlugin from "shortcut-buttons-flatpickr";
 import "@typo3/backend/input/clearable.js";
+import { createRevertButton, toggleRevertButton } from "@xima/recordlist/recordlist-filter-revert-button.js";
 
 /**
 * Enhances date-column filters with a flatpickr range picker (two month views,
@@ -56,6 +57,7 @@ class RecordlistFilterDaterange {
     let mode = null;
 
     const isRange = () => (exprSelect ? exprSelect.value === 'between' : true);
+    const hasDefault = container.dataset.filterDefault === 'date';
 
     const writeHidden = selectedDates => {
       if (!selectedDates.length) {
@@ -129,6 +131,9 @@ class RecordlistFilterDaterange {
         // Without this, the document-click handler closes the calendar before the
         // trigger's own handler runs, so the button could never toggle it shut.
         ignoredFocusElements: trigger ? [trigger] : [],
+        // Core's clearable wrapper hands focus back to the field after the clear
+        // and revert buttons are clicked; opening on focus would pop the calendar.
+        clickOpens: false,
         locale,
         defaultDate: seed,
         allowInput: false,
@@ -167,9 +172,17 @@ class RecordlistFilterDaterange {
       if (instance.altInput && display.id) {
         instance.altInput.id = `${display.id}-visible`;
       }
+      const fp = instance;
+      fp.altInput.addEventListener('click', () => fp.open());
 
       if (typeof instance.altInput.clearable === 'function') {
-        instance.altInput.clearable({ onClear: () => instance.clear() });
+        const altInput = instance.altInput;
+        // v13 builds the wrapper synchronously and returns nothing, v14 returns a promise
+        Promise.resolve(altInput.clearable({ onClear: () => instance.clear() })).then(() => {
+          if (hasDefault) {
+            attachRevert(altInput);
+          }
+        });
       }
 
       if (exprHost) {
@@ -181,6 +194,28 @@ class RecordlistFilterDaterange {
       if (wasOpen) {
         requestAnimationFrame(() => instance.open());
       }
+    };
+
+    // The revert lives in core's clearable wrapper, which a rebuild throws away
+    // together with the alt input, so every build attaches a fresh one.
+    const attachRevert = altInput => {
+      const button = createRevertButton(container.dataset.revertLabel || '');
+      altInput.parentElement.appendChild(button);
+      const update = () => toggleRevertButton(button, startInput.value === '');
+      altInput.addEventListener('keyup', update);
+      update();
+
+      button.addEventListener('click', e => {
+        e.preventDefault();
+        // Write the operator silently: its change handler would resync the
+        // hidden bounds from the still empty picker and wipe the restored dates.
+        if (exprSelect && container.dataset.defaultExpr) {
+          exprSelect.value = container.dataset.defaultExpr;
+        }
+        startInput.value = container.dataset.defaultValue || '';
+        endInput.value = isRange() ? (container.dataset.defaultValueEnd || '') : '';
+        build();
+      });
     };
 
     build();

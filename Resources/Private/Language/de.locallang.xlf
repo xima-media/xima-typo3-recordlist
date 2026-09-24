@@ -375,6 +375,10 @@
 				<source />
 				<target>Zwischen</target>
 			</trans-unit>
+			<trans-unit id="filter.default.restore" approved="yes">
+				<source />
+				<target>Standardwert wiederherstellen</target>
+			</trans-unit>
 			<trans-unit id="filter.date.open" approved="yes">
 				<source />
 				<target>Datumsauswahl öffnen</target>

@@ -417,3 +417,30 @@ the standard select hover so the relocated operator field behaves like the rest.
     color: var(--typo3-form-select-hover-color);
     outline: none;
 }
+
+/* --- Default filter values ---------------------------------------------------
+The revert button reuses core's clearable `.close` styling and position. A select
+keeps its chevron at the inline end, so the button moves in front of it. */
+.xima-recordlist-filter-revert:hover,
+.xima-recordlist-filter-revert:focus-visible {
+    opacity: 1;
+}
+
+.xima-recordlist-filter-select .form-select {
+    padding-inline-end: 4.75em;
+}
+
+.form-control-clearable-wrapper.xima-recordlist-filter-select .close {
+    inset-inline-end: 2.75em;
+}
+
+.xima-recordlist-filter-revert--inline {
+    display: inline-flex;
+    margin-inline-start: .25em;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    opacity: .5;
+    vertical-align: middle;
+}
